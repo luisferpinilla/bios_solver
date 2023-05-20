@@ -6,6 +6,8 @@
 
 ### Sets:
 
+$e$ : Compañia
+
 $i$ : Macro ingredientes
 
 $j$ : Puertos
@@ -28,11 +30,13 @@ $SS_{ik}^{t}$ : Inventario de seguridad a tener del ingrediente $i$ en la planta
 
 $CA_{mi}$ : Capacidad de almacenamiento de la unidad $m$ en toneladas del ingrediente $i$
 
-$CC_{l}^{t}$ Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$
+$CC_{l}^{t}$ Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $$
 
 $¿?$ Capacidad de mover carga hacia un almacenamiento en puerto
 
 $¿?$ Capacidad de mover carga directa hacia un camión
+
+$¿?$ Capacidad de recepción de plantas
 
 ### Diccionary
 
@@ -40,7 +44,9 @@ $l$ -> $i$ : Para cada carga, determina a cuál ingrediente pertenece
 
 $l$ -> $j$ : Para cada carga, determina a cuál puerto ha llegado
 
-$m$ -> $i$ : Para cada unidad de almacenamiento, determina a
+$m$ -> $i$ : Para cada unidad de almacenamiento, determina a qué macro incrediente $i$ pertenece
+
+$k$ -> $3$ : Para cada planta, determina a qué empresa $e$ pertenece
 
 ### Variables
 
@@ -65,16 +71,36 @@ Función de minimización de costos de:
 - Costo fijo de transportar un camion desde puerto hacia plantas
 - Costo de no respetar un inventario mìnimo o de no satisfacer una demanda en una planta
 - Costo de mantener una unidad de almacenamiento activa con algun ingrediente
+- Costo de vender una cantidad de ingrediente desde una empresa a otra durante el transporte.
+
+### Almacenamiento en puerto por corte de Facturación:
+
+Dado que las cargas almacenadas en el puerto causan un costo de almacenamiento que suma al costo total, la suma de los productos escalares entre el costo de almacenamiento colocado a cada carga $l$ en el tiempo y la cantidad almacenada al final del día $t$, nos dará el componente del costo del almacenamiento en el puerto. Así:
+
+$$\sum_{l}^{t}{CC_{l}^{t} \cdot XIP_{l}^{t}}$$
+
+### Descargue en almacenamiento en puerto
+
+### Descargue para despacho directo hacia una planta
+
+### Costo variable de transportar cargas desde puertos hacia plantas
+
+### Costo fijo de transportar un camion desde puerto hacia plantas
+
+### Costo de no respetar un inventario mìnimo o de no satisfacer una demanda en una planta
+
+### Costo de mantener una unidad de almacenamiento activa con algun ingrediente
 
 ## Restricciones
 
 - Balance de masa en cargas en puerto
+- Balance de masa en barcos
 - Balance de masa en unidades de almacenamiento por producto en planta
 - Asignación de unidades de almacenamiento a ingredientes en el tiempo
 - Capacidad de almacenamiento en unidades de almacenamiento
 - Mantenimiento del nivel de seguridad de igredientes en plantas
 
-### Balance de masa en
+### Balance de masa en cargas en puerto
 
 # Preguntas para reunión
 
