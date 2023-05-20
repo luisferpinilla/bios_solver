@@ -2,7 +2,27 @@
 
 ## Abstract
 
+El presente documento contiene el modelo matemático de programación lineal mixta que describe la situación de almacenamiento, transporte y demanda de macro ingredientes para la compañia Grupo BIOS.
+
 ## Contexto del problema
+
+Grupo BIOS es un grupo de empresas dedicadas a la fabricación de productos agrícolas destinados a diferentes propósitos. Para efectos de dicha fabricación emplea varias materias primas que son procesadas en 13 plantas al interior de Colombia y que tienen origen en el extranjero.
+
+Dado el origen de las materias primas, surgen una serie de operaciones logísticas para colocalas en las plantas con sus correspondientes costos y restricciones asociadas.
+
+El modelo matemático descrito a continuación ayudará un usuario experto en la operación de Grupo BIOS a encontrar el mejor conjunto de decisiones que conduzcan a causar el menor costo logistico durante un periodo dado. Dichas decisiones estan asociadas específicamente con:
+
+- La cantidad de materias primas a almacenar en puerto;
+- la cantidad de materias primas a despachar entre el puerto y las 13 plantas y;
+- la unidad de almacenamiento en donde se almacenará la materia prima que llega a las plantas y las que se usarán para cumplir con la demanda proyectada de consumo.
+
+El modelo matemático no tendrá como objetivo responder a preguntas o cuestiones adicionales relacioandas con otras decisiones o aspectos relacionados, por ejemplo:
+
+- la cantidad de materias primas a comprar;
+- la cantidad de materias primas a consumir para fabricar el producto terminado;
+- la forma como se mezclarán las materias primas en las plantas;
+- los esquemas de negociación de tarifas de almacenamiento, transporte;
+- ni ningún otro aspecto del negocio que no haya sido explícitamente discutido, aprobado y costeado por parte de WA Solutions y Esteban Restrepo Luis Fernando Pinilla.
 
 ### Sets:
 
