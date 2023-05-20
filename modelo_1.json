@@ -1,0 +1,194 @@
+{
+    "nombre": "test",
+    "horizonte": 60,
+    "ingredientes": [
+        "Maiz",
+        "Gluten",
+        "Forraje",
+        "Frijol"
+    ],
+    "puertos": [
+        {
+            "Cartagena": {
+                "cargas": [
+                    {
+                        "Maiz": [
+                            {
+                                "identificacion": "maiz_zffs",
+                                "llegadas": [
+                                    {
+                                        "periodo": -1,
+                                        "cantidad_toneladas": 25000
+                                    }
+                                ],
+                                "cortes_facturacion": [
+                                    {
+                                        "periodo": 17,
+                                        "costo_fijo": 0,
+                                        "costo_por_tonelada": 24000
+                                    },
+                                    {
+                                        "periodo": 47,
+                                        "costo_fijo": 0,
+                                        "costo_por_tonelada": 26000
+                                    }
+                                ]
+                            },
+                            {
+                                "identificacion": "maiz_abc",
+                                "llegadas": [
+                                    {
+                                        "periodo": 17,
+                                        "cantidad_toneladas": 5000
+                                    },
+                                    {
+                                        "periodo": 18,
+                                        "cantidad_toneladas": 5000
+                                    },
+                                    {
+                                        "periodo": 19,
+                                        "cantidad_toneladas": 5000
+                                    },
+                                    {
+                                        "periodo": 20,
+                                        "cantidad_toneladas": 5000
+                                    }
+                                ],
+                                "cortes_facturacion": [
+                                    {
+                                        "periodo": 17,
+                                        "costo_fijo": 0,
+                                        "costo_por_tonelada": 24000
+                                    },
+                                    {
+                                        "periodo": 47,
+                                        "costo_fijo": 0,
+                                        "costo_por_tonelada": 26000
+                                    }
+                                ]
+                            }
+                        ],
+                        "Gluten": [
+                            {
+                                "identificacion": "accdg",
+                                "llegadas": [
+                                    {
+                                        "periodo": -1,
+                                        "cantidad_toneladas": 12000
+                                    }
+                                ],
+                                "cortes_facturacion": [
+                                    {
+                                        "periodo": 7,
+                                        "costo_fijo": 0,
+                                        "costo_por_tonelada": 120000
+                                    },
+                                    {
+                                        "periodo": 37,
+                                        "costo_fijo": 0,
+                                        "costo_por_tonelada": 120000
+                                    }
+                                ]
+                            }
+                        ],
+                        "Forraje": [],
+                        "flijol": []
+                    }
+                ]
+            }
+        },
+        {
+            "Barranquilla": {}
+        },
+        {
+            "Buenventura": {}
+        }
+    ],
+    "plantas": [
+        {
+            "Medellin": [
+                {
+                    "Maiz": {
+                        "demanda": []
+                    }
+                }
+            ]
+        },
+        "Buga",
+        "Ciénaga"
+    ],
+    "fletes": [
+        {
+            "puerto": "Cartagena",
+            "planta": "Medellin",
+            "costo_fijo": 0,
+            "costo_por_tonelada": 165000
+        },
+        {
+            "puerto": "Cartagena",
+            "planta": "Buga",
+            "costo_fijo": 0,
+            "costo_por_tonelada": 165000
+        },
+        {
+            "puerto": "Cartagena",
+            "planta": "Ciénaga",
+            "costo_fijo": 0,
+            "costo_por_tonelada": 165000
+        },
+        {
+            "puerto": "Santamarta",
+            "planta": "Medellin",
+            "costo_fijo": 0,
+            "costo_por_tonelada": 165000
+        },
+        {
+            "puerto": "Santamarta",
+            "planta": "Buga",
+            "costo_fijo": 0,
+            "costo_por_tonelada": 165000
+        },
+        {
+            "puerto": "Santamarta",
+            "planta": "Ciénaga",
+            "costo_fijo": 0,
+            "costo_por_tonelada": 165000
+        },
+        {
+            "puerto": "Barranquilla",
+            "planta": "Medellin",
+            "costo_fijo": 0,
+            "costo_por_tonelada": 165000
+        },
+        {
+            "puerto": "Barranquilla",
+            "planta": "Buga",
+            "costo_fijo": 0,
+            "costo_por_tonelada": 165000
+        },
+        {
+            "puerto": "Barranquilla",
+            "planta": "Ciénaga",
+            "costo_fijo": 0,
+            "costo_por_tonelada": 165000
+        },
+        {
+            "puerto": "Buenventura",
+            "planta": "Medellin",
+            "costo_fijo": 0,
+            "costo_por_tonelada": 165000
+        },
+        {
+            "puerto": "Buenventura",
+            "planta": "Buga",
+            "costo_fijo": 0,
+            "costo_por_tonelada": 165000
+        },
+        {
+            "puerto": "Buenventura",
+            "planta": "Ciénaga",
+            "costo_fijo": 0,
+            "costo_por_tonelada": 165000
+        }
+    ]
+}
