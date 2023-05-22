@@ -52,6 +52,12 @@ $CA_{mi}$ : Capacidad de almacenamiento de la unidad $m$ en toneladas del ingred
 
 $CC_{l}^{t}$ Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $$
 
+$CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
+
+$CF_{lm}$ : Costo fijo de transporte por camión despachado llevando la carga $l$ hasta la unidad de almacenamiento $m$.
+
+$CW_{lm}$ : Costo de vender una carga perteneciente a una empresa a otra.
+
 $¿?$ Capacidad de mover carga hacia un almacenamiento en puerto
 
 $¿?$ Capacidad de mover carga directa hacia un camión
@@ -70,15 +76,21 @@ $k$ -> $3$ : Para cada planta, determina a qué empresa $e$ pertenece
 
 ### Variables
 
-$XIP_{l}^{t}$ : Cantidad de la carga $l$ al final del periodo $t$
+$XIP_{l}^{t}$ : Cantidad de la carga $l$ en puerto al final del periodo $t$
 
-$XTR_{lm}^{t}$ : Cantidad de carga $l$ a transportar hacia la unidad $m$ durante el día $t$
+$XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a transportar hacia la unidad $m$ durante el día $t$
+
+$XTI_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar hacia la unidad $m$ durante el día $t$
+
+$XIU_{l}^{t}$ : Cantidad de ingrediente almacenado en la unidad de almacenameinto $m$ al final del periodo $t$
 
 $XDM_{}^{t}$: Cantidad de producto a sacar de la unidad de almacenamiento para satisfacer la demanda.
 
 $ITR_{lm}^{t}$ : Cantidad de camiones con carga $l$ a transportar hacia la unidad $m$ durante el día $t$
 
-$BSS_{ik}^{t}$ : sí estará permitido que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ baje por debajo de $SS_{ik}^{t}$
+$BSS_{ik}^{t}$ : sí se cumple que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté sobre el nivel de seguridad $SS_{ik}^{t}$
+
+$BCD_{ik}^{t}$ : sí estará permitido que la demanda de un ingrediente $i$ no se satisfaga en la planta $k$ al final del día $t$
 
 ## Función Objetivo:
 
@@ -105,7 +117,15 @@ $$\sum_{l}^{t}{CC_{l}^{t} \cdot XIP_{l}^{t}}$$
 
 ### Costo variable de transportar cargas desde puertos hacia plantas
 
+Existe una tabla de fletes que muestra el costo por tonelada a enviar desde plantas hacia los puertos. dado que no esta definido el costo desde una carga en particular en un puerto hacia una unidad de almacenamiento, asumiremos que el costo de despacho de carga entre puertos y fábricas se puede aplicar de esta manera. Así las cosas usaremos los diccionarios para saber qué cargas están en qué puerto y cuáles unidades de almacenamiento están en qué fábrica.
+
+$ \sum_{l}{XTR_{lm}^{t}} \cdot CT_{lm} $
+
 ### Costo fijo de transportar un camion desde puerto hacia plantas
+
+Aunque las negociaciones están dadas por toneada, existe la posibilidad que se decida en el modelo despachar una cantidad muy baja en un camión, lo que se verá como un error del modelo. La forma de evitar este comportamiento es asignar un valor fijo por camión, de esta manera el modelo intentará despachar cantidades razonables en cada camión. Esta expresión en la función objetivo debe estar atada a una restricción sobre la cantidad de camiones y toneladas a despachar
+
+$$ \sum_{l E }^{}{XTR_{lm}^{t}} \cdot CF\_{lm} $$
 
 ### Costo de no respetar un inventario mìnimo o de no satisfacer una demanda en una planta
 
@@ -115,6 +135,7 @@ $$\sum_{l}^{t}{CC_{l}^{t} \cdot XIP_{l}^{t}}$$
 
 - Balance de masa en cargas en puerto
 - Balance de masa en barcos
+- Capacidad de carga de los camiones
 - Balance de masa en unidades de almacenamiento por producto en planta
 - Asignación de unidades de almacenamiento a ingredientes en el tiempo
 - Capacidad de almacenamiento en unidades de almacenamiento
@@ -122,6 +143,48 @@ $$\sum_{l}^{t}{CC_{l}^{t} \cdot XIP_{l}^{t}}$$
 
 ### Balance de masa en cargas en puerto
 
+$XTR_{lm}^{t}$ : Cantidad de carga $l$ a transportar hacia la unidad $m$ durante el día $t$
+
+$XIP_{l}^{t}$ : Cantidad de la carga $l$ al final del periodo $t$
+
+$AR_{l}^{t}$ : Cantidad de ingrediente que va a llegar a la carga $l$ durante el día $t$
+
+La cantidad de inventario para la carga $l$ al final del periodo $t$ será el inventario del periodo anterior, más las llegadas en el periodo actual menos todos los envios hacia las unidades de almacenamiento:
+
+$$ XIP_{l}^{t} = XIP_{l}^{t-1} + AR_{l}^{t} - \sum_{m}{XTR_{lm}^{t}}: \forall{ \mathbb{t \in T}}$$
+
+### Balance de masa en barcos
+
+El balance de masa en barcos no se requiere porque vendrá dado por la cantidad total de ingredientes en el barco y la velocidad de descarge.
+
+### Capacidad de carga de los camiones
+
+Asumiremos que los camiones no pueden transportar más de 34 toneladas en cada viaje.
+
+$$ XTR_{lm}^{t} \leq 34 \cdot XTI_{lm}^{t} $$
+
+### Balance de masa en unidades de almacenamiento por producto en planta
+
+El balance de masa en unidades de almacenamiento en todo periodo $t$ es igual al inventario del periodo anterior más las llegadas desde cualquier puerto, menos la demanda del periodo.
+
+$$ XIU_{m}^{t} = XIU_{m}^{t-1} + \sum_{l}{XTR_{lm}^{t}} - XDM_{km}^{t}: \forall{\mathbb{t \in T}}$$
+
+### Satisfaccion de la demanda
+
+
+
+$$ \sum_{m \in i}^{t}{XDM_{m}^{t}} \geq DM_{ki}^{t} \cdot BCD_{ik}^{t} $$
+
+### Asignación de unidades de almacenamiento a ingredientes en el tiempo
+
+### Capacidad de almacenamiento en unidades de almacenamiento
+
+### Mantenimiento del nivel de seguridad de igredientes en plantas
+
+$$ \sum_{m \in i}^{t}{XDM_{m}^{t}} \geq SS_{ki}^{t} \cdot (1-BSS_{ik}^{t}) $$
+
 # Preguntas para reunión
 
 La asignación puede intentar minimizar la cantidad de unidades de almacenamiento activas (con algun ingrediente) en vez de intentar usar una combinatoria de estados y asignaciones de las unidades de almacenamiento.
+
+¿Cual es el costo de no satisfacer una demanda de un ingrediente en una planta en un día?
