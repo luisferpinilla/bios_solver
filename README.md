@@ -26,7 +26,7 @@ El modelo matemático no tendrá como objetivo responder a preguntas o cuestione
 
 ### Sets:
 
-$e$ : Compañia
+$e$ : Empresa
 
 $i$ : Macro ingredientes
 
@@ -72,7 +72,7 @@ $l$ -> $j$ : Para cada carga, determina a cuál puerto ha llegado
 
 $m$ -> $i$ : Para cada unidad de almacenamiento, determina a qué macro incrediente $i$ pertenece
 
-$k$ -> $3$ : Para cada planta, determina a qué empresa $e$ pertenece
+$k$ -> $e$ : Para cada planta, determina a qué empresa $e$ pertenece
 
 ### Variables
 
@@ -91,6 +91,8 @@ $ITR_{lm}^{t}$ : Cantidad de camiones con carga $l$ a transportar hacia la unida
 $BSS_{ik}^{t}$ : sí se cumple que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté sobre el nivel de seguridad $SS_{ik}^{t}$
 
 $BCD_{ik}^{t}$ : sí estará permitido que la demanda de un ingrediente $i$ no se satisfaga en la planta $k$ al final del día $t$
+
+$X$ : si 
 
 ## Función Objetivo:
 
@@ -178,6 +180,10 @@ $$ \sum_{m \in i}^{t}{XDM_{m}^{t}} \geq DM_{ki}^{t} \cdot BCD_{ik}^{t} $$
 ### Asignación de unidades de almacenamiento a ingredientes en el tiempo
 
 ### Capacidad de almacenamiento en unidades de almacenamiento
+
+$XIU_{l}^{t}$ : Cantidad de ingrediente almacenado en la unidad de almacenameinto $m$ al final del periodo $t$
+
+ $XIU_{l}^{t} \leq CA_{mi} $
 
 ### Mantenimiento del nivel de seguridad de igredientes en plantas
 
