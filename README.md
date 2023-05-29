@@ -58,6 +58,8 @@ $CF_{lm}$ : Costo fijo de transporte por camión despachado llevando la carga $l
 
 $CW_{lm}$ : Costo de vender una carga perteneciente a una empresa a otra.
 
+$CS_{ikt}$ : Costo de no respetar un inventario de seguridad en una planta $k$ de un ingrediente $i$ en un día $t$.
+
 $¿?$ Capacidad de mover carga hacia un almacenamiento en puerto
 
 $¿?$ Capacidad de mover carga directa hacia un camión
@@ -127,10 +129,11 @@ $ \sum_{l}{XTR_{lm}^{t}} \cdot CT_{lm} $
 
 Aunque las negociaciones están dadas por toneada, existe la posibilidad que se decida en el modelo despachar una cantidad muy baja en un camión, lo que se verá como un error del modelo. La forma de evitar este comportamiento es asignar un valor fijo por camión, de esta manera el modelo intentará despachar cantidades razonables en cada camión. Esta expresión en la función objetivo debe estar atada a una restricción sobre la cantidad de camiones y toneladas a despachar
 
-$$ \sum_{l E }^{}{XTR_{lm}^{t}} \cdot CF\_{lm} $$
+$$ \sum_{\mathbb{l \in m}}^{}{XTR_{lm}^{t}} \cdot CF\_{lm} $$
 
-### Costo de no respetar un inventario mìnimo o de no satisfacer una demanda en una planta
+### Costo de no respetar un inventario mínimo o de no satisfacer una demanda en una planta
 
+$$ \sum_{m E k}{XIU_{l}^{t}} \leq CS_{ikt} \cdot BSS_{ik}^{t}$$
 ### Costo de mantener una unidad de almacenamiento activa con algun ingrediente
 
 ## Restricciones
