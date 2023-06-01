@@ -117,27 +117,27 @@ Función de minimización de costos de:
 
 Dado que las cargas almacenadas en el puerto causan un costo de almacenamiento que suma al costo total, la suma de los productos escalares entre el costo de almacenamiento colocado a cada carga $l$ en el tiempo y la cantidad almacenada al final del día $t$, nos dará el componente del costo del almacenamiento en el puerto. Así:
 
-$$\sum_{l}^{t}{CC_{l}^{t} \cdot XIP_{l}^{t}}$$
+$$\sum_{l \in j}{\sum_{t}{CC_{l}^{t} \cdot XIP_{l}^{t}}}$$
 
 ### Costo variable de transportar cargas desde puertos hacia plantas
 
 Existe una tabla de fletes que muestra el costo por tonelada a enviar desde plantas hacia los puertos. dado que no esta definido el costo desde una carga en particular en un puerto hacia una unidad de almacenamiento, asumiremos que el costo de despacho de carga entre puertos y fábricas se puede aplicar de esta manera. Así las cosas usaremos los diccionarios para saber qué cargas están en qué puerto y cuáles unidades de almacenamiento están en qué fábrica.
 
-$$ \sum_{l \in j}{XTR_{lm}^{t}} \cdot CT_{lm} \forall t, m \in k $$
+$$ \sum_{l \in j}{\sum_{m \in k}{\sum_{t}{XTR_{lm}^{t}} \cdot CT_{lm}}}$$
 
 ### Costo fijo de transportar un camion desde puerto hacia plantas
 
 Aunque las negociaciones están dadas por toneada, existe la posibilidad que se decida en el modelo despachar una cantidad muy baja en un camión, lo que se verá como un error del modelo. La forma de evitar este comportamiento es asignar un valor fijo por camión, de esta manera el modelo intentará despachar cantidades razonables en cada camión. Esta expresión en la función objetivo debe estar atada a una restricción sobre la cantidad de camiones y toneladas a despachar
 
-$$ \sum_{l E }^{}{XTR_{lm}^{t}} \cdot CF_{lm} \forall t$$
+$$ \sum_{l \in j}{\sum_{l \in E }\sum_{t}{{XTI_{lm}^{t}}} \cdot CF_{lm}}$$
 
 ### Costo de no respetar un inventario de seguridad de un ingrediente en una planta
 
-$$ \sum_{ik}^{t}{CS_{ik}^{y} \cdot BSS_{ik}^{t} \forall ikt} $$
+$$ \sum_{i}{\sum_{k}{\sum_{t}{CS_{ik}^{t} \cdot BSS_{ik}^{t}}}} $$
 
 ### Costo de no satisfacer una demanda en una planta
 
-$$ \sum_{ik}^{t}{CD_{ik}^{t} \cdot BCD_{ik}^{t} \forall ikt} $$
+$$ \sum_{i}{\sum_{k}{\sum_{t}{CD_{ik}^{t} \cdot BCD_{ik}^{t}}}} $$
 
 ### Costo de mantener una unidad de almacenamiento activa con algun ingrediente
 
