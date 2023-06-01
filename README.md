@@ -26,13 +26,11 @@ El modelo matemático no tendrá como objetivo responder a preguntas o cuestione
 
 ```mermaid
 graph LR;
-
-
     Barco --AR--> Almacenamiento
-    Almacenamiento --XTR--> Planta
+    Almacenamiento --XTR--> UnidadAlmacenamieto
     Almacenamiento --XIP--> Almacenamiento
-    UnidadAlmacenamieto --XIU--> Planta
-    Planta --DM--> Consumos
+    UnidadAlmacenamieto --XIU--> UnidadAlmacenamieto
+    UnidadAlmacenamieto --XDM--> Consumos
 ```
 
 ### Sets:
