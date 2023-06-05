@@ -71,6 +71,8 @@ $CS_{ik}^{t}$ : Costo de no satisfacer el inventario de seguridad para el ingred
 
 $CD_{ik}^{t}$ : Costo de no satisfacer la demanda del ingrediente $i$  en la planta $k$ durante el día $t$
 
+$TT_{jk}$ : tiempo en días para transportar la carga desde el puertoa $j$ hacia la planta $k$
+
 ### Diccionary
 
 $l$ -> $i$ : Para cada carga, determina a cuál ingrediente pertenece
@@ -86,6 +88,8 @@ $k$ -> $e$ : Para cada planta, determina a qué empresa $e$ pertenece
 $XIP_{l}^{t}$ : Cantidad de la carga $l$ en puerto al final del periodo $t$
 
 $XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a transportar hacia la unidad $m$ durante el día $t$
+
+$XTD_{lm}^{t}$ : Cantidad de carga $l$ en barco a transportar bajo despacho directo hacia la unidad $m$ durante el día $t$
 
 $XTI_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar hacia la unidad $m$ durante el día $t$
 
@@ -123,7 +127,7 @@ $$\sum_{l \in j}{\sum_{t}{CC_{l}^{t} \cdot XIP_{l}^{t}}}$$
 
 Existe una tabla de fletes que muestra el costo por tonelada a enviar desde plantas hacia los puertos. dado que no esta definido el costo desde una carga en particular en un puerto hacia una unidad de almacenamiento, asumiremos que el costo de despacho de carga entre puertos y fábricas se puede aplicar de esta manera. Así las cosas usaremos los diccionarios para saber qué cargas están en qué puerto y cuáles unidades de almacenamiento están en qué fábrica.
 
-$$ \sum_{l \in j}{\sum_{m \in k}{\sum_{t}{XTR_{lm}^{t}} \cdot CT_{lm}}}$$
+$$ \sum_{l \in j}{\sum_{m \in k}{\sum_{t}{(XTR_{lm}^{t} + XTD_{lm}^{t})} \cdot CT_{lm}}}$$
 
 ### Costo fijo de transportar un camion desde puerto hacia plantas
 
@@ -149,19 +153,19 @@ Pendiente por modelar
 
 La cantidad de inventario para la carga $l$ al final del periodo $t$ será el inventario del periodo anterior, más las llegadas en el periodo actual menos todos los envios hacia las unidades de almacenamiento:
 
-$$ XIP_{l}^{t} = XIP_{l}^{t-1} + AR_{l}^{t} - \sum_{m}{XTR_{lm}^{t}}: \forall{ \mathbb{t \in T}}$$
+$$ XIP_{l}^{t} = XIP_{l}^{t-1} + AR_{l}^{t} - \sum_{m}{XTR_{lm}^{t}} -\sum_{m}{XTD_{lm}^{t}}: \forall{ \mathbb{t \in T}}$$
 
 ### Capacidad de carga de los camiones
 
 Asumiremos que los camiones no pueden transportar más de 34 toneladas en cada viaje.
 
-$$ XTR_{lm}^{t} \leq 34 \cdot XTI_{lm}^{t} $$
+$$ XTR_{lm}^{t} + XTD_{lm}^{t} \leq 34 \cdot XTI_{lm}^{t} $$
 
 ### Balance de masa en unidades de almacenamiento por producto en planta
 
-El inventario en las unidades de almacenamiento $m$ al final de un día $t$ es igual al inventario al final del día anterior más las llegadas desde cualquier carga $l$, menos la cantidad de producto a sacar desde la unidad $m$.
+El inventario en las unidades de almacenamiento $m$ al final de un día $t$ es igual al inventario al final del día anterior más las llegadas desde cualquier carga $l$ teniendo en cuenta el tiempo de despacho entre puertos y plantas, menos la cantidad de producto a sacar desde la unidad $m$.
 
-$$ XIU_{m}^{t} = XIU_{m}^{t-1} + \sum_{l}{XTR_{lm}^{t}} - XDM_{km}^{t}: \forall{\mathbb{t \in T}}$$
+$$ XIU_{m}^{t} = XIU_{m}^{t-1} + \sum_{l}{XTR_{lm}^{t-TT}} - XDM_{km}^{t-TT}: \forall{\mathbb{t \in T}}$$
 
 ### Satisfaccion de la demanda
 
