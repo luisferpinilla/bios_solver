@@ -1,25 +1,26 @@
 import pulp as pu
 
+
 class Model():
 
-    def __init__(self, definiciones:dict) -> None:
-        
+    def __init__(self, definiciones: dict) -> None:
+
+        # Conjuntos
+        self._conjuntos = dict()
         # Parametros
-        self._DM_kit = dict()
-        self._AR_lt = dict()
-        self._SS_ikt = dict()
-        
-        # Diccionarios
-        self._l_i = dict()
-        self._l_j = dict()
-        self._m_i = dict()
+        self._parameters = dict()
 
         # Variables
+        self._variables = dict()
 
-        # Modelo
-        self.definiciones = definiciones
-        self.problema = pu.LpProblem("Bios", sense=pu.const.LpMinimize)
+        # Definición del modelo
+        self._definiciones = definiciones
 
+        # Problema
+        self._problema = pu.LpProblem("Bios", sense=pu.const.LpMinimize)
+
+    def construir_parametros(self):
+        pass
 
     def construir_variables(self):
         pass
@@ -30,6 +31,5 @@ class Model():
     def construir_restricciones(self):
         pass
 
-
-
-
+    def resolver(self):
+        pass
