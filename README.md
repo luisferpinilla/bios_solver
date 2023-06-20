@@ -10,13 +10,13 @@ Grupo BIOS es un grupo de empresas dedicadas a la fabricación de productos agr�
 
 Dado el origen de las materias primas, surgen una serie de operaciones logísticas para colocalas en las plantas con sus correspondientes costos y restricciones asociadas.
 
-El modelo matemático descrito a continuación ayudará un usuario experto en la operación de Grupo BIOS a encontrar el mejor conjunto de decisiones que conduzcan a causar el menor costo logistico durante un periodo dado. Dichas decisiones estan asociadas específicamente con:
+El modelo matemático descrito a continuación ayudará como herramienta a un usuario experto en la operación de Grupo BIOS a configurar la mejor decision logística partiendo de la información disponible y suministrada, y que de acuerdo con los entendimientos durante las reuniones del equipo de trabajo, conduce hacia obtener el menor costo logistico durante un periodo dado. Dicha decision está asociada específicamente con:
 
-- La cantidad de materias primas a almacenar en puerto;
-- la cantidad de materias primas a despachar entre el puerto y las 13 plantas y;
-- la unidad de almacenamiento en donde se almacenará la materia prima que llega a las plantas y las que se usarán para cumplir con la demanda proyectada de consumo.
+- La cantidad de materias primas a almacenar en puerto de acuerdo con la información de barcos pendientes por llegar y las cargas actualmente almacenadas a los puertos;
+- la cantidad de materias primas a despachar y el momento para hacerlo entre el puerto y las 13 plantas y la unidad de despacho a donde llegarán estas cargas;
+- Las unidades de almacenamiento desde donde deberán consumirse las aterias primas de acuerdo con la demanda proyectada de consumo que el usuario experto suministre.
 
-El modelo matemático no tendrá como objetivo responder a preguntas o cuestiones adicionales relacioandas con otras decisiones o aspectos relacionados, por ejemplo:
+El modelo matemático no tendrá como objetivo responder a otras preguntas o cuestiones relacioandas o no con otras decisiones o aspectos relacionados. Por ejemplo no se tendrán en cuenta aspectos como:
 
 - la cantidad de materias primas a comprar;
 - la cantidad de materias primas a consumir para fabricar el producto terminado;
@@ -25,6 +25,10 @@ El modelo matemático no tendrá como objetivo responder a preguntas o cuestione
 - ni ningún otro aspecto del negocio que no haya sido explícitamente discutido, aprobado y costeado por parte de WA Solutions, Esteban Restrepo y Luis Fernando Pinilla.
 
 ## Conceptualización de la solución
+
+El modelo matemático que se ha identificado como el más adecuado para aproximar una solución que ayuda al usuario a configurar la solución descrita, corresponde a un modelo de optimización para flujo en redes con nodos y arcos, que incluye el tiempo como parámetro enriquecido y restricciones conmutables usando variables binarias. 
+
+En general, cada nodo abstrae la cantidad de inventario de un ingrediente particular en un periodo y lugar específico de la cadena de suministro que se ha incluído en el modelo y los arcos representan traslado de dicho inventario entre los nodos, lo anterior teniendo en cuenta en todo momento los balances de masa.
 
 Esquemáticamente, el flujo de material sin tener en cuenta el tiempo, puede representarse de la siguiente manera:
 
@@ -36,7 +40,15 @@ graph LR;
     UnidadAlmacenamiento --XDM--> Consumo
 ```
 
+La representación anterior incluyendo el tiempo multiplica la cantidad de nodos y arcos en el esquema anterior por el número de periodos y adiciona un grupo adicional de arcos que representan el inventario que no se traslada de un lugar a otro sino que permanece de un periodo al siguiente.
+
+La técnica de matemática que permite crear un modelo del problema se conoce como Programación Matemática Lineal Mixta y el mecanismo de solución empleará un macro algoritmo matemático "Branch and Bound" (o de  ramificación y acotamiento), que emplea el Método "Simplex Revisado" a modo de sub-algoritmo para solucionar una version relajada del problema, y con cada iteración va agregando las restricciones asociadas a las variables enteras y binarias, hasta encontrar la solución al problema completo.
+
 ## Modelos entidad relación
+
+Dado que el modelo matemático matemático aproxima estima una decisión optimizada con base en la información suministrada, dicha decisión debe mapearse usando un modelo Entidad-Relación estándar, lo que habilita las técnicas de inteligencia de negocios para la construcción de tableros de control interactivos usando software para este propósito como Excel o Power BI.
+
+A continuación se muestra un modelo entidad relación que permite mapear las relaciones matemáticas entre las variables y parámetros del problema con la visualización:
 
 ```mermaid
 erDiagram
@@ -95,6 +107,14 @@ erDiagram
         Float costoAplicacion "Valor por tonelada para aplicar"
     }
 
+    Kardex{
+        Int idtransaccion PK
+        String unidadAlmacenamiento PK "Nombre Unidad de almacenamiento"
+        String ingrediente PK "Nombre del ingrediente"
+        Float Cantidad "Cantidad en la transacción"
+        
+    }
+
     UnidadAlmacenamiento ||--|{ CapacidadAlmacenaiento : ""
     Empresa ||--|{ Carga : "compra"
     Empresa ||--|{ Planta : "tiene"
@@ -108,6 +128,7 @@ erDiagram
 ```
 
 # Modelo matemático
+
 ## Variables, parámetros y conjuntos
 ### Sets:
 
@@ -131,7 +152,7 @@ $M$ : Unidades de Almacenamiento $m = 1,2,3... \in K$
 
 $AR_{l}^{t}$ : Cantidad de material que va a llegar a la carga $l$ durante el día $t$, sabiendo que: $material \in I$ y $carga \in J$.
 
-$CC_{l}^{t}$ : Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $$.
+$CC_{l}^{t}$ : Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $J$.
 
 #### Parámetros asociados al transporte entre puertos y plantas
 
@@ -251,10 +272,6 @@ $$ XIP_{l}^{t} = XIP_{l}^{t-1} + AR_{l}^{t} - \sum_{m}{XTR_{lm}^{t}} -\sum_{m}{X
 El inventario en las unidades de almacenamiento $m$ al final de un día $t$ es igual al inventario al final del día anterior más las llegadas desde cualquier carga $l$ teniendo en cuenta el tiempo de despacho entre puertos y plantas, menos la cantidad de producto a sacar desde la unidad $m$.
 
 $$ XIU_{m}^{t} = XIU_{m}^{t-1} + \sum_{l}{XTR_{lm}^{t-TT}} - XDM_{km}^{t-TT}: \forall{\mathbb{t \in T}}$$
-
-
-
-
 
 
 
