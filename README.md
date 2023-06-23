@@ -10,13 +10,13 @@ Grupo BIOS es un grupo de empresas dedicadas a la fabricación de productos agr�
 
 Dado el origen de las materias primas, surgen una serie de operaciones logísticas para colocalas en las plantas con sus correspondientes costos y restricciones asociadas.
 
-El modelo matemático descrito a continuación ayudará como herramienta a un usuario experto en la operación de Grupo BIOS a configurar la mejor decision logística partiendo de la información disponible y suministrada, y que de acuerdo con los entendimientos durante las reuniones del equipo de trabajo, conduce hacia obtener el menor costo logistico durante un periodo dado. Dicha decision está asociada específicamente con:
+El modelo matemático descrito a continuación ayudará como herramienta a un usuario experto en la operación de Grupo BIOS a configurar la mejor decision logística partiendo de la información disponible y suministrada, y que de acuerdo con los entendimientos durante las reuniones del equipo de trabajo, conduce hacia obtener el menor costo logistico durante un periodo dado. Dicha decision está asociada específicamente con determinar:
 
 - La cantidad de materias primas a almacenar en puerto de acuerdo con la información de barcos pendientes por llegar y las cargas actualmente almacenadas a los puertos;
 - la cantidad de materias primas a despachar y el momento para hacerlo entre el puerto y las 13 plantas y la unidad de despacho a donde llegarán estas cargas;
 - Las unidades de almacenamiento desde donde deberán consumirse las aterias primas de acuerdo con la demanda proyectada de consumo que el usuario experto suministre.
 
-El modelo matemático no tendrá como objetivo responder a preguntas o cuestiones adicionales relacioandas con otras decisiones o aspectos relacionados, por ejemplo:
+El modelo matemático no tendrá como objetivo responder a preguntas o cuestiones adicionales relacioandas con otras decisiones o aspectos, por ejemplo:
 
 - la cantidad de materias primas a comprar;
 - la cantidad de materias primas a consumir para fabricar el producto terminado;
@@ -43,6 +43,9 @@ graph LR;
 
 
 # Modelo matemático
+
+
+
 ## Variables, parámetros y conjuntos
 ### Sets:
 
