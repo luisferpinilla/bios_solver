@@ -40,11 +40,13 @@ graph LR;
     id2[Unidad de Almacenamiento] --> id3((Consumo))
 ```
 
-
-
 # Modelo matemático
 
+Los modelos matemáticos son conjuntos de expresiones matemáticas relacionadas entre si que describen un sistema y permiten efectuar cálculos con el fin de encontrar una alternativa que optimiza la manera de alcanzar un objetivo mientras que se satisfacen una serie de restricciones que representan aspectos puntuales del sistema.
 
+El sistema que se pretende modelar ha sido descrito por el personal de Grupo BIOS durante sesiones de trabajo con el equipo de WA Solutions, quien ha construido el modelo a partir de la interpretación resultante en cada sesión de trabajo.
+
+Las expresions matemáticas son construidas usando variables, conjuntos y parámetros, que serán descritos a continuación.
 
 ## Variables, parámetros y conjuntos
 ### Sets:
