@@ -36,11 +36,13 @@ Esquemáticamente, el flujo de material sin tener en cuenta el tiempo, puede rep
 
 ```mermaid
 graph LR;
-    Llegadas --Descarga--> BodegaPuerto
-    Llegadas --DespachoDirecto--> UnidadAlmacenamiento
-    BodegaPuerto --Despacho--> UnidadAlmacenamiento
-    UnidadAlmacenamiento --XDM--> Consumo
+    id0((Barco)) --Descarga--> id1[Bodega en Puerto]
+    id0((Barco)) --Despacho Directo--> id2[Unidad de Almacenamiento]
+    id1[Bodega en Puerto] --DespachoAlmacenamiento--> id2[Unidad de Almacenamiento]
+    id2[Unidad de Almacenamiento] --> id3((Consumo))
 ```
+
+Lo anterior muestra cómo los macro-ingredientes se mueven desde el Barco hasta las unidades de almacenamiento desde donde son consumidas por la fábrica y, en este proceso, pueden ser: despachadas directamente desde el barco o almacenadas en puerto y; posteriormente despachadas hacia las plantas. Este proceso deberá respetar los balances de masa en cada punto de la red de distribición.
 
 ## Modelos entidad relación
 
@@ -114,24 +116,44 @@ erDiagram
 ```
 
 # Modelo matemático
+
+El modelo matemático es una representación matemática del sistema descrito por Grupo BIOS y comprendido por WA Solutions que reúne un conjunto de expresiones, cada una de ellas relacionadas con un aspecto particular del negocio.
+
+Como medida granular, cada expresión esta compuesta por variables y parámetros que son agrupados en conjuntos de modo que se resume y facilita la escritura de las expresiones. A continuación se describen cada uno de estos elementos:
+
 ## Variables, parámetros y conjuntos
 ### Sets:
 
+El modelo tiene una granularidad diaria, los días en el horizonte de planeación definido constituye el conjunto de periodos.
+
 $T$ : día $i = 1,2,...,30$
+
+Las empresas involucradas en la operación son Contegral y Finca. La importancia de este conjunto radica en hay un costo relevante de "venta" de material entre una y otra.
 
 $E$ : Empresas $e = Contegral, Finca$
 
+Los ingredientes que serán almacenados en distintos puntos de la cadena de suministro relevante al modelo componen el conjunto de ingredientes.
+
 $I$ : Ingredientes $i = Maiz, Harina, ...$
+
+Los puertos a donde llega la carga y desde donde se puede despachar el producto o almacenarlo según sea conveniente, además de ser el punto de origen en la tabla de fletes para obtener el costo de transporte, constituyen el conjunto de puertos
 
 $J$ : Puertos $j = Buenaventura, Santamarta, Cartagena, ...$
 
+Las 13 plantas distribuidas al interior del país y que consumen los macro ingredientes del conjunto ya descrito, y que son el destino para el cálculo de los costos de transporte, además de totalizar la capacidad de almacenamiento y requerir inventarios de seguridad, constituyen el conjunto de plantas.
+
 $K$ : Plantas $k = Medellín, Bogotá, ... \in E$ 
 
+La agrupación entre un ingrediente y el nombre del barco permiten individualizar una carga, desde donde se pueden obtener atributos como la cantidad de producto pendiente por llegar a puerto o, almacenada en bodega en el mismo, constituyen una carga que puede agruparse en un conjunto.
+
 $L$ : Cargas en Puerto $l=1,2,3,.. \in J \in I \in E$
+
+Las unidades de almacenamiento que se encuentran en las plantas y que tienen una capacidad en toneladas por cada ingrediente conforman el conjunto de unidades de almacenamiento.
 
 $M$ : Unidades de Almacenamiento $m = 1,2,3... \in K$
 
 ### Parameters
+
 
 #### Parámetros asociados a almacenamiento en puerto
 
@@ -169,13 +191,15 @@ $XIP_{j}^{t}$ : Cantidad de la carga $l$ en puerto al final del periodo $t$
 
 #### Variables asociadas al transporte entre puertos y plantas
 
-$XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a transportar hacia la unidad $m$ durante el día $t$
+$XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
+
+$ITR_{lm}^{t}$ : Cantidad de camiones con carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
 
 $XTD_{lm}^{t}$ : Cantidad de carga $l$ en barco a transportar bajo despacho directo hacia la unidad $m$ durante el día $t$
 
-$XTI_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar hacia la unidad $m$ durante el día $t$
+$ITD_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar directamente hacia la unidad $m$ durante el día $t$
 
-$ITR_{lm}^{t}$ : Cantidad de camiones con carga $l$ almacenada en puerto a transportar hacia la unidad $m$ durante el día $t$
+
 
 #### Variables asociadas a la operación en planta
 
@@ -257,12 +281,6 @@ $$ XIP_{l}^{t} = XIP_{l}^{t-1} + AR_{l}^{t} - \sum_{m}{XTR_{lm}^{t}} -\sum_{m}{X
 El inventario en las unidades de almacenamiento $m$ al final de un día $t$ es igual al inventario al final del día anterior más las llegadas desde cualquier carga $l$ teniendo en cuenta el tiempo de despacho entre puertos y plantas, menos la cantidad de producto a sacar desde la unidad $m$.
 
 $$ XIU_{m}^{t} = XIU_{m}^{t-1} + \sum_{l}{XTR_{lm}^{t-TT}} - XDM_{km}^{t-TT}: \forall{\mathbb{t \in T}}$$
-
-
-
-
-
-
 
 ### Asignación de unidades de almacenamiento a ingredientes en el tiempo
 
