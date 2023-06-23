@@ -40,88 +40,7 @@ graph LR;
     id2[Unidad de Almacenamiento] --> id3((Consumo))
 ```
 
-## Modelos entidad relación
 
-Dado que el modelo matemático matemático aproxima estima una decisión optimizada con base en la información suministrada, dicha decisión debe mapearse usando un modelo Entidad-Relación estándar, lo que habilita las técnicas de inteligencia de negocios para la construcción de tableros de control interactivos usando software para este propósito como Excel o Power BI.
-
-A continuación se muestra un modelo entidad relación que permite mapear las relaciones matemáticas entre las variables y parámetros del problema con la visualización:
-
-```mermaid
-erDiagram
-
-    Calendario {
-        Int periodo PK "Periodo"
-        DATE dia "día calendario"
-    }
-
-    Ingrediente {
-        String nombre PK "Nombre ingrediente"
-    }
-
-    Puerto {
-        String nombre PK "Nombre puerto"
-    }
-
-    Empresa {
-        String nombre PK "Nombre emrpesa"
-    }
-
-    Planta {
-        String empresa PK "Empresa"
-        String planta PK "Nombre de la planta"
-    }
-
-    UnidadAlmacenamiento {
-        String id PK "acronimo: {pis_001, pis_002}"
-        String planta "planta"
-    }
-
-    CapacidadAlmacenaiento {
-        String id PK "Unidad de almacenamiento"
-        String ingrediente "Ingrediente"
-        Float capacidad "capacidad en toneladas"
-    }
-
-    Carga {
-        String puerto "Nombre del puerto"
-        String nombreBarco PK "Nombre del barco que entregó la carga"
-        String ingrediente "Nombre del ingrediente almacenado"
-        String empresa "empresa propietaria de la carga"
-        Float valor "Valor de la carga por tonelada"
-    }
-
-    TarifaTransporte {
-        String puerto PK "Puerto origen"
-        String planta PK "Planta destino"
-        Float costoFijo "Costo de enviar un camión"
-        Float costoVar "Costo por tonelada"
-    }
-
-    CostosPuerto {
-        String nombreBarco PK "Nombre del barco que entregó la carga"
-        Date diaAplicacion PK "día de aplicación de la tarifa"
-        Float costoAplicacion "Valor por tonelada para aplicar"
-    }
-
-    Kardex{
-        Int idtransaccion PK
-        String unidadAlmacenamiento PK "Nombre Unidad de almacenamiento"
-        String ingrediente PK "Nombre del ingrediente"
-        Float Cantidad "Cantidad en la transacción"
-        
-    }
-
-    UnidadAlmacenamiento ||--|{ CapacidadAlmacenaiento : ""
-    Empresa ||--|{ Carga : "compra"
-    Empresa ||--|{ Planta : "tiene"
-    Planta ||--|{ TarifaTransporte : "recibe"
-    Puerto ||--|{ TarifaTransporte : "despacha"
-    Planta ||--|{ UnidadAlmacenamiento : "contiene"
-    Ingrediente ||--|{ CapacidadAlmacenaiento : ""
-    Puerto ||--|{ Carga : "almacena"
-    Ingrediente ||--|{ Carga : "tiene"
-    Carga ||--|{ CostosPuerto : "causa"
-```
 
 # Modelo matemático
 ## Variables, parámetros y conjuntos
@@ -285,17 +204,92 @@ El inventario en las unidades de almacenamiento $m$ al final de un día $t$ es i
 
 $$ XIU_{m}^{t} = XIU_{m}^{t-1} + \sum_{l}{XTR_{lm}^{t-TT}} - XDM_{km}^{t-TT}: \forall{\mathbb{t \in T}}$$
 
-
-
-
-
-
-
 ### Asignación de unidades de almacenamiento a ingredientes en el tiempo
 
 Pendiente por formular
 
+# Esquematización de la ETL
 
+## Modelos entidad relación
 
+Dado que el modelo matemático matemático aproxima estima una decisión optimizada con base en la información suministrada, dicha decisión debe mapearse usando un modelo Entidad-Relación estándar, lo que habilita las técnicas de inteligencia de negocios para la construcción de tableros de control interactivos usando software para este propósito como Excel o Power BI.
 
+A continuación se muestra un modelo entidad relación que permite mapear las relaciones matemáticas entre las variables y parámetros del problema con la visualización:
+
+```mermaid
+erDiagram
+
+    Calendario {
+        Int periodo PK "Periodo"
+        DATE dia "día calendario"
+    }
+
+    Ingrediente {
+        String nombre PK "Nombre ingrediente"
+    }
+
+    Puerto {
+        String nombre PK "Nombre puerto"
+    }
+
+    Empresa {
+        String nombre PK "Nombre emrpesa"
+    }
+
+    Planta {
+        String empresa PK "Empresa"
+        String planta PK "Nombre de la planta"
+    }
+
+    UnidadAlmacenamiento {
+        String id PK "acronimo: {pis_001, pis_002}"
+        String planta "planta"
+    }
+
+    CapacidadAlmacenaiento {
+        String id PK "Unidad de almacenamiento"
+        String ingrediente "Ingrediente"
+        Float capacidad "capacidad en toneladas"
+    }
+
+    Carga {
+        String puerto "Nombre del puerto"
+        String nombreBarco PK "Nombre del barco que entregó la carga"
+        String ingrediente "Nombre del ingrediente almacenado"
+        String empresa "empresa propietaria de la carga"
+        Float valor "Valor de la carga por tonelada"
+    }
+
+    TarifaTransporte {
+        String puerto PK "Puerto origen"
+        String planta PK "Planta destino"
+        Float costoFijo "Costo de enviar un camión"
+        Float costoVar "Costo por tonelada"
+    }
+
+    CostosPuerto {
+        String nombreBarco PK "Nombre del barco que entregó la carga"
+        Date diaAplicacion PK "día de aplicación de la tarifa"
+        Float costoAplicacion "Valor por tonelada para aplicar"
+    }
+
+    Kardex{
+        Int idtransaccion PK
+        String unidadAlmacenamiento PK "Nombre Unidad de almacenamiento"
+        String ingrediente PK "Nombre del ingrediente"
+        Float Cantidad "Cantidad en la transacción"
+        
+    }
+
+    UnidadAlmacenamiento ||--|{ CapacidadAlmacenaiento : ""
+    Empresa ||--|{ Carga : "compra"
+    Empresa ||--|{ Planta : "tiene"
+    Planta ||--|{ TarifaTransporte : "recibe"
+    Puerto ||--|{ TarifaTransporte : "despacha"
+    Planta ||--|{ UnidadAlmacenamiento : "contiene"
+    Ingrediente ||--|{ CapacidadAlmacenaiento : ""
+    Puerto ||--|{ Carga : "almacena"
+    Ingrediente ||--|{ Carga : "tiene"
+    Carga ||--|{ CostosPuerto : "causa"
+```
 
