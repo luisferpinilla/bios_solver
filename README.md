@@ -16,7 +16,13 @@ El modelo matemático descrito a continuación ayudará un usuario experto en la
 - la cantidad de materias primas a despachar entre el puerto y las 13 plantas y;
 - la unidad de almacenamiento en donde se almacenará la materia prima que llega a las plantas y las que se usarán para cumplir con la demanda proyectada de consumo.
 
-El modelo matemático no tendrá como objetivo responder a preguntas o cuestiones adicionales relacioandas con otras decisiones o aspectos relacionados, por ejemplo:
+El criterio que el modelo matemático empleará para guiar la construcción de la decisión que se le recomendará al usuario resulta de calcular el costo logistico total derivado de los costos de almacenamiento causados en los puertos durante las fechas de corte y, los costos asociados al envio de ingredientes desde los puertos hacia las plantas bajo la tabla de fletes suministrada.
+
+Dentro de las restricciones que el modelo matemático observará están: no exceder las capacidades de almacenamiento de las fábricas; el cumplimiento de la demanda proyectada y; mantener en la medida de lo posible los inventarios al final del día sobre los inventarios de seguridad establecidos.
+
+Como insumo para el modelo matemático, Grupo BIOS ha suministrado información relacionada con: la llegada de carga a los puertos; los inventarios actuales en cada puerto; las cantidades en tránsito entre el puerto y las plantas; las cantidades almacenadas en las plantas de cada ingrediente y cómo están distribuídas en las unidades de almacenamiento y; los consumos proyectados de cada ingrediente. Adicionalmente, se ha suministrado la tabla de fletes con los costos del transporte por tonelada entre las ubicaciones de los puertos y las de las plantas, los costos de venta de ingredientes entre las empresas.
+
+El modelo matemático no tendrá como objetivo responder a preguntas o cuestiones adicionales relacioandas con otras decisiones, por ejemplo:
 
 - la cantidad de materias primas a comprar;
 - la cantidad de materias primas a consumir para fabricar el producto terminado;
