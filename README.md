@@ -49,6 +49,7 @@ El sistema que se pretende modelar ha sido descrito por el personal de Grupo BIO
 Las expresions matemáticas son construidas usando variables, conjuntos y parámetros, que serán descritos a continuación.
 
 ## Variables, parámetros y conjuntos
+
 ### Sets:
 
 El modelo tiene una granularidad diaria, los días en el horizonte de planeación definido constituye el conjunto de periodos.
@@ -81,6 +82,7 @@ $M$ : Unidades de Almacenamiento $m = 1,2,3... \in K$
 
 ### Parameters
 
+Los parámetros son valores encontrados dentro de la información suministrada por el usuario cada vez que requiere evaluar una alternativa de despacho.
 
 #### Parámetros asociados a almacenamiento en puerto
 
