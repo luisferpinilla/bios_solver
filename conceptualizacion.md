@@ -38,7 +38,7 @@ graph LR;
     id0((Barco)) --Despacho Directo--> id2[Unidad de Almacenamiento]
     id1[Bodega en Puerto] --Despacho hacia almacenamiento--> id2[Unidad de Almacenamiento]
     id2[Unidad de Almacenamiento] --> id3((Consumo))
-    id3((Transitos)) ----> id2[Unidad de Almacenamiento]
+    id4((Transitos)) ----> id2[Unidad de Almacenamiento]
 ```
 
 # Modelo matemático
