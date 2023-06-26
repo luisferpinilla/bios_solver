@@ -38,6 +38,7 @@ graph LR;
     id0((Barco)) --Despacho Directo--> id2[Unidad de Almacenamiento]
     id1[Bodega en Puerto] --Despacho hacia almacenamiento--> id2[Unidad de Almacenamiento]
     id2[Unidad de Almacenamiento] --> id3((Consumo))
+    id3((Transitos)) ----> id2[Unidad de Almacenamiento]
 ```
 
 # Modelo matemático
@@ -72,7 +73,14 @@ Los parámetros son valores encontrados dentro de la información suministrada p
 
 #### Parámetros asociados a almacenamiento en puerto
 
-Cantidad de material que va a llegar a la carga durante el día, sabiendo que los materiales corresponden a un ingrediente en una carga específica identificada con el nombre del barco en el que ha llegado al puerto
+Cantidad de material que viene en barco y que va a llegar al puerto durante una fecha estimada (ver el siguiente diagrama). 
+
+```mermaid
+graph LR;
+    id0((Barco)) --Descarga--> id1[Bodega en Puerto]
+    id0((Barco)) --Despacho Directo--> id2[Unidad de Almacenamiento]
+    
+```
 
 Costo de almacenamiento de la carga por tonelada a cobrar al final del día en el puerto.
 
@@ -90,13 +98,9 @@ tiempo en días para transportar la carga desde el puerto hacia la planta.
 
 Capacidad de almacenamiento de la unidad en toneladas del ingrediente, teniendo en cuenta que cada unidad pertenece a una planta.
 
-Demanda del ingrediente en la planta durante el día.
-
-Costo de no satisfacer la demanda del ingrediente en la planta durante el día.
+Demanda del ingrediente en la planta durante cada día en el horizonte de planeación.
 
 Inventario de seguridad a tener del ingrediente en la planta al final del día.
-
-Costo de no satisfacer el inventario de seguridad para el ingrediente en la planta durante el día.
 
 ### Variables
 
@@ -104,27 +108,27 @@ Las variables son los elementos matemáticos que se asocian con la decisión a t
 
 #### Variables asociadas al almacenamiento en puerto
 
-Cantidad de la carga en puerto al final del periodo.
+Cantidad de la carga en puerto al final de cada día durante el horizonte de planeación.
 
 #### Variables asociadas al transporte entre puertos y plantas
 
-Cantidad de carga en puerto a despachar hacia la unidad durante el día.
+Cantidad de carga en puerto a despachar hacia la unidad de almacenamiento durante el día.
 
-Cantidad de camiones con carga en puerto a despachar hacia la unidad durante el día.
+Cantidad de camiones con carga en puerto a despachar hacia la unidad de almacenamiento durante el día.
 
-Cantidad de carga en barco a transportar bajo despacho directo hacia la unidad $m$ durante el día.
+Cantidad de carga en barco a transportar bajo despacho directo hacia la unidad de almacenamiento durante un día particular dentro del horizonte de planeación.
 
-Cantidad de camiones con carga a despachar directamente hacia la unidad durante el día.
+Cantidad de camiones con carga a despachar directamente hacia la unidad de almacenamiento durante un día particular dentro del horizonte de planeación.
 
 #### Variables asociadas a la operación en planta
 
-Cantidad de ingrediente almacenado en la unidad de almacenamiento al final del periodo
+Cantidad de ingrediente almacenado en la unidad de almacenamiento al final de cada día.
 
 Cantidad de producto a sacar de la unidad de almacenamiento para satisfacer la demanda del día.
 
-Variables para determinar cuándo se permite que el inventario del ingrediente en la planta al final del día esté sobre el nivel de seguridad definido
+Variable para determinar cuándo se permite que el inventario del ingrediente en la planta al final del día esté por debajo del nivel de seguridad definido
 
-Variables para determinar cuándo estará permitido que la demanda de un ingrediente no se satisfaga en la planta al final del día.
+Variable para determinar cuándo estará permitido que la demanda de un ingrediente no se satisfaga en la planta al final del día.
 
 ## Función Objetivo:
 
@@ -136,7 +140,7 @@ Para efectos del problema, se ha definido que esta función está relacionada co
 
 #### Almacenamiento en puerto por corte de Facturación:
 
-Dado que las cargas almacenadas en el puerto causan un costo de almacenamiento que suma al costo total, la suma de los productos escalares entre el costo de almacenamiento colocado a cada carga en el tiempo y la cantidad almacenada al final del día, nos dará el componente del costo del almacenamiento en el puerto.
+Dado que las cargas almacenadas en el puerto causan un costo de almacenamiento que suma al costo total, la suma de las multiplicaciones entre el costo de almacenamiento y la cantidad almacenada con cada carga en el tiempo.
 
 ### Costos por transporte
 
@@ -170,7 +174,7 @@ Dado que el modelo debe decidir la cantidad de producto que debe extraerse de ca
 
 #### Mantenimiento del nivel de seguridad de ingredientes en plantas
 
-Los inventarios finales de ingredientes deberán ser mayores al nivel de seguridad definido por el usuario. En caso que exista escasez, se permitirá ignorar esta condición y se alertará al usuario.
+Los inventarios finales de ingredientes deberán ser mayores o iguales al nivel de seguridad definido por el usuario. En caso que exista escasez, se permitirá ignorar esta condición y se alertará al usuario.
 
 #### Capacidad de carga de los camiones
 
@@ -178,8 +182,8 @@ Asumiremos que los camiones no pueden transportar más de 34 toneladas en cada v
 
 #### Capacidad de almacenamiento en unidades de almacenamiento
 
-La cantidad de ingredientes almacenados en cada unidad de almacenamiento no debe superar el máximo posible.
+La cantidad de ingredientes almacenados en cada unidad de almacenamiento no debe superar el máximo especificado.
 
 ### Balances de masa de inventarios
 
-Los inventarios deben respetar el balance de masas, esto implica que las cantidades de inventario al final de cualquier día deben ser iguales a las cantidades iniciales, más las cantidades que llegan menos las que se consumen o despachan.
+Los inventarios deben respetar el balance de masas, esto implica que las cantidades de inventario al final de cualquier día deben ser iguales a las cantidades iniciales de ese día, más las cantidades que llegan, menos las que se consumen o despachan. Lo anterior aplica para todo nodo que implica material almacenado.
