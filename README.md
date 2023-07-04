@@ -113,9 +113,26 @@ $SS_{ik}^{t}$ : Inventario de seguridad a tener del ingrediente $i$ en la planta
 
 $CS_{ik}^{t}$ : Costo de no satisfacer el inventario de seguridad para el ingrediente $i$ en la planta $k$ durante el día $t$.
 
+$TR_{im}^{t}$ : Cantidad en tránsito programada para llegar a la unidad de almacenamiento $m$ durante el día $t$,
+
 ### Variables
 
-Las variables son los elementos matemáticos que se asocian con la decisión a tomar y tienen relación directa con los parámetros y los conjuntos descritos anteriormente. A continuación se describe la lista de variables:
+Las variables son los elementos matemáticos que se asocian con la decisión a tomar y tienen relación directa con los parámetros y los conjuntos descritos anteriormente. A continuación, se detalla el diagrama de red para los inventarios 
+
+```mermaid
+graph LR;
+
+    id0((Barco)) --AR--> id1{bif}
+    id1{bif} --XPL--> id2[Bodega en Puerto]
+    id3((Transitos)) --TR--> id4[Unidad de Almacenamiento]
+    id1{bif} --XTD--> id4[Unidad de Almacenamiento]
+    id2[Bodega en Puerto] --XTR--> id4[Unidad de Almacenamiento]
+    id2[Bodega en Puerto] --XIP--> id2[Bodega en Puerto]
+    id4[Unidad de Almacenamiento] --XIU--> id4[Unidad de Almacenamiento]
+    id4[Unidad de Almacenamiento] --XDM-->id5((Consumo))
+```
+
+A continuación se describe la lista de variables:
 
 #### Variables asociadas al almacenamiento en puerto
 
@@ -123,12 +140,7 @@ $XPL_{l}^{t}$ : Cantidad de la carga $l$ que llega al puerto y que será almacen
 
 $XIP_{j}^{t}$ : Cantidad de la carga $l$ en puerto al final del periodo $t$
 
-```mermaid
-graph LR;
-    id0((Barco)) --AR--> id1[Bodega en Puerto]
-    id0((Barco)) --Despacho Directo--> id5[Unidad de Almacenamiento]
-    id1[Bodega en Puerto] --Despacho hacia almacenamiento--> id5[Unidad]
-```
+
 
 #### Variables asociadas al transporte entre puertos y plantas
 
