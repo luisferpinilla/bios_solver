@@ -87,6 +87,8 @@ Los parámetros son valores encontrados dentro de la información suministrada p
 
 #### Parámetros asociados a almacenamiento en puerto
 
+$IP_{l}$ : inventario inicial en puerto para la carga $l$.
+
 $AR_{l}^{t}$ : Cantidad de material que va a llegar a la carga $l$ durante el día $t$, sabiendo que: $material \in I$ y $carga \in J$.
 
 $CC_{l}^{t}$ : Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $J$.
@@ -234,15 +236,51 @@ $$ XIU_{m}^{t} \leq CA_{mi} $$
 
 #### Balance de masa en cargas en puerto
 
+Dado que las cargas pueden ir directamente desde el Barco a una unidad de almacenamiento, necesitamos colocar un bunto de bifurcación 'bif' y armar un balance de masa en este punto.
+
+```mermaid
+graph LR;
+
+    id0((Barco)) --AR--> id1{bif}
+    id1{bif} --XPL--> id2[Bodega en Puerto]
+    id1{bif} --XTD--> id4[Unidad de Almacenamiento]
+```
+
+$$ AR_{l}^{t} = XPL_{l}^{t} + \sum_{m \in M}{XTD_{lm}^{t}} : \forall l \in L$$
+
+
 La cantidad de inventario para la carga $l$ al final del periodo $t$ será el inventario del periodo anterior, más las llegadas en el periodo actual menos todos los envios hacia las unidades de almacenamiento:
 
-$$ XIP_{l}^{t} = XIP_{l}^{t-1} + AR_{l}^{t} - \sum_{m}{XTR_{lm}^{t}} -\sum_{m}{XTD_{lm}^{t}}: \forall{ \mathbb{t \in T}}$$
+```mermaid
+graph LR;
+    id1{bif} --XPL--> id2[Bodega en Puerto]
+    id2[Bodega en Puerto] --XTR--> id4[Unidad de Almacenamiento]
+    id2[Bodega en Puerto] --XIP--> id2[Bodega en Puerto]
+```
+
+$$ XIP_{l}^{t} = XIP_{l}^{t-1} + XPL_{l}^{t} - \sum_{m}{XTR_{lm}^{t}} : \forall{ \mathbb{t \in T}}$$
+
+Adicionalmente, debemos tener en cuenta el inventario inicial en el almacenamiento de puerto:
+
+$$ XIP_{l}^{t=0} = IP_{l} $$
 
 #### Balance de masa en unidades de almacenamiento por producto en planta
 
 El inventario en las unidades de almacenamiento $m$ al final de un día $t$ es igual al inventario al final del día anterior más las llegadas desde cualquier carga $l$ teniendo en cuenta el tiempo de despacho entre puertos y plantas, menos la cantidad de producto a sacar desde la unidad $m$.
 
-$$ XIU_{m}^{t} = XIU_{m}^{t-1} + \sum_{l}{XTR_{lm}^{t-TT}} - XDM_{km}^{t-TT}: \forall{\mathbb{t \in T}}$$
+```mermaid
+graph LR;
+    id3((Transitos)) --TR--> id4[Unidad de Almacenamiento]
+    id1{bif} --XTD--> id4[Unidad de Almacenamiento]
+    id2[Bodega en Puerto] --XTR--> id4[Unidad de Almacenamiento]
+
+    id4[Unidad de Almacenamiento] --XIU--> id4[Unidad de Almacenamiento]
+    id4[Unidad de Almacenamiento] --XDM-->id5((Consumo))
+```
+
+
+(REVISAR)
+$$ XIU_{m}^{t} = XIU_{m}^{t-1} + TR + XDT + \sum_{l}{XTR_{lm}^{t-TT}} - XDM_{km}^{t}: \forall{\mathbb{t \in T}}$$
 
 # Esquematización de la ETL
 
