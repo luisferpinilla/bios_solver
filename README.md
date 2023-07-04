@@ -119,7 +119,16 @@ Las variables son los elementos matemáticos que se asocian con la decisión a t
 
 #### Variables asociadas al almacenamiento en puerto
 
+$XPL_{l}^{t}$ : Cantidad de la carga $l$ que llega al puerto y que será almacenada en el mismo. 
+
 $XIP_{j}^{t}$ : Cantidad de la carga $l$ en puerto al final del periodo $t$
+
+```mermaid
+graph LR;
+    id0((Barco)) --AR--> id1[Bodega en Puerto]
+    id0((Barco)) --Despacho Directo--> id5[Unidad de Almacenamiento]
+    id1[Bodega en Puerto] --Despacho hacia almacenamiento--> id5[Unidad]
+```
 
 #### Variables asociadas al transporte entre puertos y plantas
 
