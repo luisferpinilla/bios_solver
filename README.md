@@ -226,7 +226,8 @@ $$ \sum_{m \in i}^{t}{XDM_{m}^{t}} \geq SS_{ki}^{t} \cdot (1-BSS_{ik}^{t}) $$
 
 Asumiremos que los camiones no pueden transportar más de 34 toneladas en cada viaje.
 
-$$ XTR_{lm}^{t} + XTD_{lm}^{t} \leq 34 \cdot XTI_{lm}^{t} $$
+$$ XTD_{lm}^{t} \leq 34 \cdot ITD_{lm}^{t} $$
+$$ XTR_{lm}^{t} \leq 34 \cdot ITR_{lm}^{t} $$
 
 #### Capacidad de almacenamiento en unidades de almacenamiento
 
