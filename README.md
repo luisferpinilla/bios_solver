@@ -367,3 +367,20 @@ erDiagram
     Carga ||--|{ CostosPuerto : "causa"
 ```
 
+# Cuestiones a revisar, reunión 5 de julio/2023:
+
+## solicitud
+Posibilidad de incluir las calidades del ingrediente
+
+## Implicaciones
+se requerirá la siguiente información: adicional
+- Costos de almacenamiento de productos por calidad
+- Discutir supuestos sobre efectos de mezclar diferentes cantidades de un mismo ingredientes en una unidad de almacenamiento. La calidad disminuye?
+- ¿se puede definir que una unidad de almacenamiento solo debe contener una calidad específica y todo el producto que llegue desde los puertos debe ser almacenado en una unidad de almacenamiento con igual calidad? ¿en caso de no haber unidades de almacenamiento, se podrá usar una que esté vacia?.
+- en el sentido del punto anterior, ¿puede el modelo enfocarse en minimizar la cantidad de unidades de almacenamiento en uso? de ser así, podría sugierir la forma como consumir el ingrediente de modo que se trate de tener la menor cantidad de Unidades vacias al final de un periodo
+
+
+se estima que el proyecto incrementará en 2 meses debido principalmente a que:
+- surgirán nuevas preguntas sobre el manejo de las calidades que tendrán que discutirse durante más sesiones de trabajo,
+- se deberá solicitar nuevamente archivos con información incluyendo calidad y cantidades de ingredientes por unidad de almacenamiento, al igual que las proyecciones de consumo.
+
