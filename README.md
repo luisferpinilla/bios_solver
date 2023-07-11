@@ -111,6 +111,8 @@ $DM_{ki}^{t}$: Demanda del ingrediente $i$ en la planta $k$ durante el día $t$.
 
 $CD_{ik}^{t}$ : Costo de no satisfacer la demanda del ingrediente $i$  en la planta $k$ durante el día $t$.
 
+$CI_{im}^{t}$ : Costo de asignar el ingrediente $i$ a la unidad de almacenamiento $m$ durante el periodo $t$. Si la unidad de almacenamiento no puede contener el ingrediente, este costo será $infinito$.
+
 $SS_{ik}^{t}$ : Inventario de seguridad a tener del ingrediente $i$ en la planta $k$ al final del día $t$.
 
 $CS_{ik}^{t}$ : Costo de no satisfacer el inventario de seguridad para el ingrediente $i$ en la planta $k$ durante el día $t$.
@@ -142,8 +144,6 @@ $XPL_{l}^{t}$ : Cantidad de la carga $l$ que llega al puerto y que será almacen
 
 $XIP_{j}^{t}$ : Cantidad de la carga $l$ en puerto al final del periodo $t$
 
-
-
 #### Variables asociadas al transporte entre puertos y plantas
 
 $XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
@@ -155,6 +155,8 @@ $XTD_{lm}^{t}$ : Cantidad de carga $l$ en barco a transportar bajo despacho dire
 $ITD_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar directamente hacia la unidad $m$ durante el día $t$
 
 #### Variables asociadas a la operación en planta
+
+$IIU_{im}^{t}$ : Binaria, 1 sí el ingrediente $i$ esta almacenado en la unidad de almacenamiento $m$ al final del periodo $t$; 0 en otro caso
 
 $XIU_{m}^{t}$ : Cantidad de ingrediente almacenado en la unidad de almacenameinto $m$ al final del periodo $t$
 
@@ -209,6 +211,12 @@ $$ \sum_{i}{\sum_{k}{\sum_{t}{CS_{ik}^{t} \cdot BSS_{ik}^{t}}}} $$
 Del mismo modo, si el nivel de escacéz de un ingrediente es tal, el solucionador permitirá que la demanda de la planta no sea satisfecha y se alertará al usuario de esta situación.
 
 $$ \sum_{i}{\sum_{k}{\sum_{t}{CD_{ik}^{t} \cdot BCD_{ik}^{t}}}} $$
+
+#### Costo por permitir guardar un ingrediente en una planta
+
+Dado que se asume que las unidades de almaceamiento deberían usarse con la mayor eficiencia posible, se buscará tener la menor cantidad de estas ocupada con algún ingrediente
+
+$$ \sum_{i}{\sum_{m}{\sum_{t}{CI_{im}^{t} \cdot  IIU{im}_{t}}}} $$
 
 ## Restricciones
 
@@ -282,6 +290,12 @@ graph LR;
 
 (REVISAR)
 $$ XIU_{m}^{t} = XIU_{m}^{t-1} + TR + XDT + \sum_{l}{XTR_{lm}^{t-TT}} - XDM_{km}^{t}: \forall{\mathbb{t \in T}}$$
+
+### Asignación de uniades de almacenamiento a ingredientes
+
+Solamente se permitirá que un ingrediente $i$ esté asignado a una unidad de almacenamiento $m$ al final del periodo $t$
+
+$$ \sum_{t}{IIU_{im}^{t}} \leq 1 $$
 
 # Esquematización de la ETL
 
