@@ -49,7 +49,7 @@ El sistema que se pretende modelar ha sido descrito por el personal de Grupo BIO
 
 Las expresions matemáticas son construidas usando variables, conjuntos y parámetros, que serán descritos a continuación.
 
-## Variables, parámetros y conjuntos
+## Variables, diccioanrios, parámetros y conjuntos
 
 ### Sets:
 
@@ -80,6 +80,16 @@ $K$ : Plantas $k = Medellín, Bogotá, ... \in E$
 Las unidades de almacenamiento que se encuentran en las plantas y que tienen una capacidad en toneladas por cada ingrediente conforman el conjunto de unidades de almacenamiento. Desde estas unidades se descontará el inventario con base en la demanda diaria entregada por Grupo BIOS. Adicionalmente estas pueden contener diferentes tipos de producto según se ha descrito y la suma de sus contenidos conforman el inventario del ingrediente en la planta y, que deberá interactuar con las capacidades máximas de almacenamiento e inventarios de seguridad.
 
 $M$ : Unidades de Almacenamiento $m = 1,2,3... \in K$
+
+### Diccionarios
+
+Los diccionarios permiten asociar conjuntos permitiendo establecer relaciones. Ejemplos de este aspecto son las cargas y plantas que pertenecen a una determinada empresa.
+
+empresas_cargas: contiene para cada empresa la lista de cargas en puerto, su valor radica en identificar cuándo una carga de un ingrediente perteneciente a una empresa debe ser despachada a una planta de la empresa contraria, en este caso se podrá identificar si se debe incluir un sobrecosto en la variable de transporte para incluir el costo de la venta.
+
+empresas_plantas: contiene para cada empresa la lista de plantas.
+
+ingredientes_cargas: contiene la lista de cargas en puerto con un ingrediente particular
 
 ### Parameters
 
