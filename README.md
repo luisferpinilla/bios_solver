@@ -168,7 +168,7 @@ $ITD_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar directamente hac
 
 $IIU_{im}^{t}$ : Binaria, 1 sí el ingrediente $i$ esta almacenado en la unidad de almacenamiento $m$ al final del periodo $t$; 0 en otro caso
 
-$XIU_{m}^{t}$ : Cantidad de ingrediente almacenado en la unidad de almacenameinto $m$ al final del periodo $t$
+$XIU_{mi}^{t}$ : Cantidad de ingrediente $i$ almacenado en la unidad de almacenameinto $m$ al final del periodo $t$
 
 $XDM_{im}^{t}$: Cantidad de producto $i$ a sacar de la unidad de almacenamiento $m$ para satisfacer la demanda e el día $t$.
 
@@ -265,7 +265,7 @@ graph LR;
     id1{bif} --XTD--> id4[Unidad de Almacenamiento]
 ```
 
-$$ AR_{l}^{t} = XPL_{l}^{t} + \sum_{m \in M}{XTD_{lm}^{t}} : \forall l \in L$$
+$$ AR_{l}^{t} = XPL_{l}^{t} + \sum_{m \in M}{XTD_{lm}^{t}} \hspace{1cm} \forall l \in L$$
 
 
 La cantidad de inventario para la carga $l$ al final del periodo $t$ será el inventario del periodo anterior, más las llegadas en el periodo actual menos todos los envios hacia las unidades de almacenamiento:
@@ -277,7 +277,7 @@ graph LR;
     id2[Bodega en Puerto] --XIP--> id2[Bodega en Puerto]
 ```
 
-$$ XIP_{l}^{t} = XIP_{l}^{t-1} + XPL_{l}^{t} - \sum_{m}{XTR_{lm}^{t}} : \forall{ \mathbb{t \in T}}$$
+$$ XIP_{l}^{t} = XIP_{l}^{t-1} + XPL_{l}^{t} - \sum_{m}{XTR_{lm}^{t}} \hspace{1cm} \forall{ \mathbb{t \in T}}$$
 
 Adicionalmente, debemos tener en cuenta el inventario inicial en el almacenamiento de puerto:
 
@@ -299,13 +299,30 @@ graph LR;
 
 
 (REVISAR)
-$$ XIU_{m}^{t} = XIU_{m}^{t-1} + TR + XDT + \sum_{l}{XTR_{lm}^{t-TT}} - XDM_{km}^{t}: \forall{\mathbb{t \in T}}$$
+$$ XIU_{m}^{t} = XIU_{m}^{t-1} + TR + XDT + \sum_{l}{XTR_{lm}^{t-TT}} - XDM_{km}^{t} \hspace{1cm} \forall{\mathbb{t \in T}}$$
 
 ### Asignación de uniades de almacenamiento a ingredientes
 
 Solamente se permitirá que un ingrediente $i$ esté asignado a una unidad de almacenamiento $m$ al final del periodo $t$
 
 $$ \sum_{t}{IIU_{im}^{t}} \leq 1 $$
+
+En conjunto con la anterior, la cantidad de inventario de un ingrediente una unidad  unidad de almacenamiento al final de cualquier día no puede exceder la capacidad de almacenamiento según el ingrediente asignado
+
+$$ XIU_{im}^{t} \leq CA_{m}^{i} \cdot IIU_{im}^{t} $$
+
+Adicionalmente, la suma de todas las cargas de un ingrediente que se despachen desde el puerto deben estar habilitadas para ser guardadas en las unidades de almacenamiento
+
+$$ XTR_{lm}^{t=t-2} + XTD_{lm}^{t=t-2} \leq BigM \cdot IIU_{im}^{t} \hspace{1cm} \forall t=2,3,.. $$
+
+$XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
+
+$ITR_{lm}^{t}$ : Cantidad de camiones con carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
+
+$XTD_{lm}^{t}$ : Cantidad de carga $l$ en barco a transportar bajo despacho directo hacia la unidad $m$ durante el día $t$
+
+$ITD_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar directamente hacia la unidad $m$ durante el día $t$
+
 
 # Esquematización de la ETL
 
