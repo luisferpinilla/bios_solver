@@ -299,6 +299,7 @@ graph LR;
 
 
 (REVISAR)
+
 $$ XIU_{m}^{t} = XIU_{m}^{t-1} + TR + XDT + \sum_{l}{XTR_{lm}^{t-TT}} - XDM_{km}^{t} \hspace{1cm} \forall{\mathbb{t \in T}}$$
 
 ### Asignación de uniades de almacenamiento a ingredientes
@@ -314,15 +315,6 @@ $$ XIU_{im}^{t} \leq CA_{m}^{i} \cdot IIU_{im}^{t} $$
 Adicionalmente, la suma de todas las cargas de un ingrediente que se despachen desde el puerto deben estar habilitadas para ser guardadas en las unidades de almacenamiento
 
 $$ XTR_{lm}^{t=t-2} + XTD_{lm}^{t=t-2} \leq BigM \cdot IIU_{im}^{t} \hspace{1cm} \forall t=2,3,.. $$
-
-$XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
-
-$ITR_{lm}^{t}$ : Cantidad de camiones con carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
-
-$XTD_{lm}^{t}$ : Cantidad de carga $l$ en barco a transportar bajo despacho directo hacia la unidad $m$ durante el día $t$
-
-$ITD_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar directamente hacia la unidad $m$ durante el día $t$
-
 
 # Esquematización de la ETL
 
