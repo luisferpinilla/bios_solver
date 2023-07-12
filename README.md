@@ -55,31 +55,31 @@ Las expresions matemáticas son construidas usando variables, conjuntos y parám
 
 El modelo tiene una granularidad diaria, los días en el horizonte de planeación definido constituye el conjunto de periodos.
 
-$T$ : día $i = 1,2,...,30$
+$T$ : día, $i \in \{1,2,3,...,30\}$
 
 Las empresas involucradas en la operación son Contegral y Finca. La importancia de este conjunto radica en hay un costo relevante de "venta" de material entre una y otra cuando sea necesario.
 
-$E$ : Empresas $e = Contegral, Finca$
+$E$ : Empresas, $e \in \{Contegral, Finca\}$
 
 Los ingredientes que serán almacenados en distintos puntos de la cadena de suministro relevante al modelo componen el conjunto de ingredientes.
 
-$I$ : Ingredientes $i = Maiz, Harina, ...$
+$I$ : Ingredientes, $i \in \{Maiz, Harina, ...\}$
 
 Los puertos a donde llega la carga y desde donde se puede despachar el producto o almacenarlo según sea conveniente, además son el punto de origen en la tabla de fletes para obtener el costo de transporte, constituyen el conjunto de puertos
 
-$J$ : Puertos $j = Buenaventura, Santamarta, Cartagena, ...$
+$J$ : Puertos, $j \in \{Buenaventura, Santamarta, Cartagena, ...\}$
 
 La agrupación entre un ingrediente y el nombre del barco permiten individualizar una carga, desde donde se pueden obtener atributos como la cantidad de producto pendiente por llegar a puerto o, almacenada en bodega en el mismo, constituyen una carga que puede agruparse en un conjunto del mismo nombre.
 
-$L$ : Cargas en Puerto $l=1,2,3,.. \in J \in I \in E$
+$L$ : Cargas en Puerto, $l \in \{1,2,3,..\}, j \in J, i \in I, e \in E$
 
 Las 13 plantas distribuidas al interior del país y que consumen los macro ingredientes del conjunto ya descrito, y que son el destino para el cálculo de los costos de transporte, además de totalizar la capacidad de almacenamiento y requerir inventarios de seguridad, constituyen el conjunto de plantas.
 
-$K$ : Plantas $k = Medellín, Bogotá, ... \in E$ 
+$K$ : Plantas $k \in E$ 
 
 Las unidades de almacenamiento que se encuentran en las plantas y que tienen una capacidad en toneladas por cada ingrediente conforman el conjunto de unidades de almacenamiento. Desde estas unidades se descontará el inventario con base en la demanda diaria entregada por Grupo BIOS. Adicionalmente estas pueden contener diferentes tipos de producto según se ha descrito y la suma de sus contenidos conforman el inventario del ingrediente en la planta y, que deberá interactuar con las capacidades máximas de almacenamiento e inventarios de seguridad.
 
-$M$ : Unidades de Almacenamiento $m = 1,2,3... \in K$
+$M$ : Unidades de Almacenamiento $m \in \{1,2,3...\}$
 
 ### Diccionarios
 
@@ -90,6 +90,8 @@ empresas_cargas: contiene para cada empresa la lista de cargas en puerto, su val
 empresas_plantas: contiene para cada empresa la lista de plantas.
 
 ingredientes_cargas: contiene la lista de cargas en puerto con un ingrediente particular
+
+plantas_unidades: contiene para cada planta, la lista de unidades de almacenamiento disponibles
 
 ### Parameters
 
@@ -300,7 +302,7 @@ graph LR;
 
 (REVISAR)
 
-$$ XIU_{m}^{t} = XIU_{m}^{t-1} + TR + XDT + \sum_{l}{XTR_{lm}^{t-TT}} - XDM_{km}^{t} \hspace{1cm} \forall{\mathbb{t \in T}}$$
+$$ XIU_{m}^{t} = XIU_{m}^{t-1} + TR + XDT + \sum_{l}{XTR_{lm}^{t-TT}} - XDM_{km}^{t} \hspace{1cm} \hspace{1cm} \forall{\mathbb{t>1}}$$
 
 ### Asignación de uniades de almacenamiento a ingredientes
 
@@ -314,7 +316,7 @@ $$ XIU_{im}^{t} \leq CA_{m}^{i} \cdot IIU_{im}^{t} $$
 
 Adicionalmente, la suma de todas las cargas de un ingrediente que se despachen desde el puerto deben estar habilitadas para ser guardadas en las unidades de almacenamiento
 
-$$ XTR_{lm}^{t=t-2} + XTD_{lm}^{t=t-2} \leq BigM \cdot IIU_{im}^{t} \hspace{1cm} \forall t=2,3,.. $$
+$$ XTR_{lm}^{t=t-2} + XTD_{lm}^{t=t-2} \leq BigM \cdot IIU_{im}^{t} \hspace{1cm} \forall t \geq 2 $$
 
 # Esquematización de la ETL
 
