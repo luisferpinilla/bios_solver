@@ -1,46 +1,62 @@
 import pulp as pu
 import pandas as pd
+from datetime import datetime
 
-
-def construir_conjuntos():
-
-    conjuntos = dict()
-
-    # Empresas
-    empresas_df = pd.read_excel('model_1.xlsm', sheet_name='empresas')
-    conjuntos['empresas'] = empresas_df['empresa'].to_list()
-
-    # Calendario
-    periodos_df = pd.read_excel('model_1.xlsm', sheet_name='periodos')
-    conjuntos['periodos'] = {periodos_df.loc[i]['Id']
-        : periodos_df.loc[i]['Fecha'] for i in periodos_df.index}
-    conjuntos['fechas'] = {periodos_df.loc[i]['Fecha']                           : periodos_df.loc[i]['Id'] for i in periodos_df.index}
-
-    # Ingredientes
-    ingredientes_df = pd.read_excel('model_1.xlsm', sheet_name='ingredientes')
-    conjuntos['ingredientes'] = ingredientes_df['ingrediente'].to_list()
-
-    # Puertos
-    puertos_df = pd.read_excel('model_1.xlsm', sheet_name='puertos')
-    conjuntos['puertos'] = puertos_df['puerto'].to_list()
-
-    # plantas
-    plantas_df = pd.read_excel('model_1.xlsm', sheet_name='plantas')
-    conjuntos['plantas'] = plantas_df['planta'].to_list()
-
-    # Unidades de almacenamiento
-    unidades_df = pd.read_excel(
-        'model_1.xlsm', sheet_name='unidades_almacenamiento')
-    conjuntos['unidades_almacenamiento'] = unidades_df['key'].to_list()
-
-    return conjuntos
-
-
-def construir_parametros(conjuntos: dict):
+def construir_parametros():
 
     parametros = dict()
+    
+    
+    parametros['conjuntos'] = dict()
+    parametros['diccionarios'] = dict() 
+
+
+    # Conjuntos
+    
+    ## Empresas
+    empresas_df = pd.read_excel('model_1.xlsm', sheet_name='empresas')
+    parametros['conjuntos']['empresas'] = empresas_df['empresa'].to_list()
+
+    ## Calendario
+    periodos_df = pd.read_excel('model_1.xlsm', sheet_name='periodos')
+    parametros['conjuntos']['periodos'] = {periodos_df.loc[i]['Id']: periodos_df.loc[i]['Fecha'] for i in periodos_df.index}
+    parametros['conjuntos']['fechas'] = {periodos_df.loc[i]['Fecha'] : periodos_df.loc[i]['Id'] for i in periodos_df.index}
+
+    ## Ingredientes
+    ingredientes_df = pd.read_excel('model_1.xlsm', sheet_name='ingredientes')
+    parametros['conjuntos']['ingredientes'] = ingredientes_df['ingrediente'].to_list()
+
+    ## Puertos
+    puertos_df = pd.read_excel('model_1.xlsm', sheet_name='puertos')
+    parametros['conjuntos']['puertos'] = puertos_df['puerto'].to_list()
+
+    ## plantas
+    plantas_df = pd.read_excel('model_1.xlsm', sheet_name='plantas')
+    parametros['conjuntos']['plantas'] = plantas_df['planta'].to_list()
+
+    ## Unidades de almacenamiento
+    unidades_df = pd.read_excel('model_1.xlsm', sheet_name='unidades_almacenamiento')
+    parametros['conjuntos']['unidades_almacenamiento'] = unidades_df['key'].to_list()
+
+    
+    ## diccionarios
+    
+    parametros['diccionarios']['empresas_plantas'] = dict()    
+    parametros['diccionarios']['empresas_plantas']['contegral'] = ['bogota', 'cartago', 'envigado', 'neiva']
+    parametros['diccionarios']['empresas_plantas']['finca'] = ['bmanga', 'buga', 'cienaga', 'itagui', 'mosquera']
+   
+    
+    parametros['diccionarios']['plantas_unidades'] = {p:list(unidades_df[unidades_df['planta']==p]['key'].unique()) for p in parametros['conjuntos']['plantas']}
 
     # $IP_{l}$ : inventario inicial en puerto para la carga $l$.
+    
+    parametros['inventarios_puerto'] = dict()
+    inventarios_puerto_df = pd.read_excel('model_1.xlsm', sheet_name='cargas_puerto')
+    
+    inventarios_puerto_df['status'] = inventarios_puerto_df['fecha_llegada'].apply(lambda x: 'arrival' if x > now else 'inventory')
+    
+    ip_df = inventarios_puerto_df[inventarios_puerto_df['status']=='inventory']
+    
 
     # $AR_{l}^{t}$ : Cantidad de material que va a llegar a la carga $l$ durante el día $t$, sabiendo que: $material \in I$ y $carga \in J$.
 
@@ -52,20 +68,19 @@ def construir_parametros(conjuntos: dict):
     fletes_fijos_df = pd.read_excel('model_1.xlsm', sheet_name='fletes_fijos')
     fletes_fijos_df.set_index('puerto', drop=True, inplace=True)
 
-    for puerto in conjuntos['puertos']:
-        for planta in conjuntos['plantas']:
+    for puerto in parametros['conjuntos']['puertos']:
+        for planta in parametros['conjuntos']['plantas']:
             parametros['fletes_fijos'][f'CF_{puerto}_{planta}'] = fletes_fijos_df.loc[puerto][planta]
 
     # $ CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
 
     parametros['fletes_variables'] = dict()
 
-    fletes_variables_df = pd.read_excel(
-        'model_1.xlsm', sheet_name='fletes_variables')
+    fletes_variables_df = pd.read_excel('model_1.xlsm', sheet_name='fletes_variables')
     fletes_variables_df.set_index('puerto', drop=True, inplace=True)
 
-    for puerto in conjuntos['puertos']:
-        for planta in conjuntos['plantas']:
+    for puerto in parametros['conjuntos']['puertos']:
+        for planta in parametros['conjuntos']['plantas']:
             parametros['fletes_variables'][f'CT_{puerto}_{planta}'] = fletes_variables_df.loc[puerto][planta]
 
     # $CW_{lm}$ : Costo de vender una carga perteneciente a una empresa a otra.
@@ -174,8 +189,9 @@ def generar_reporte():
     pass
 
 
-conjuntos = construir_conjuntos()
-parametros = construir_parametros(conjuntos)
+now = datetime(2023,7,7)
+
+parametros = construir_parametros()
 
 
 # Problema
