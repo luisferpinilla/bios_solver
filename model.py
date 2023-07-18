@@ -58,7 +58,7 @@ def construir_parametros(now:datetime):
     ip_df = inventarios_puerto_df[inventarios_puerto_df['status']== 'inventory'].groupby(['ingrediente', 'puerto', 'barco'])[['cantidad']].sum().reset_index()
     
     parametros['diccionarios']['ingredientes_puerto'] = {ingrediente: list(inventarios_puerto_df[inventarios_puerto_df['ingrediente']==ingrediente]['barco'].unique()) for ingrediente in parametros['conjuntos']['ingredientes']}
-    
+      
     parametros['inventario_inicial_cargas'] = {f"IP_{ip_df.iloc[fila]['barco']}" :ip_df.iloc[fila]['cantidad'] for fila in range(ip_df.shape[0])}
 
     # $AR_{l}^{t}$ : Cantidad de material que va a llegar a la carga $l$ durante el día $t$, sabiendo que: $material \in I$ y $carga \in J$.
@@ -107,9 +107,20 @@ def construir_parametros(now:datetime):
     
     costo_cambio_empresa_df.melt(id_vars='origen', value_vars=['contegral', 'finca'],var_name='destino')
 
-
-
     # $TT_{jk}$ : tiempo en días para transportar la carga desde el puerto $j$ hacia la planta $k$.
+
+    parametros['tiempo_transporte'] = dict()
+
+    for puerto in parametros['conjuntos']['puertos']:
+        for planta in parametros['conjuntos']['plantas']:            
+            lista_ua = [ua for ua in parametros['conjuntos']['unidades_almacenamiento'] if planta in ua.split('_')[0]]
+            for ua in lista_ua:
+                parametros['tiempo_transporte'][f"TT_{puerto}_{ua}"] = 2
+                
+                
+       
+
+    {f"TT_"}
 
     # $CA_{m}^{i}$ : Capacidad de almacenamiento de la unidad $m$ en toneladas del ingrediente $i$, tenendo en cuenta que $m \in K$.
 
