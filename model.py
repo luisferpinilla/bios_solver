@@ -49,8 +49,7 @@ def construir_parametros(now:datetime):
     parametros['diccionarios']['plantas_unidades'] = {p: list(unidades_df[unidades_df['planta'] == p]['key'].unique()) for p in parametros['conjuntos']['plantas']}
 
     # $IP_{l}$ : inventario inicial en puerto para la carga $l$.
-
-    parametros['inventarios_puerto'] = dict()
+    
     inventarios_puerto_df = pd.read_excel(file, sheet_name='cargas_puerto')
 
     inventarios_puerto_df['status'] = inventarios_puerto_df['fecha_llegada'].apply(lambda x: 'arrival' if x > now else 'inventory')
@@ -117,14 +116,20 @@ def construir_parametros(now:datetime):
             for ua in lista_ua:
                 parametros['tiempo_transporte'][f"TT_{puerto}_{ua}"] = 2
                 
-                
-       
-
-    {f"TT_"}
 
     # $CA_{m}^{i}$ : Capacidad de almacenamiento de la unidad $m$ en toneladas del ingrediente $i$, tenendo en cuenta que $m \in K$.
 
+
+
     # $DM_{ki}^{t}$: Demanda del ingrediente $i$ en la planta $k$ durante el día $t$.
+
+    demanda_df = pd.read_excel(file, sheet_name='consumo_proyectado')
+    
+    demanda_df = demanda_df.melt(id_vars=['ingrediente', 'planta'], var_name='fecha', value_name='consumo').copy()
+
+    demanda_df['periodo'] =  demanda_df['fecha'].map(parametros['conjuntos']['fechas'])
+    
+    {f"DM_{}_{}_{}":"-"}
 
     # $CD_{ik}^{t}$ : Costo de no satisfacer la demanda del ingrediente $i$  en la planta $k$ durante el día $t$.
 
