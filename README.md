@@ -89,6 +89,8 @@ empresas_cargas: contiene para cada empresa la lista de cargas en puerto, su val
 
 empresas_plantas: contiene para cada empresa la lista de plantas.
 
+empresas_cargas: contiene para cada empresa la lista de cargas que están en puerto
+
 ingredientes_cargas: contiene la lista de cargas en puerto con un ingrediente particular
 
 plantas_unidades: contiene para cada planta, la lista de unidades de almacenamiento disponibles
