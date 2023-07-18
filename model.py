@@ -102,6 +102,12 @@ def construir_parametros(now:datetime):
             parametros['fletes_variables'][f'CT_{puerto}_{planta}'] = fletes_variables_df.loc[puerto][planta]
 
     # $CW_{lm}$ : Costo de vender una carga perteneciente a una empresa a otra.
+    
+    costo_cambio_empresa_df = pd.read_excel(file, 'venta_entre_empresas')
+    
+    costo_cambio_empresa_df.melt(id_vars='origen', value_vars=['contegral', 'finca'],var_name='destino')
+
+
 
     # $TT_{jk}$ : tiempo en días para transportar la carga desde el puerto $j$ hacia la planta $k$.
 
@@ -209,7 +215,7 @@ def generar_reporte():
 
 now = datetime(2023, 7, 7)
 
-parametros = construir_parametros()
+parametros = construir_parametros(now)
 
 
 # Problema
