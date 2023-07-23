@@ -37,7 +37,8 @@ def construir_parametros(now: datetime):
 
     # plantas
     plantas_df = pd.read_excel(file, sheet_name='plantas')
-    parametros['conjuntos']['plantas'] = plantas_df['planta'].to_list()
+    plantas_df['key'] = plantas_df.apply(lambda x:x['empresa'] + "_" + x['planta'], axis=1)
+    parametros['conjuntos']['plantas'] = plantas_df['key'].to_list()
 
     # Unidades de almacenamiento
     unidades_df = pd.read_excel(file, sheet_name='unidades_almacenamiento')
@@ -228,7 +229,7 @@ def construir_fob():
     # Costo por permitir guardar un ingrediente en una planta
 
 
-def construir_restricciones():
+def construir_restricciones(parametros:dict, variables:dict()):
 
     # Satisfaccion de la demanda en las plantas
 
@@ -240,8 +241,13 @@ def construir_restricciones():
 
     # Balances de masa de inventarios
 
-    # Balance de masa en cargas en puerto
+    # Balance de masa en bif
 
+    # for periodo in range(len(parametros['conjuntos']['periodos'].items())):
+        
+
+    # Balance de masa en cargas en puerto
+   
     # Balance de masa en unidades de almacenamiento por producto en planta
 
     # Asignación de uniades de almacenamiento a ingredientes
