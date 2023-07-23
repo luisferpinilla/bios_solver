@@ -12,6 +12,7 @@ def construir_parametros(now: datetime):
     parametros['fecha_inicial'] = now
     parametros['conjuntos'] = dict()
     parametros['diccionarios'] = dict()
+    parametros['parametros'] = dict()
 
     # Conjuntos
 
@@ -56,64 +57,56 @@ def construir_parametros(now: datetime):
     # $IP_{l}$ : inventario inicial en puerto para la carga $l$.
 
     inventarios_puerto_df = pd.read_excel(file, sheet_name='cargas_puerto')
+    
+    inventarios_puerto_df['status'] = inventarios_puerto_df['fecha_llegada'].apply(lambda x: 'arrival' if x > now else 'inventory')
 
-    inventarios_puerto_df['status'] = inventarios_puerto_df['fecha_llegada'].apply(
-        lambda x: 'arrival' if x > now else 'inventory')
+    ip_df = inventarios_puerto_df[inventarios_puerto_df['status'] == 'inventory'].groupby(['ingrediente', 'puerto', 'barco'])[['cantidad']].sum().reset_index()
+    
+    parametros['conjuntos']['cargas'] = list(inventarios_puerto_df['barco'].unique())
 
-    ip_df = inventarios_puerto_df[inventarios_puerto_df['status'] == 'inventory'].groupby(
-        ['ingrediente', 'puerto', 'barco'])[['cantidad']].sum().reset_index()
+    parametros['diccionarios']['ingredientes_puerto'] = {ingrediente: list(inventarios_puerto_df[inventarios_puerto_df['ingrediente'] == ingrediente]['barco'].unique()) for ingrediente in parametros['conjuntos']['ingredientes']}
 
-    parametros['diccionarios']['ingredientes_puerto'] = {ingrediente: list(
-        inventarios_puerto_df[inventarios_puerto_df['ingrediente'] == ingrediente]['barco'].unique()) for ingrediente in parametros['conjuntos']['ingredientes']}
-
-    parametros['inventario_inicial_cargas'] = {
-        f"IP_{ip_df.iloc[fila]['barco']}": ip_df.iloc[fila]['cantidad'] for fila in range(ip_df.shape[0])}
+    parametros['parametros']['inventario_inicial_cargas'] = {f"IP_{ip_df.iloc[fila]['barco']}": ip_df.iloc[fila]['cantidad'] for fila in range(ip_df.shape[0])}
 
     # $AR_{l}^{t}$ : Cantidad de material que va a llegar a la carga $l$ durante el día $t$, sabiendo que: $material \in I$ y $carga \in J$.
 
-    ar_df = inventarios_puerto_df[inventarios_puerto_df['status'] == 'arrival'].groupby(
-        ['ingrediente', 'puerto', 'barco', 'fecha_llegada'])[['cantidad']].sum().reset_index()
+    ar_df = inventarios_puerto_df[inventarios_puerto_df['status'] == 'arrival'].groupby(['ingrediente', 'puerto', 'barco', 'fecha_llegada'])[['cantidad']].sum().reset_index()
 
-    ar_df['periodo'] = ar_df['fecha_llegada'].map(
-        parametros['conjuntos']['fechas'])
+    ar_df['periodo'] = ar_df['fecha_llegada'].map(parametros['conjuntos']['fechas'])
 
-    parametros['llegadas_cargas'] = {
-        f"AR_{ar_df.iloc[i]['barco']}_{ar_df.iloc[i]['periodo']}": ar_df.iloc[i]['cantidad'] for i in range(ar_df.shape[0])}
+    parametros['parametros']['llegadas_cargas'] = {f"AR_{ar_df.iloc[i]['barco']}_{ar_df.iloc[i]['periodo']}": ar_df.iloc[i]['cantidad'] for i in range(ar_df.shape[0])}
 
     # $CC_{l}^{t}$ : Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $J$.
 
     cc_df = pd.read_excel(file, sheet_name='costos_almacenamiento_cargas')
 
-    cc_df = cc_df[cc_df['fecha_llegada'].isin(
-        parametros['conjuntos']['fechas'])].copy()
+    cc_df = cc_df[cc_df['fecha_llegada'].isin(parametros['conjuntos']['fechas'])].copy()
 
-    cc_df['periodo'] = cc_df['fecha_llegada'].map(
-        parametros['conjuntos']['fechas'])
+    cc_df['periodo'] = cc_df['fecha_llegada'].map(parametros['conjuntos']['fechas'])
 
-    parametros['costos_almacenamiento'] = {
-        f"CC_{cc_df.iloc[i]['barco']}_{cc_df.iloc[i]['periodo']}": cc_df.iloc[i]['Valor_por_tonelada'] for i in range(cc_df.shape[0])}
+    parametros['parametros']['costos_almacenamiento'] = {f"CC_{cc_df.iloc[i]['barco']}_{cc_df.iloc[i]['periodo']}": cc_df.iloc[i]['Valor_por_tonelada'] for i in range(cc_df.shape[0])}
 
     # $CF_{lm}$ : Costo fijo de transporte por camión despachado llevando la carga $l$ hasta la unidad de almacenamiento $m$.
 
-    parametros['fletes_fijos'] = dict()
+    parametros['parametros']['fletes_fijos'] = dict()
     fletes_fijos_df = pd.read_excel(file, sheet_name='fletes_fijos')
     fletes_fijos_df.set_index('puerto', drop=True, inplace=True)
     fletes_fijos_df.fillna(0.0, inplace=True)
 
     for puerto in parametros['conjuntos']['puertos']:
         for planta in parametros['conjuntos']['plantas']:
-            parametros['fletes_fijos'][f'CF_{puerto}_{planta}'] = fletes_fijos_df.loc[puerto][planta]
+            parametros['parametros']['fletes_fijos'][f'CF_{puerto}_{planta}'] = fletes_fijos_df.loc[puerto][planta]
 
     # $ CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
 
-    parametros['fletes_variables'] = dict()
+    parametros['parametros']['fletes_variables'] = dict()
 
     fletes_variables_df = pd.read_excel(file, sheet_name='fletes_variables')
     fletes_variables_df.set_index('puerto', drop=True, inplace=True)
 
     for puerto in parametros['conjuntos']['puertos']:
         for planta in parametros['conjuntos']['plantas']:
-            parametros['fletes_variables'][f'CT_{puerto}_{planta}'] = fletes_variables_df.loc[puerto][planta]
+            parametros['parametros']['fletes_variables'][f'CT_{puerto}_{planta}'] = fletes_variables_df.loc[puerto][planta]
 
     # $CW_{lm}$ : Costo de vender una carga perteneciente a una empresa a otra.
 
@@ -123,13 +116,13 @@ def construir_parametros(now: datetime):
 
     # $TT_{jk}$ : tiempo en días para transportar la carga desde el puerto $j$ hacia la planta $k$.
 
-    parametros['tiempo_transporte'] = dict()
+    parametros['parametros']['tiempo_transporte'] = dict()
 
     for puerto in parametros['conjuntos']['puertos']:
         for planta in parametros['conjuntos']['plantas']:
-            lista_ua = [ua for ua in parametros['conjuntos'] ['unidades_almacenamiento'] if planta in ua.split('_')[0]]
+            lista_ua = [ua for ua in parametros['conjuntos']['unidades_almacenamiento'] if planta in ua.split('_')[0]]
             for ua in lista_ua:
-                parametros['tiempo_transporte'][f"TT_{puerto}_{ua}"] = 2
+                parametros['parametros']['tiempo_transporte'][f"TT_{puerto}_{ua}"] = 2
 
     # $CA_{m}^{i}$ : Capacidad de almacenamiento de la unidad $m$ en toneladas del ingrediente $i$, tenendo en cuenta que $m \in K$.
 
@@ -142,7 +135,7 @@ def construir_parametros(now: datetime):
     demanda_df['periodo'] = demanda_df['fecha'].map(
         parametros['conjuntos']['fechas'])
 
-    parametros['consumo_proyectado'] = {f"DM_{demanda_df.iloc[i]['planta']}_{demanda_df.iloc[i]['ingrediente']}_{demanda_df.iloc[i]['periodo']}": demanda_df.iloc[i]['consumo'] for i in range(demanda_df.shape[0])}
+    parametros['parametros']['consumo_proyectado'] = {f"DM_{demanda_df.iloc[i]['planta']}_{demanda_df.iloc[i]['ingrediente']}_{demanda_df.iloc[i]['periodo']}": demanda_df.iloc[i]['consumo'] for i in range(demanda_df.shape[0])}
 
     # $CD_{ik}^{t}$ : Costo de no satisfacer la demanda del ingrediente $i$  en la planta $k$ durante el día $t$.
 
@@ -157,7 +150,7 @@ def construir_parametros(now: datetime):
     return parametros
 
 
-def construir_variables(conjuntos: dict):
+def construir_variables(parametros: dict):
 
     variables = dict()
 
@@ -165,7 +158,20 @@ def construir_variables(conjuntos: dict):
 
     # $XPL_{l}^{t}$ : Cantidad de la carga $l$ que llega al puerto y que será almacenada en el mismo.
 
+    for k,v in parametros['parametros']['llegadas_cargas'].items():
+        barco = k.split('_')[1]
+        periodo = k.split('_')[2]
+        var_name = f"XPL_{barco}_{periodo}"
+        print(var_name)
+        variables[var_name] = pu.LpVariable(name=var_name, lowBound=0.0, cat=pu.LpContinuous)
+
+
     # $XIP_{j}^{t}$ : Cantidad de la carga $l$ en puerto al final del periodo $t$
+     
+    for periodo in parametros['conjuntos']['periodos']:
+        for carga in parametros['conjuntos']['cargas']:
+            var_name = f"XIP_{carga}_{periodo}"
+            variables[var_name] = pu.LpVariable(name=var_name, lowBound=0.0, cat=pu.LpContinuous)
 
     # Variables asociadas al transporte entre puertos y plantas
 
@@ -174,6 +180,13 @@ def construir_variables(conjuntos: dict):
     # $ITR_{lm}^{t}$ : Cantidad de camiones con carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
 
     # $XTD_{lm}^{t}$ : Cantidad de carga $l$ en barco a transportar bajo despacho directo hacia la unidad $m$ durante el día $t$
+
+    for carga in parametros['conjuntos']['cargas']:
+        for ua in parametros['conjuntos']['unidades_almacenamiento']:
+            for periodo in parametros['conjuntos']['periodos']:
+                var_name = f"XTD_{carga}_{ua}_{periodo}"
+                print(var_name)
+                variables[var_name] = pu.LpVariable(name=var_name, lowBound=0.0, cat=pu.LpContinuous)
 
     # $ITD_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar directamente hacia la unidad $m$ durante el día $t$
 
@@ -188,6 +201,8 @@ def construir_variables(conjuntos: dict):
     # $BSS_{ik}^{t}$ : Binaria, si se cumple que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté sobre el nivel de seguridad $SS_{ik}^{t}$
 
     # $BCD_{ik}^{t}$ : si estará permitido que la demanda de un ingrediente $i$ no se satisfaga en la planta $k$ al final del día $t$
+    
+    return variables
 
 
 def construir_fob():
@@ -245,6 +260,8 @@ def generar_reporte():
 now = datetime(2023, 7, 7)
 
 parametros = construir_parametros(now)
+
+variables = construir_variables(parametros)
 
 
 # Problema
