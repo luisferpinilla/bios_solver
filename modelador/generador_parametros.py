@@ -11,7 +11,7 @@ def generar_parametros(parametros:dict, file:str, now:datetime)->dict:
 
     inventarios_puerto_df = pd.read_excel(file, sheet_name='cargas_puerto')
     
-    inventarios_puerto_df['status'] = inventarios_puerto_df['fecha_llegada'].apply(lambda x: 'arrival' if x > now else 'inventory')
+    inventarios_puerto_df['status'] = inventarios_puerto_df['fecha_llegada'].apply(lambda x: 'arrival' if x >= now else 'inventory')
 
     ip_df = inventarios_puerto_df[inventarios_puerto_df['status'] == 'inventory'].groupby(['key'])[['cantidad']].sum().reset_index()
     
