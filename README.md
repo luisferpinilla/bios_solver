@@ -242,7 +242,7 @@ $$ \sum_{m \in i}^{t}{XDM_{m}^{t}} = DM_{ki}^{t} \cdot BCD_{ik}^{t} $$
 
 #### Mantenimiento del nivel de seguridad de igredientes en plantas
 
-$$ \sum_{m \in i}^{t}{XDM_{m}^{t}} \geq SS_{ki}^{t} \cdot (1-BSS_{ik}^{t}) $$
+$$ \sum_{m \in i}^{t}{XIU_{m}^{t}} \geq SS_{ki}^{t} \cdot (1-BSS_{ik}^{t}) $$
 
 #### Capacidad de carga de los camiones
 
