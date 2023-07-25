@@ -81,11 +81,11 @@ def generar_parametros(parametros:dict, file:str, now:datetime)->dict:
 
     demanda_df = pd.read_excel(file, sheet_name='consumo_proyectado')
 
-    demanda_df = demanda_df.melt(id_vars=['ingrediente', 'planta'], var_name='fecha', value_name='consumo').copy()
+    demanda_df = demanda_df.melt(id_vars=['key', 'ingrediente', 'planta'], var_name='fecha', value_name='consumo').copy()
 
     demanda_df['periodo'] = demanda_df['fecha'].map(parametros['conjuntos']['fechas'])
 
-    parametros['parametros']['consumo_proyectado'] = {f"DM_{demanda_df.iloc[i]['planta']}_{demanda_df.iloc[i]['ingrediente']}_{demanda_df.iloc[i]['periodo']}": demanda_df.iloc[i]['consumo'] for i in range(demanda_df.shape[0])}
+    parametros['parametros']['consumo_proyectado'] = {f"DM_{demanda_df.iloc[i]['key']}_{demanda_df.iloc[i]['periodo']}": demanda_df.iloc[i]['consumo'] for i in range(demanda_df.shape[0])}
 
     # $CD_{ik}^{t}$ : Costo de no satisfacer la demanda del ingrediente $i$  en la planta $k$ durante el día $t$.
 
