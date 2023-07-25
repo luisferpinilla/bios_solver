@@ -169,8 +169,41 @@ def _mantenimiento_ss_plantas(restricciones:list, variables:list):
     
     pass
 
-def _capacidad_camiones():
-    pass
+def _capacidad_camiones(restricciones:list, variables:list, cargas:list, unidades:list):
+    
+    # XTR_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}: cantidad a despachar desde almacenamiento en puerto
+    # XTD_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}: cantidad a despachar desde barco en puerto 
+    # ITR_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}: cantidad de camiones desde almacenamiento
+    # ITD_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}: cantidad de camiones desde barco
+    
+    restricciones['Capacidad de carga de camiones'] = list()
+    
+    for carga in cargas:
+        for ua in unidades:
+            for periodo in range(30):
+                
+                xtr_name = f'XTR_{carga}_{ua}_{periodo}'                
+                itr_name = f'ITR_{carga}_{ua}_{periodo}'
+                
+                xdt_name = f'XDR_{carga}_{ua}_{periodo}' 
+                itd_name = f'IDR_{carga}_{ua}_{periodo}' 
+
+                if xtr_name in variables.keys() and itr_name in variables.keys():
+                    
+                    xtr_var = variables[xtr_name]
+                    itr_var = variables[itr_name]
+                    
+                    rest = (xtr_var <= 34*itr_var ,f'capacidad de carga de camiones despacho almacenamiento {carga}_{ua}_{periodo}')
+                    restricciones['Capacidad de carga de camiones'].append(rest)
+            
+                if xdt_name in variables.keys() and itd_name in variables.keys():
+                    
+                    xdt_var = variables[xdt_name]
+                    idt_var = variables[itd_name]
+                    
+                    rest = (xdt_var <= 34*idt_var ,f'capacidad de carga de camiones despacho directo {carga}_{ua}_{periodo}')
+                    restricciones['Capacidad de carga de camiones'].append(rest)
+            
 
 def _capacidad_unidades_almacenamiento():
     pass
@@ -200,7 +233,7 @@ def generar_restricciones(parametros:list, variables:list):
     _mantenimiento_ss_plantas(restricciones, variables)
 
     # Capacidad de carga de los camiones
-    _capacidad_camiones()
+    _capacidad_camiones(restricciones, variables, cargas, unidades)
     
     # Capacidad de almacenamiento en unidades de almacenamiento
     _capacidad_unidades_almacenamiento()
@@ -218,11 +251,11 @@ def generar_restricciones(parametros:list, variables:list):
     ### Balance de masa en Bodega puerto
     _balance_masa_bodega_puerto(restricciones,variables,cargas, unidades)
    
-    ## Balance de masa en unidades de almacenamiento por producto en planta
-    
-    
+    ## Balance de masa en plantas
+   
+    ### Balance de masa en unidades de almacenamiento por producto en planta
 
-    # Asignación de uniades de almacenamiento a ingredientes
+    ## Asignación de uniades de almacenamiento a ingredientes
     
     return restricciones
     
