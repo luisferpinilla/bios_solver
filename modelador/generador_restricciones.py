@@ -37,8 +37,35 @@ def _balance_masa_bif(restricciones: list, variables:list, llegadas: list, unida
 
         restricciones['balance_masa_bif'].append((pu.lpSum(left_expesion) == ar_val, f'balance bif_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}'))
 
-def _inventario_inicial_bodega_puerto(restricciones:list, variables:list):
-    pass
+def _inventario_inicial_bodega_puerto(restricciones:list, variables:list, cargas:list, inventario_inicial:list):
+    
+    # XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}
+    
+    restricciones['inventario_inicial_puerto'] = list()
+    
+    for carga in cargas:
+       
+        campos = carga.split('_')
+        empresa = campos[0]
+        ingrediente = campos[1]
+        puerto = campos[2]
+        barco = campos[3]
+        
+        xip_name = f'XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{0}'
+        
+        if xip_name in variables:
+            xip_var = variables[xip_name]
+            ip_name = f'IP_{empresa}_{ingrediente}_{puerto}_{barco}'
+            
+            if ip_name in inventario_inicial:
+                ip_val = inventario_inicial[ip_name]
+            else:
+                ip_val = 0.0
+                
+            print(ip_name,"==",ip_val)    
+            rest = (xip_var == ip_val,f'inventario_inicial_puerto_{carga}')
+            
+            restricciones['inventario_inicial_puerto'].append(rest)
 
 
 def _balance_masa_bodega_puerto(restricciones:list, variables:list, cargas:list, unidades:list):
@@ -89,12 +116,6 @@ def _balance_masa_bodega_puerto(restricciones:list, variables:list, cargas:list,
                     left_expesion.append(-1*xtr_var)
             
             restricciones['balance_masa_bodega_puerto'].append((pu.lpSum(left_expesion) == 0, f'balance_masa_{carga}_{periodo}'))
-              
-        
-        
-        
-    
-    
 
 
 def _satisfaccion_demanda_plantas(restricciones:list, variables:list):
@@ -122,15 +143,19 @@ def generar_restricciones(parametros:list, variables:list):
     
     restricciones = dict()
     
-    empresas = parametros['conjuntos']['empresas']
-    periodos = parametros['conjuntos']['periodos']
-    ingredientes = parametros['conjuntos']['ingredientes']
+    # empresas = parametros['conjuntos']['empresas']
+    # periodos = parametros['conjuntos']['periodos']
+    # ingredientes = parametros['conjuntos']['ingredientes']
+    inventario_inicial = parametros['parametros']['inventario_inicial_cargas']
     llegadas = parametros['parametros']['llegadas_cargas']
     unidades = parametros['conjuntos']['unidades_almacenamiento']
     cargas = parametros['conjuntos']['cargas']
     
     ## Balance de masa en bif    
     _balance_masa_bif(restricciones, variables, llegadas, unidades)
+    
+    ## Inventario inicial puerto
+    _inventario_inicial_bodega_puerto(restricciones, variables, cargas, inventario_inicial)
     
     ## Balance de masa en Bodega puerto
     _balance_masa_bodega_puerto(restricciones,variables,cargas, unidades)
