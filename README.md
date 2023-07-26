@@ -121,6 +121,8 @@ $TT_{jk}$ : tiempo en días para transportar la carga desde el puerto $j$ hacia 
 
 $CA_{m}^{i}$ : Capacidad de almacenamiento de la unidad $m$ en toneladas del ingrediente $i$, tenendo en cuenta que $m \in K$.
 
+$II_{m}^{i}$ : Inventario inicial del ingrediente $i$ en la unidad $m$, teniendo en cuenta que $m \in K$
+
 $DM_{ki}^{t}$: Demanda del ingrediente $i$ en la planta $k$ durante el día $t$.
 
 $CD_{ik}^{t}$ : Costo de no satisfacer la demanda del ingrediente $i$  en la planta $k$ durante el día $t$.
