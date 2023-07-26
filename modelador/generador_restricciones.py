@@ -162,6 +162,80 @@ def _satisfaccion_demanda_plantas(restricciones:list, variables:list, plantas:li
                 restricciones['Satisfaccion_demanda'].append(rest)            
 
 
+def _balance_masa_ua(restricciones:list, variables:list, ingredientes:list, cargas:list, unidades:list, inventario_inicial:dict()):
+    
+    # XIU = XIU_t-1 + TR + XDT_t-2 + XTR_t-2 - XDM
+    # XIU - XIU_t-1      - XTD_t-2 - XTR_t-2 + XDM = TR
+    
+    # XIU_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}'
+    # XDM_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}
+    # 
+    
+    restricciones['balance_masa_inventario'] = list()
+    
+    
+    
+    for periodo in range (30):
+        for ingrediente in ingredientes:
+            for ua in unidades:            
+                
+                left_expesion = list()
+                right_value = 0.0
+                
+                campos = ua.split('_')
+                empresa = campos[0]
+                planta = campos[1]
+                unidad = campos[2]
+                
+                
+                # XIU_t-1 o II traer el inventario al final del periodo anterior
+                # si no estamos en el periodo inicial
+                if periodo > 0:
+                    # traer variable de inventario final
+                    xiu_ant_name = f'XIU_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}'
+                    xiu_ant_var = variables[xiu_ant_name]
+                    left_expesion.append(-1*xiu_ant_var)
+                    
+                else:
+                    # traer el inventario inicial desde los parámetros
+                    ii_name = f'II_{empresa}_{planta}_{unidad}_{ingrediente}'
+                    if ii_name in inventario_inicial.keys():
+                        ii_value = inventario_inicial[ii_name] 
+                    else:
+                        ii_value = 0.0
+                    
+                    right_value = right_value + ii_value
+                
+                # XTD despachos directos desde barco
+                # XTR despachos desde bodega puerto
+                if periodo >=2:
+                    # agregar el despacho directo si lo hay
+                    for carga in cargas:
+                        xtd_name = f'XTD_{carga}_{ua}_{periodo}'
+                        if xtd_name in variables:
+                            xtd_var = variables[xtd_name]
+                            left_expesion.append(-1*xtd_var)
+                            
+                        xtr_name = f'XTR_{carga}_{ua}_{periodo}'
+                        if xtr_name in variables.keys():
+                            xtr_var = variables[xtr_name]
+                            left_expesion.append(-1*xtr_var) 
+                            
+                # XDM: demanda
+                xdm_name = f'XDM_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}'
+                xdm_var = variables[xdm_name]
+                left_expesion.append(xdm_var)
+                
+                # armar restriccion
+                rest = (pu.lpSum(left_expesion)==right_value, 'balance_masa_{ua}_{ingrediente}_{periodo}')
+            
+                # agregar la restriccion
+                restricciones['balance_masa_inventario'].append(rest)
+    
+    
+def _inventario_inicial_ua(restricciones:list, parametros:list):
+    pass    
+
 def _mantenimiento_ss_plantas(restricciones:list, variables:list):
     
     # sum(XDM) > SS * (1 - BSS)
@@ -238,8 +312,7 @@ def generar_restricciones(parametros:list, variables:list):
     # Capacidad de almacenamiento en unidades de almacenamiento
     _capacidad_unidades_almacenamiento()
 
-    # Balances de masa de inventarios
-    
+    # Balances de masa de inventarios    
     ## Balance de masa en cargas en puerto
     
     ### Balance de masa en bif    
@@ -251,10 +324,10 @@ def generar_restricciones(parametros:list, variables:list):
     ### Balance de masa en Bodega puerto
     _balance_masa_bodega_puerto(restricciones,variables,cargas, unidades)
    
-    ## Balance de masa en plantas
-   
+    ## Balance de masa en plantas   
     ### Balance de masa en unidades de almacenamiento por producto en planta
-
+    _balance_masa_ua(restricciones, variables, ingredientes, cargas, unidades, inventario_inicial)
+    
     ## Asignación de uniades de almacenamiento a ingredientes
     
     return restricciones
