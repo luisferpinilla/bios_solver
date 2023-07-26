@@ -77,6 +77,16 @@ def generar_parametros(parametros:dict, file:str, now:datetime)->dict:
 
     # $CA_{m}^{i}$ : Capacidad de almacenamiento de la unidad $m$ en toneladas del ingrediente $i$, tenendo en cuenta que $m \in K$.
 
+    inventario_planta_df = pd.read_excel(file, sheet_name='unidades_almacenamiento', skiprows=1)
+            
+    capacidad_ua_df = inventario_planta_df.melt(id_vars=['key'], value_vars=parametros['conjuntos']['ingredientes'],var_name='ingrediente', value_name='capacidad').rename(columns={'key':'unidad_almacenamiento'})
+
+    {f"CA_{capacidad_ua_df.iloc[x]['unidad_almacenamiento']}_{capacidad_ua_df.iloc[x]['ingrediente']}":capacidad_ua_df.iloc[x]['capacidad'] for x in range(capacidad_ua_df.shape[0])}
+
+    # $II_{m}^{i}$ : Inventario inicial del ingrediente $i$ en la unidad $m$, teniendo en cuenta que $m \in K$
+
+    parametros['parametros']['inventario_inicial_ua'] = {f"II_{inventario_planta_df.iloc[x]['key']}_{inventario_planta_df.iloc[x]['ingrediente_actual']}":inventario_planta_df.iloc[x]['cantidad_actual'] for x in range(inventario_planta_df.shape[0])}
+
     # $DM_{ki}^{t}$: Demanda del ingrediente $i$ en la planta $k$ durante el día $t$.
 
     demanda_df = pd.read_excel(file, sheet_name='consumo_proyectado')
