@@ -279,14 +279,35 @@ def _capacidad_camiones(restricciones:list, variables:list, cargas:list, unidade
                     restricciones['Capacidad de carga de camiones'].append(rest)
             
 
-def _capacidad_unidades_almacenamiento():
-    pass
+def _capacidad_unidades_almacenamiento(restricciones:list, variables:list, unidades:list, ingredientes:list, capacidad_unidades:dict):
+    # IIU_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}
+    # CA_{empresa}_{planta}_{unidad}_{ingrediente}
+    restricciones['capacidad de unidades de almacenamiento'] = list()
+    
+    for periodo in range(30):
+        for unidad in unidades:                       
+            for ingrediente in ingredientes:                
+                
+                iiu_name = f'IIU_{unidad}_{ingrediente}_{periodo}'
+                iiu_var = variables[iiu_name]
+                
+                ca_name = f'CA_{unidad}_{ingrediente}'
+                ca_value = capacidad_unidades[ca_name]
+                
+                rest = (iiu_var<=ca_value, f'capacidad de almacenamiento {unidad}_{ingrediente}_{periodo}')
+
+                restricciones['capacidad de unidades de almacenamiento'].append(rest)              
+
+    
+    
+    
+    
 
 def _asignacion_unidades_almacenamiento(restricciones: list, variables:list, unidades:list, ingredientes:list):
     
     # IIU_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}
     
-    restricciones['Capacidad de carga de camiones'] = list()
+    restricciones['asignación de unidades de almacenamiento'] = list()
     
     for periodo in range(30):
         for unidad in unidades:            
@@ -298,13 +319,7 @@ def _asignacion_unidades_almacenamiento(restricciones: list, variables:list, uni
                 
             rest = (pu.lpSum(left_expesion)<=1, f'cantidad de ingredientes en {unidad}_{periodo}')
 
-            restricciones['Capacidad de carga de camiones'].append(rest)              
-            
-        
-    
-    
-    
-
+            restricciones['asignación de unidades de almacenamiento'].append(rest)              
 
 
 def generar_restricciones(parametros:list, variables:list):
@@ -320,6 +335,7 @@ def generar_restricciones(parametros:list, variables:list):
     llegadas = parametros['parametros']['llegadas_cargas']
     unidades = parametros['conjuntos']['unidades_almacenamiento']
     cargas = parametros['conjuntos']['cargas']
+    capacidad_unidades = parametros['parametros']['capacidad_almacenamiento_ua']
     
     # Satisfaccion de la demanda en las plantas
     _satisfaccion_demanda_plantas(restricciones, variables, plantas, ingredientes, unidades, consumo_proyectado)
@@ -330,8 +346,8 @@ def generar_restricciones(parametros:list, variables:list):
     # Capacidad de carga de los camiones
     _capacidad_camiones(restricciones, variables, cargas, unidades)
     
-    # Capacidad de almacenamiento en unidades de almacenamiento
-    _capacidad_unidades_almacenamiento()
+    ### Capacidad de unidades de almacenamiento
+    _capacidad_unidades_almacenamiento(restricciones, variables, unidades, ingredientes, capacidad_unidades)
 
     # Balances de masa de inventarios    
     ## Balance de masa en cargas en puerto
@@ -353,10 +369,6 @@ def generar_restricciones(parametros:list, variables:list):
     
     ### Asignación de máximo un ingrediente a una unidad de almacenamiento
     _asignacion_unidades_almacenamiento(restricciones, variables, unidades, ingredientes)
-    
-    ### Capacidad de unidades de almacenamiento
-    
-    
     
     return restricciones
     

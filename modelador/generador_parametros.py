@@ -81,7 +81,7 @@ def generar_parametros(parametros:dict, file:str, now:datetime)->dict:
             
     capacidad_ua_df = inventario_planta_df.melt(id_vars=['key'], value_vars=parametros['conjuntos']['ingredientes'],var_name='ingrediente', value_name='capacidad').rename(columns={'key':'unidad_almacenamiento'})
 
-    {f"CA_{capacidad_ua_df.iloc[x]['unidad_almacenamiento']}_{capacidad_ua_df.iloc[x]['ingrediente']}":capacidad_ua_df.iloc[x]['capacidad'] for x in range(capacidad_ua_df.shape[0])}
+    parametros['parametros']['capacidad_almacenamiento_ua'] = {f"CA_{capacidad_ua_df.iloc[x]['unidad_almacenamiento']}_{capacidad_ua_df.iloc[x]['ingrediente']}":capacidad_ua_df.iloc[x]['capacidad'] for x in range(capacidad_ua_df.shape[0])}
 
     # $II_{m}^{i}$ : Inventario inicial del ingrediente $i$ en la unidad $m$, teniendo en cuenta que $m \in K$
 
