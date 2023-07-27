@@ -228,7 +228,7 @@ Del mismo modo, si el nivel de escacéz de un ingrediente es tal, el solucionado
 
 $$ \sum_{i}{\sum_{k}{\sum_{t}{CD_{ik}^{t} \cdot BCD_{ik}^{t}}}} $$
 
-#### Costo por permitir guardar un ingrediente en una planta
+#### Costo por permitir guardar un ingrediente en una unidad de almacenamiento en una planta
 
 Dado que se asume que las unidades de almaceamiento deberían usarse con la mayor eficiencia posible, se buscará tener la menor cantidad de estas ocupada con algún ingrediente
 
