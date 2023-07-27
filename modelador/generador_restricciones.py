@@ -227,7 +227,7 @@ def _balance_masa_ua(restricciones:list, variables:list, ingredientes:list, carg
                 left_expesion.append(xdm_var)
                 
                 # armar restriccion
-                rest = (pu.lpSum(left_expesion)==right_value, 'balance_masa_{ua}_{ingrediente}_{periodo}')
+                rest = (pu.lpSum(left_expesion)==right_value, f'balance_masa_{ua}_{ingrediente}_{periodo}')
             
                 # agregar la restriccion
                 restricciones['balance_masa_inventario'].append(rest)
