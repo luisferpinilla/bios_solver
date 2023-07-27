@@ -167,7 +167,7 @@ def _balance_masa_ua(restricciones:list, variables:list, ingredientes:list, carg
     # XIU = XIU_t-1 + TR + XDT_t-2 + XTR_t-2 - XDM
     # XIU - XIU_t-1      - XTD_t-2 - XTR_t-2 + XDM = TR
     
-    # XIU_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}'
+    # XIU_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}
     # XDM_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}
     # 
     
@@ -233,8 +233,28 @@ def _balance_masa_ua(restricciones:list, variables:list, ingredientes:list, carg
                 restricciones['balance_masa_inventario'].append(rest)
     
     
-def _inventario_inicial_ua(restricciones:list, parametros:list):
-    pass    
+def _inventario_inicial_ua(restricciones:list, variables:list, parametros:list, unidades:list, ingredientes:list, inventario_inicial_ua:list):
+    # XIU_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}
+    
+    restricciones['inventario_inicial_ua'] = list()
+    
+    periodo = 0
+    for unidad in unidades:                       
+        for ingrediente in ingredientes:                
+                
+            xiu_name = f'XIU_{unidad}_{ingrediente}_{periodo}'
+            xiu_var = variables[xiu_name]
+                
+            ii_name = f'II_{unidad}_{ingrediente}'
+            
+            if ii_name in inventario_inicial_ua.keys():
+                ii_value = inventario_inicial_ua[ii_name]
+            else:
+                ii_value = 0.0
+                
+            rest = (xiu_var==ii_value, f'inventario inicial en {unidad}_{ingrediente}_{periodo}')
+
+            restricciones['inventario_inicial_ua'].append(rest)    
 
 def _mantenimiento_ss_plantas(restricciones:list, variables:list):
     
@@ -297,11 +317,7 @@ def _capacidad_unidades_almacenamiento(restricciones:list, variables:list, unida
                 rest = (iiu_var<=ca_value, f'capacidad de almacenamiento {unidad}_{ingrediente}_{periodo}')
 
                 restricciones['capacidad de unidades de almacenamiento'].append(rest)              
-
-    
-    
-    
-    
+  
 
 def _asignacion_unidades_almacenamiento(restricciones: list, variables:list, unidades:list, ingredientes:list):
     
@@ -336,6 +352,7 @@ def generar_restricciones(parametros:list, variables:list):
     unidades = parametros['conjuntos']['unidades_almacenamiento']
     cargas = parametros['conjuntos']['cargas']
     capacidad_unidades = parametros['parametros']['capacidad_almacenamiento_ua']
+    inventario_inicial_ua = parametros['parametros']['inventario_inicial_ua']
     
     # Satisfaccion de la demanda en las plantas
     _satisfaccion_demanda_plantas(restricciones, variables, plantas, ingredientes, unidades, consumo_proyectado)
@@ -363,7 +380,10 @@ def generar_restricciones(parametros:list, variables:list):
    
     ## Balance de masa en plantas   
     ### Balance de masa en unidades de almacenamiento por producto en planta
-    _balance_masa_ua(restricciones, variables, ingredientes, cargas, unidades, inventario_inicial)
+    _balance_masa_ua(restricciones, variables, ingredientes, cargas, unidades, inventario_inicial_ua)
+    
+    ### Inventario inicial en unidades de almacenamiento
+    _inventario_inicial_ua(restricciones, variables, parametros, unidades, ingredientes, inventario_inicial_ua)
     
     ## Asignación de unidades de almacenamiento a ingredientes
     
