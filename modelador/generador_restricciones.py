@@ -282,6 +282,29 @@ def _capacidad_camiones(restricciones:list, variables:list, cargas:list, unidade
 def _capacidad_unidades_almacenamiento():
     pass
 
+def _asignacion_unidades_almacenamiento(restricciones: list, variables:list, unidades:list, ingredientes:list):
+    
+    # IIU_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}
+    
+    restricciones['Capacidad de carga de camiones'] = list()
+    
+    for periodo in range(30):
+        for unidad in unidades:            
+            left_expesion = list()            
+            for ingrediente in ingredientes:                
+                iiu_name = f'IIU_{unidad}_{ingrediente}_{periodo}'
+                iiu_var = variables[iiu_name]
+                left_expesion.append(iiu_var)
+                
+            rest = (pu.lpSum(left_expesion)<=1, f'cantidad de ingredientes en {unidad}_{periodo}')
+
+            restricciones['Capacidad de carga de camiones'].append(rest)              
+            
+        
+    
+    
+    
+
 
 
 def generar_restricciones(parametros:list, variables:list):
@@ -297,8 +320,6 @@ def generar_restricciones(parametros:list, variables:list):
     llegadas = parametros['parametros']['llegadas_cargas']
     unidades = parametros['conjuntos']['unidades_almacenamiento']
     cargas = parametros['conjuntos']['cargas']
-    
-
     
     # Satisfaccion de la demanda en las plantas
     _satisfaccion_demanda_plantas(restricciones, variables, plantas, ingredientes, unidades, consumo_proyectado)
@@ -328,7 +349,14 @@ def generar_restricciones(parametros:list, variables:list):
     ### Balance de masa en unidades de almacenamiento por producto en planta
     _balance_masa_ua(restricciones, variables, ingredientes, cargas, unidades, inventario_inicial)
     
-    ## Asignación de uniades de almacenamiento a ingredientes
+    ## Asignación de unidades de almacenamiento a ingredientes
+    
+    ### Asignación de máximo un ingrediente a una unidad de almacenamiento
+    _asignacion_unidades_almacenamiento(restricciones, variables, unidades, ingredientes)
+    
+    ### Capacidad de unidades de almacenamiento
+    
+    
     
     return restricciones
     
