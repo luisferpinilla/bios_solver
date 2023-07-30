@@ -38,37 +38,6 @@ def _balance_masa_bif(restricciones: list, variables:list, llegadas: list, unida
         restricciones['balance_masa_bif'].append((pu.lpSum(left_expesion) == ar_val, f'balance bif_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}'))
 
 
-def _inventario_inicial_bodega_puerto(restricciones:list, variables:list, cargas:list, inventario_inicial:list):
-    
-    # XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}
-    
-    restricciones['inventario_inicial_puerto'] = list()
-    
-    for carga in cargas:
-       
-        campos = carga.split('_')
-        empresa = campos[0]
-        ingrediente = campos[1]
-        puerto = campos[2]
-        barco = campos[3]
-        
-        xip_name = f'XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{0}'
-        
-        if xip_name in variables:
-            xip_var = variables[xip_name]
-            ip_name = f'IP_{empresa}_{ingrediente}_{puerto}_{barco}'
-            
-            if ip_name in inventario_inicial:
-                ip_val = inventario_inicial[ip_name]
-            else:
-                ip_val = 0.0
-                
-            # print(ip_name,"==",ip_val)    
-            rest = (xip_var == ip_val,f'inventario_inicial_puerto_{carga}')
-            
-            restricciones['inventario_inicial_puerto'].append(rest)
-
-
 def _balance_masa_bodega_puerto(restricciones:list, variables:list, cargas:list, unidades:list, inventario_inicial:dict, periodos=30):
     
     # XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}
@@ -254,30 +223,6 @@ def _balance_masa_ua(restricciones:list, variables:list, ingredientes:list, carg
                 restricciones['balance_ua'].append(rest)
     
     
-def _inventario_inicial_ua(restricciones:list, variables:list, parametros:list, unidades:list, ingredientes:list, inventario_inicial_ua:list):
-    # XIU_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}
-    
-    restricciones['inventario_inicial_ua'] = list()
-    
-    periodo = 0
-    for unidad in unidades:                       
-        for ingrediente in ingredientes:                
-                
-            xiu_name = f'XIU_{unidad}_{ingrediente}_{periodo}'
-            xiu_var = variables[xiu_name]
-                
-            ii_name = f'II_{unidad}_{ingrediente}'
-            
-            if ii_name in inventario_inicial_ua.keys():
-                ii_value = inventario_inicial_ua[ii_name]
-            else:
-                ii_value = 0.0
-                
-            rest = (xiu_var==ii_value, f'inventario inicial en {unidad}_{ingrediente}_{periodo}')
-
-            restricciones['inventario_inicial_ua'].append(rest)    
-
-
 def _mantenimiento_ss_plantas(restricciones:list, variables:list):
     
     # sum(XDM) > SS * (1 - BSS)
@@ -399,9 +344,7 @@ def generar_restricciones(parametros:list, variables:list):
     ### Balance de masa en bif    
     _balance_masa_bif(restricciones, variables, llegadas, unidades)
     
-    ### Inventario inicial puerto
-    #_inventario_inicial_bodega_puerto(restricciones, variables, cargas, inventario_inicial)
-    
+   
     ### Balance de masa en Bodega puerto
     _balance_masa_bodega_puerto(restricciones,variables,cargas, unidades, inventario_inicial=inventario_inicial, periodos=periodos)
    
@@ -409,8 +352,6 @@ def generar_restricciones(parametros:list, variables:list):
     ### Balance de masa en unidades de almacenamiento por producto en planta
     _balance_masa_ua(restricciones, variables, ingredientes, cargas, unidades, inventario_inicial_ua,periodos=periodos)
     
-    ### Inventario inicial en unidades de almacenamiento
-    #_inventario_inicial_ua(restricciones, variables, parametros, unidades, ingredientes, inventario_inicial_ua)
     
     ## Asignación de unidades de almacenamiento a ingredientes
     

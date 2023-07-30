@@ -28,16 +28,16 @@ def generar_problema(file:str):
     
     fobjetivo = generar_fob(parametros, variables)
     
-    return fobjetivo, restricciones, parametros
+    return fobjetivo, restricciones, parametros, variables
 
                                                     
 if __name__ == '__main__':
     
-    file = './model_1.xlsm'
+    file = './model_3.xlsm'
     # Problema
     problema = pu.LpProblem("Bios", sense=pu.const.LpMinimize)
     
-    fobjetivo, restricciones, parametros = generar_problema(file=file)
+    fobjetivo, restricciones, parametros, variables = generar_problema(file=file)
     
     # Agregar función objetivo
     problema += fobjetivo
@@ -54,6 +54,10 @@ if __name__ == '__main__':
     problema.solve()
     
     problema.writeLP(filename='model.lp')
+    
+    for v in problema.variables():
+        if v.varValue != 0:
+            print(v.name, "=", v.varValue)
     
     
     
