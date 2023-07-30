@@ -28,22 +28,21 @@ def generar_problema(file:str):
     
     fobjetivo = generar_fob(parametros, variables)
     
-    return fobjetivo, restricciones
+    return fobjetivo, restricciones, parametros
 
-
+                                                    
 if __name__ == '__main__':
     
-    file = '/Users/luispinilla/Dropbox/Trabajos/wa/bios_2023/model_1.xlsm'
-
+    file = './model_1.xlsm'
     # Problema
     problema = pu.LpProblem("Bios", sense=pu.const.LpMinimize)
     
-    fobjetivo, restricciones = generar_problema(file=file)
+    fobjetivo, restricciones, parametros = generar_problema(file=file)
     
     # Agregar función objetivo
     problema += fobjetivo
     
-    rest_set = ['Satisfaccion_demanda', 'Capacidad de carga de camiones', 'capacidad de unidades de almacenamiento', 'balance_masa_bif', 'inventario_inicial_puerto', 'balance_masa_bodega_puerto', 'balance_masa_inventario', 'inventario_inicial_ua', 'asignación de unidades de almacenamiento']
+    rest_set = ['Satisfaccion_demanda', 'Capacidad de carga de camiones', 'capacidad de unidades de almacenamiento', 'balance_masa_bif', 'inventario_inicial_puerto', 'balance_puerto', 'balance_ua', 'inventario_inicial_ua', 'asignación de unidades de almacenamiento']
     
     
     # Agregar restricciones
