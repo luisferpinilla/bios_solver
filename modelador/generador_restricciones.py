@@ -40,9 +40,9 @@ def _balance_masa_bif(restricciones: list, variables:list, llegadas: list, unida
 
 def _balance_masa_bodega_puerto(restricciones:list, variables:list, cargas:list, unidades:list, inventario_inicial:dict, periodos=30):
     
-    # XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}
-    # XPL_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}
-    # XTR_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}
+    # XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}: Cantidad de la carga $l$ en puerto al final del periodo $t$
+    # XPL_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}: Cantidad de la carga $l$ que llega al puerto y que será almacenada en el mismo. 
+    # XTR_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}: Cantidad de carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
     
     # XIP_t-1 + XPL - sum(XTR) = XIP
     # XIP_t-1 + XPL - sum(XTR) - XIP = 0
@@ -67,7 +67,7 @@ def _balance_masa_bodega_puerto(restricciones:list, variables:list, cargas:list,
             
             
             if periodo > 0:
-                xip_anterior_name = f'XPL_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo-1}'
+                xip_anterior_name = f'XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo-1}'
                 if xip_anterior_name in variables.keys():
                     xip_anterior_var = variables[xip_anterior_name]
                     left_expesion.append(xip_anterior_var)
@@ -81,7 +81,7 @@ def _balance_masa_bodega_puerto(restricciones:list, variables:list, cargas:list,
                 
             
             
-            xip_actual_name = f'XPL_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo-1}'
+            xip_actual_name = f'XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo-1}'
             if xip_actual_name in variables.keys():
                 xip_actual_var = variables[xip_actual_name]
                 left_expesion.append(xip_actual_var)
@@ -201,15 +201,18 @@ def _balance_masa_ua(restricciones:list, variables:list, ingredientes:list, carg
 
                 # agregar el despacho directo si lo hay
                 for carga in cargas:
-                    xtd_name = f'XTD_{carga}_{ua}_{periodo}'
-                    if xtd_name in variables:
-                        xtd_var = variables[xtd_name]
-                        left_expesion.append(-1*xtd_var)
-                            
-                    xtr_name = f'XTR_{carga}_{ua}_{periodo}'
-                    if xtr_name in variables.keys():
-                        xtr_var = variables[xtr_name]
-                        left_expesion.append(-1*xtr_var) 
+                    
+                    # se asume que el lead time es 2
+                    if periodo >= 2:                    
+                        xtd_name = f'XTD_{carga}_{ua}_{periodo-2}'
+                        if xtd_name in variables:
+                            xtd_var = variables[xtd_name]
+                            left_expesion.append(-1*xtd_var)
+                                
+                        xtr_name = f'XTR_{carga}_{ua}_{periodo-2}'
+                        if xtr_name in variables.keys():
+                            xtr_var = variables[xtr_name]
+                            left_expesion.append(-1*xtr_var) 
                             
                 # XDM: demanda
                 xdm_name = f'XDM_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}'

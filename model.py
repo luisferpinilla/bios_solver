@@ -5,6 +5,7 @@ from modelador.generador_parametros import generar_parametros
 from modelador.generador_variables import generar_variables
 from modelador.generador_restricciones import generar_restricciones
 from modelador.generador_fobjetivo import generar_fob
+from modelador.generador_reporte import generar_reporte
 
 
 
@@ -55,9 +56,7 @@ if __name__ == '__main__':
     
     problema.writeLP(filename='model.lp')
     
-    for v in problema.variables():
-        if v.varValue != 0:
-            print(v.name, "=", v.varValue)
+    generar_reporte(parametros=parametros, variables=variables)
     
     
     
