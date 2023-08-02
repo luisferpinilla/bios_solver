@@ -8,9 +8,6 @@ from modelador.generador_fobjetivo import generar_fob
 from modelador.generador_reporte import generar_reporte
 
 
-
-
-
 def generar_problema(file:str):
     
     now = datetime(2023, 7, 7)
@@ -53,8 +50,7 @@ if __name__ == '__main__':
     
     problema.writeLP(filename='model.lp')
     
-    problema.solve()
-       
+    problema.solve()       
     
     generar_reporte(parametros=parametros, variables=variables)
     

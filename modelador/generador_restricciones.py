@@ -1,41 +1,43 @@
 import pulp as pu
 
-def _balance_masa_bif(restricciones: list, variables:list, llegadas: list, unidades:list):
+def _balance_masa_bif(restricciones: list, variables:list, cargas: list, llegadas:dict, unidades:list, periodos:int):
 
     # AR = XPL + XTD
     
     restricciones['balance_masa_bif'] = list()
 
-    for llegada in llegadas:
-
-        campos = llegada.split('_')
-        empresa = campos[1]
-        ingrediente = campos[2]
-        puerto = campos[3]
-        barco = campos[4]
-        periodo = int(campos[5])
-
-        # AR = XPL + XTD
-
-        ar_name = f'AR_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}'
-
-        ar_val = llegadas[ar_name]
-
-        xpl_name = f'XPL_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}'
-        xpl_var = variables[xpl_name]
-
-        left_expesion = list()
-
-        left_expesion.append(xpl_var)
-
-        for ua in unidades:
-
-            xtd_name = f'XTD_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}'
-            xtd_var = variables[xtd_name]
-
-            left_expesion.append(xtd_var)
-
-        restricciones['balance_masa_bif'].append((pu.lpSum(left_expesion) == ar_val, f'balance bif_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}'))
+    for carga in cargas:
+        for periodo in range(periodos):
+            campos = carga.split('_')
+            empresa = campos[0]
+            ingrediente = campos[1]
+            puerto = campos[2]
+            barco = campos[3]
+    
+            # AR = XPL + sum(XTD)
+    
+            ar_name = f'AR_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}'
+    
+            if ar_name in llegadas.keys():
+                ar_val = llegadas[ar_name]
+            else:
+                ar_val = 0.0
+    
+            xpl_name = f'XPL_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}'
+            xpl_var = variables['XPL'][xpl_name]
+    
+            left_expesion = list()
+    
+            left_expesion.append(xpl_var)
+    
+            for ua in unidades:
+    
+                xtd_name = f'XTD_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}'
+                xtd_var = variables['XTD'][xtd_name]
+    
+                left_expesion.append(xtd_var)
+    
+            restricciones['balance_masa_bif'].append((pu.lpSum(left_expesion) == ar_val, f'balance bif_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}'))
 
 
 def _balance_masa_bodega_puerto(restricciones:list, variables:list, cargas:list, unidades:list, inventario_inicial:dict, periodos=30):
@@ -46,7 +48,9 @@ def _balance_masa_bodega_puerto(restricciones:list, variables:list, cargas:list,
     
     # XIP_t-1 + XPL - sum(XTR) = XIP
     # XIP_t-1 + XPL - sum(XTR) - XIP = 0
-    # IP      + XPL - sum(XTR) - XIP = 0
+    
+    #         + XPL - sum(XTR) - XIP = -IP
+    #         - XPL + sum(XTR) + XIP = +IP
     
     # carga: empresa_ingrediente_puerto_barco
     
@@ -68,8 +72,8 @@ def _balance_masa_bodega_puerto(restricciones:list, variables:list, cargas:list,
             
             if periodo > 0:
                 xip_anterior_name = f'XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo-1}'
-                if xip_anterior_name in variables.keys():
-                    xip_anterior_var = variables[xip_anterior_name]
+                if xip_anterior_name in variables['XIP'].keys():
+                    xip_anterior_var = variables['XIP'][xip_anterior_name]
                     left_expesion.append(xip_anterior_var)
             else:
                 ip_name = f'IP_{carga}'
@@ -77,25 +81,25 @@ def _balance_masa_bodega_puerto(restricciones:list, variables:list, cargas:list,
                     ip_value = inventario_inicial[ip_name]
                 else:
                     ip_value = 0.0
-                right_value = right_value -ip_value
+                right_value = right_value - ip_value
                 
             
             
-            xip_actual_name = f'XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo-1}'
-            if xip_actual_name in variables.keys():
-                xip_actual_var = variables[xip_actual_name]
+            xip_actual_name = f'XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}'
+            if xip_actual_name in variables['XIP'].keys():
+                xip_actual_var = variables['XIP'][xip_actual_name]
                 left_expesion.append(xip_actual_var)
             
-            xpl_name = f'XPL_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo-1}'            
-            if xpl_name in variables.keys():
-                xpl_name_var = variables[xpl_name]
+            xpl_name = f'XPL_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}'            
+            if xpl_name in variables['XPL'].keys():
+                xpl_name_var = variables['XPL'][xpl_name]
                 left_expesion.append(xpl_name_var)
 
             
             for ua in unidades:
                 xtr_name = f'XTR_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}'
-                if xtr_name in variables.keys():
-                    xtr_var = variables[xtr_name]
+                if xtr_name in variables['XTR'].keys():
+                    xtr_var = variables['XTR'][xtr_name]
                     left_expesion.append(-1*xtr_var)
             
             
@@ -135,11 +139,12 @@ def _satisfaccion_demanda_plantas(restricciones:list, variables:list, plantas:li
                     if planta == campos[0] + '_' + campos[1]:
     
                         xdm_name = f'XDM_{planta}_{unidad}_{ingrediente}_{periodo}'
-                        xdm_var = variables[xdm_name]
+                        xdm_var = variables['XDM'][xdm_name]
                         
                         left_expesion.append(xdm_var)
                 
-                rest = (pu.lpSum(left_expesion)==dm_value, f'satisfaccion_demanda_{dm_name}') 
+                # sum(XDM) = DM*BCD 
+                rest = (pu.lpSum(left_expesion)>=dm_value, f'satisfaccion_demanda_{dm_name}') 
                 
                 restricciones['Satisfaccion_demanda'].append(rest)            
 
@@ -172,7 +177,7 @@ def _balance_masa_ua(restricciones:list, variables:list, ingredientes:list, carg
                 
                 # XIU 
                 xiu_cur_name = f'XIU_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}'
-                xiu_cur_var = variables[xiu_cur_name]
+                xiu_cur_var = variables['XIU'][xiu_cur_name]
                 left_expesion.append(xiu_cur_var)
 
                 
@@ -181,7 +186,7 @@ def _balance_masa_ua(restricciones:list, variables:list, ingredientes:list, carg
                 if periodo > 0:
                     # traer variable de inventario final
                     xiu_ant_name = f'XIU_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo-1}'
-                    xiu_ant_var = variables[xiu_ant_name]
+                    xiu_ant_var = variables['XIU'][xiu_ant_name]
                     left_expesion.append(-1*xiu_ant_var)
                     
                 else:
@@ -205,21 +210,21 @@ def _balance_masa_ua(restricciones:list, variables:list, ingredientes:list, carg
                     # se asume que el lead time es 2
                     if periodo >= 2:                    
                         xtd_name = f'XTD_{carga}_{ua}_{periodo-2}'
-                        if xtd_name in variables:
-                            xtd_var = variables[xtd_name]
+                        if xtd_name in variables['XTD']:
+                            xtd_var = variables['XTD'][xtd_name]
                             left_expesion.append(-1*xtd_var)
                                 
                         xtr_name = f'XTR_{carga}_{ua}_{periodo-2}'
-                        if xtr_name in variables.keys():
-                            xtr_var = variables[xtr_name]
+                        if xtr_name in variables['XTR'].keys():
+                            xtr_var = variables['XTR'][xtr_name]
                             left_expesion.append(-1*xtr_var) 
                             
                 # XDM: demanda
                 xdm_name = f'XDM_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}'
-                xdm_var = variables[xdm_name]
+                xdm_var = variables['XDM'][xdm_name]
                 left_expesion.append(xdm_var)
                 
-                # armar restriccion
+                # # XIU - XIU_t-1      - XTD_t-2 - XTR_t-2 + XDM = TR
                 rest = (pu.lpSum(left_expesion)==right_value, f'balance_ua_{ua}_{ingrediente}_{periodo}')
             
                 # agregar la restriccion
@@ -253,18 +258,18 @@ def _capacidad_camiones(restricciones:list, variables:list, cargas:list, unidade
                 xdt_name = f'XDR_{carga}_{ua}_{periodo}' 
                 itd_name = f'IDR_{carga}_{ua}_{periodo}' 
 
-                if xtr_name in variables.keys() and itr_name in variables.keys():
+                if xtr_name in variables['XTR'].keys() and itr_name in variables['ITR'].keys():
                     
-                    xtr_var = variables[xtr_name]
-                    itr_var = variables[itr_name]
+                    xtr_var = variables['XTR'][xtr_name]
+                    itr_var = variables['ITR'][itr_name]
                     
                     rest = (xtr_var <= 34*itr_var ,f'capacidad de carga de camiones despacho almacenamiento {carga}_{ua}_{periodo}')
                     restricciones['Capacidad de carga de camiones'].append(rest)
             
-                if xdt_name in variables.keys() and itd_name in variables.keys():
+                if xdt_name in variables['XTD'].keys() and itd_name in variables['ITD'].keys():
                     
-                    xdt_var = variables[xdt_name]
-                    idt_var = variables[itd_name]
+                    xdt_var = variables['XTD'][xdt_name]
+                    idt_var = variables['ITD'][itd_name]
                     
                     rest = (xdt_var <= 34*idt_var ,f'capacidad de carga de camiones despacho directo {carga}_{ua}_{periodo}')
                     restricciones['Capacidad de carga de camiones'].append(rest)
@@ -281,10 +286,10 @@ def _capacidad_unidades_almacenamiento(restricciones:list, variables:list, unida
             for ingrediente in ingredientes:                
                 
                 iiu_name = f'IIU_{unidad}_{ingrediente}_{periodo}'
-                iiu_var = variables[iiu_name]
+                iiu_var = variables['IIU'][iiu_name]
 
                 xiu_name = f'XIU_{unidad}_{ingrediente}_{periodo}'
-                xiu_var = variables[xiu_name]
+                xiu_var = variables['XIU'][xiu_name]
                 
                 ca_name = f'CA_{unidad}_{ingrediente}'
                 ca_value = capacidad_unidades[ca_name]
@@ -305,7 +310,7 @@ def _asignacion_unidades_almacenamiento(restricciones: list, variables:list, uni
             left_expesion = list()            
             for ingrediente in ingredientes:                
                 iiu_name = f'IIU_{unidad}_{ingrediente}_{periodo}'
-                iiu_var = variables[iiu_name]
+                iiu_var = variables['IIU'][iiu_name]
                 left_expesion.append(iiu_var)
                 
             rest = (pu.lpSum(left_expesion)<=1, f'cantidad de ingredientes en {unidad}_{periodo}')
@@ -345,7 +350,7 @@ def generar_restricciones(parametros:list, variables:list):
     ## Balance de masa en cargas en puerto
     
     ### Balance de masa en bif    
-    _balance_masa_bif(restricciones, variables, llegadas, unidades)
+    _balance_masa_bif(restricciones, variables, cargas, llegadas, unidades, periodos)
     
    
     ### Balance de masa en Bodega puerto
