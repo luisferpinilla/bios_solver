@@ -63,7 +63,9 @@ def generar_parametros(parametros:dict, file:str, now:datetime)->dict:
 
     costo_cambio_empresa_df = pd.read_excel(file, 'venta_entre_empresas')
 
-    costo_cambio_empresa_df.melt(id_vars='origen', value_vars=['contegral', 'finca'], var_name='destino')
+    costo_cambio_empresa_df = costo_cambio_empresa_df.melt(id_vars='origen', value_vars=['contegral', 'finca'], var_name='destino')
+
+    parametros['parametros']['costo_venta_intercompany'] = {f"CW_{costo_cambio_empresa_df.iloc[x]['origen']}_{costo_cambio_empresa_df.iloc[x]['destino']}":costo_cambio_empresa_df.iloc[x]['value'] for x in range(costo_cambio_empresa_df.shape[0])}
 
     # $TT_{jk}$ : tiempo en días para transportar la carga desde el puerto $j$ hacia la planta $k$.
 

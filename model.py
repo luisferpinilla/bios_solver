@@ -51,10 +51,10 @@ if __name__ == '__main__':
         for rest in value:        
             problema += rest
     
+    problema.writeLP(filename='model.lp')
     
     problema.solve()
-    
-    problema.writeLP(filename='model.lp')
+       
     
     generar_reporte(parametros=parametros, variables=variables)
     
