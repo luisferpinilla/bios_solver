@@ -28,7 +28,7 @@ def generar_variables(parametros:dict)->dict:
             variables['XPL'][xpl_name] = pu.LpVariable(name=xpl_name, lowBound=0.0, cat=pu.LpContinuous)
             
             for ua in unidades:
-                xtd_name = f"XTD_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}"        
+                xtd_name = f"XTD_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{ingrediente}_{periodo}"        
                 variables['XTD'][xtd_name] = pu.LpVariable(name=xtd_name, lowBound=0.0, cat=pu.LpContinuous)
 
     ## $XIP_{j}^{t}$ : Cantidad de la carga $l$ en puerto al final del periodo $t$
@@ -58,15 +58,15 @@ def generar_variables(parametros:dict)->dict:
             for ua in unidades:
                 
                 ## $XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
-                xtr_name = f"XTR_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}"        
+                xtr_name = f"XTR_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{ingrediente}_{periodo}"        
                 variables['XTR'][xtr_name] = pu.LpVariable(name=xtr_name, lowBound=0.0, cat=pu.LpContinuous)
     
                 ## $ITR_{lm}^{t}$ : Cantidad de camiones con carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
-                itr_name = f"ITR_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}"        
+                itr_name = f"ITR_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{ingrediente}_{periodo}"        
                 variables['ITR'][itr_name] = pu.LpVariable(name=itr_name, lowBound=0.0, cat=pu.LpInteger)
                 
                 ## $ITD_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar directamente hacia la unidad $m$ durante el día $t$
-                itd_name = f"ITD_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}"        
+                itd_name = f"ITD_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{ingrediente}_{periodo}"        
                 variables['ITD'][itd_name] = pu.LpVariable(name=itd_name, lowBound=0.0, cat=pu.LpInteger)
 
 
