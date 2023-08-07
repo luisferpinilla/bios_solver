@@ -32,7 +32,7 @@ def _balance_masa_bif(restricciones: list, variables:list, cargas: list, llegada
     
             for ua in unidades:
     
-                xtd_name = f'XTD_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}'
+                xtd_name = f'XTD_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{ingrediente}_{periodo}'
                 xtd_var = variables['XTD'][xtd_name]
     
                 left_expesion.append(xtd_var)
@@ -97,7 +97,7 @@ def _balance_masa_bodega_puerto(restricciones:list, variables:list, cargas:list,
 
             
             for ua in unidades:
-                xtr_name = f'XTR_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}'
+                xtr_name = f'XTR_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{ingrediente}_{periodo}'
                 if xtr_name in variables['XTR'].keys():
                     xtr_var = variables['XTR'][xtr_name]
                     left_expesion.append(-1*xtr_var)
@@ -209,12 +209,12 @@ def _balance_masa_ua(restricciones:list, variables:list, ingredientes:list, carg
                     
                     # se asume que el lead time es 2
                     if periodo >= 2:                    
-                        xtd_name = f'XTD_{carga}_{ua}_{periodo-2}'
+                        xtd_name = f'XTD_{carga}_{ua}_{ingrediente}_{periodo-2}'
                         if xtd_name in variables['XTD']:
                             xtd_var = variables['XTD'][xtd_name]
                             left_expesion.append(-1*xtd_var)
                                 
-                        xtr_name = f'XTR_{carga}_{ua}_{periodo-2}'
+                        xtr_name = f'XTR_{carga}_{ua}_{ingrediente}_{periodo-2}'
                         if xtr_name in variables['XTR'].keys():
                             xtr_var = variables['XTR'][xtr_name]
                             left_expesion.append(-1*xtr_var) 
@@ -236,6 +236,9 @@ def _mantenimiento_ss_plantas(restricciones:list, variables:list):
     # sum(XDM) > SS * (1 - BSS)
     # sum(XDM) > SS - BSS*SS
     
+    
+    
+    
     pass
 
 
@@ -249,11 +252,17 @@ def _capacidad_camiones(restricciones:list, variables:list, cargas:list, unidade
     restricciones['Capacidad de carga de camiones'] = list()
     
     for carga in cargas:
+        campos = carga.split('_')
+        empresa = campos[0]
+        ingrediente = campos[1]
+        puerto = campos[2]
+        barco = campos[3]
+        
         for ua in unidades:
             for periodo in range(periodos):
                 
-                xtr_name = f'XTR_{carga}_{ua}_{periodo}'                
-                itr_name = f'ITR_{carga}_{ua}_{periodo}'
+                xtr_name = f'XTR_{carga}_{ua}_{ingrediente}_{periodo}'                
+                itr_name = f'ITR_{carga}_{ua}_{ingrediente}_{periodo}'
                 
                 xdt_name = f'XDR_{carga}_{ua}_{periodo}' 
                 itd_name = f'IDR_{carga}_{ua}_{periodo}' 
