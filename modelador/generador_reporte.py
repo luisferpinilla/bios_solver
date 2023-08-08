@@ -19,8 +19,6 @@ def generar_periodos(parametros:dict):
         
     periodos_df = pd.DataFrame(periodos)
     
-    periodos_df.to_parquet('periodos.parquet')
-    
     return periodos_df
 
 
@@ -55,12 +53,8 @@ def generar_invenario_puerto(parametros:dict, variables:dict):
             invenatario_puertos['inventario_final'].append(xip_var.varValue)
             
     invenatario_puertos_df = pd.DataFrame(invenatario_puertos)
-    
-    invenatario_puertos_df.to_parquet('invenatarios_puerto.parquet')
-    
+   
     return invenatario_puertos_df
-    
-    
     
 
 def generar_inventario_plantas(parametros:dict, variables:dict, verbose=False):
@@ -71,6 +65,8 @@ def generar_inventario_plantas(parametros:dict, variables:dict, verbose=False):
     inventario_plantas['planta'] =  list()
     inventario_plantas['unidad'] =  list()
     inventario_plantas['ingrediente'] =  list()
+    inventario_plantas['llegadas_barco'] = list()
+    inventario_plantas['llegadas_almacen'] = list()
     inventario_plantas['demanda']=list()
     inventario_plantas['inventario_final'] = list()
     
@@ -101,9 +97,32 @@ def generar_inventario_plantas(parametros:dict, variables:dict, verbose=False):
                 inventario_plantas['demanda'].append(xdm_var.varValue)
                 inventario_plantas['inventario_final'].append(xiu_var.varValue)
                 
+                
+                # totalizar las llegadas desde puerto
+                llegadas_barco = 0.0
+                Llegadas_almacen = 0.0
+                
+                for carga in parametros['conjuntos']['cargas']:
+                    
+                    xtr_name = f'XTR_{carga}_{unidad}_{ingrediente}_{periodo-2}'
+                    xtd_name = f'XTD_{carga}_{unidad}_{ingrediente}_{periodo-2}'
+                    
+                    if xtr_name in variables['XTR']:
+                        xtr_var = variables['XTR'][xtr_name]
+                        Llegadas_almacen = xtr_var.varValue
+                    else:
+                        print(xtr_name, 'no existe')
+                
+                    if xtd_name in variables['XTD']:
+                        xtd_var = variables['XTD'][xtd_name]
+                        llegadas_barco = xtd_var.varValue
+                    else:
+                        print(xtd_name, 'no existe')
+                
+                inventario_plantas['llegadas_barco'].append(llegadas_barco)
+                inventario_plantas['llegadas_almacen'].append(Llegadas_almacen)
+                
     inventario_plantas_df = pd.DataFrame(inventario_plantas)
-    
-    inventario_plantas_df.to_parquet('inventarios_planta.parquet')  
     
     return inventario_plantas_df
 
@@ -115,6 +134,7 @@ def generar_reporte_transitos(parametros:dict, variables:dict):
     transitos['tipo'] = list()
     transitos['empresa_origen'] = list()
     transitos['ingrediente'] = list()
+    transitos['puerto'] = list()
     transitos['barco']=list()
     transitos['empresa_destino']=list()
     transitos['planta']=list()
@@ -132,7 +152,7 @@ def generar_reporte_transitos(parametros:dict, variables:dict):
 
         campos = carga.split('_')
         empresa_origen = campos[0]
-        ingrediente = campos[1]
+        ingrediente_origen = campos[1]
         puerto = campos[2]
         barco = campos[3]
         
@@ -145,9 +165,10 @@ def generar_reporte_transitos(parametros:dict, variables:dict):
             
             for periodo in range(parametros['periodos']):
             
-                xtd_name = f'XTD_{empresa_origen}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}' 
-            
+                xtd_name = f'XTD_{empresa_origen}_{ingrediente_origen}_{puerto}_{barco}_{ua}_{ingrediente_origen}_{periodo}' 
+                                      
                 if xtd_name in variables['XTD']:
+                    
                     xtd_var = variables['XTD'][xtd_name]
                     xtd_val = xtd_var.varValue
                     
@@ -162,9 +183,10 @@ def generar_reporte_transitos(parametros:dict, variables:dict):
                     
                     ct = cf_val + (ct_val + ci_value)*xtd_val
                 
-                    transitos['tipo'].append('Indirecto')
+                    transitos['tipo'].append('Barco->Planta')
                     transitos['empresa_origen'].append(empresa_origen)
-                    transitos['ingrediente'].append(ingrediente)
+                    transitos['puerto'].append(puerto)
+                    transitos['ingrediente'].append(ingrediente_origen)
                     transitos['barco'].append(barco)
                     transitos['empresa_destino'].append(empresa_destino)
                     transitos['planta'].append(planta)
@@ -176,40 +198,92 @@ def generar_reporte_transitos(parametros:dict, variables:dict):
                     transitos['costo_total'].append(ct)
                     transitos['periodo_despacho'].append(periodo)
                     transitos['periodo_llegada'].append(periodo+2)
-        
+                    
+                xtr_name = f'XTR_{empresa_origen}_{ingrediente_origen}_{puerto}_{barco}_{ua}_{ingrediente_origen}_{periodo}' 
+                                          
+                if xtr_name in variables['XTR']:
+                        
+                    xtr_var = variables['XTR'][xtr_name]
+                    xtr_val = xtr_var.varValue
+                        
+                    cf_name = f'CF_{puerto}_{empresa_destino}_{planta}'
+                    cf_val = parametros['parametros']['fletes_fijos'][cf_name]
+                    
+                    ct_name = f'CT_{puerto}_{empresa_destino}_{planta}'
+                    ct_val = parametros['parametros']['fletes_variables'][ct_name]
+                        
+                    ci_name = f'CW_{empresa_origen}_{empresa_destino}'
+                    ci_value = parametros['parametros']['costo_venta_intercompany'][ci_name]
+                        
+                    ct = cf_val + (ct_val + ci_value)*xtr_val
+                    
+                    transitos['tipo'].append('BodegaPuerto->Planta')
+                    transitos['empresa_origen'].append(empresa_origen)
+                    transitos['puerto'].append(puerto)
+                    transitos['ingrediente'].append(ingrediente_origen)
+                    transitos['barco'].append(barco)
+                    transitos['empresa_destino'].append(empresa_destino)
+                    transitos['planta'].append(planta)
+                    transitos['unidad'].append(unidad)
+                    transitos['cantidad'].append(xtr_val)
+                    transitos['costo_fijo'].append(cf_val)
+                    transitos['costo_variable'].append(ct_val)
+                    transitos['costo_intercompany'].append(ci_value)
+                    transitos['costo_total'].append(ct)
+                    transitos['periodo_despacho'].append(periodo)
+                    transitos['periodo_llegada'].append(periodo+2)
+            
             
     transitos_df = pd.DataFrame(transitos)
+    
+    transitos_df = transitos_df[transitos_df['cantidad']>0]
                
     return transitos_df
             
-        
-        
     
 def generar_reporte(parametros:dict, variables:dict):
     
-    periodos_df = generar_periodos(parametros=parametros)
     
-    transitos_df = generar_reporte_transitos(parametros=parametros, variables=variables)
-    
-    inventarios_puertos_df = generar_invenario_puerto(parametros=parametros, variables=variables)
-    
-    inventarios_plantas_df = generar_inventario_plantas(parametros=parametros, variables=variables) 
-    
+    print('guardando archivos')
     with pd.ExcelWriter('data.xlsx') as writer:
         
         print('guardar periodos')
-        periodos_df.to_excel(writer, sheet_name='periodos')
-        
-        print('guardar inventario_plantas')
-        inventarios_plantas_df.to_excel(writer, sheet_name='inventario_plantas')
-        
-        print('guardar inventario_puertos')
-        inventarios_puertos_df.to_excel(writer, sheet_name='inventario_puertos')
+        periodos_df = generar_periodos(parametros=parametros)
+        periodos_df.to_excel(writer, sheet_name='periodos', index=False)
         
         print('guardar transitos')
-        transitos_df.to_excel(writer, sheet_name='transitos')
+        transitos_df = generar_reporte_transitos(parametros=parametros, variables=variables)
+        transitos_df.to_excel(writer, sheet_name='transitos', index=False)
+        
+        print('guardar inventario_plantas')
+        inventarios_plantas_df = generar_inventario_plantas(parametros=parametros, variables=variables)
+        inventarios_plantas_df.to_excel(writer, sheet_name='inventario_plantas', index=False)
+        
+        print('guardar inventario_puertos')
+        inventarios_puertos_df = generar_invenario_puerto(parametros=parametros, variables=variables)
+        inventarios_puertos_df.to_excel(writer, sheet_name='inventario_puertos', index=False)
         
         print('listo')
     
+
+def guardar_data(parametros:dict, variables:dict):
+    
+    data_dict = dict()
+    data_dict['tipo'] = list()
+    data_dict['nombre'] = list()
+    data_dict['value'] = list()
     
     
+    for tipo, var_list in variables.items():
+        for var_name, var_value in var_list.items():
+            data_dict['tipo'].append(tipo)
+            data_dict['nombre'].append(var_name)
+            data_dict['value'].append(var_value.varValue)  
+            
+    df = pd.DataFrame(data_dict)
+    
+    df.to_excel('borrame.xlsx', index=False)
+        
+
+    
+        
