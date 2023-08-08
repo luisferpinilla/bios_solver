@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
+import numpy as np
 from datetime import datetime
 
 
@@ -99,13 +100,22 @@ def generar_parametros(parametros:dict, file:str, now:datetime)->dict:
 
     parametros['parametros']['consumo_proyectado'] = {f"DM_{demanda_df.iloc[i]['key']}_{demanda_df.iloc[i]['periodo']}": demanda_df.iloc[i]['consumo'] for i in range(demanda_df.shape[0])}
 
-    # $CD_{ik}^{t}$ : Costo de no satisfacer la demanda del ingrediente $i$  en la planta $k$ durante el día $t$.
+    
 
     # $CI_{im}^{t}$ : Costo de asignar el ingrediente $i$ a la unidad de almacenamiento $m$ durante el periodo $t$. Si la unidad de almacenamiento no puede contener el ingrediente, este costo será $infinito$.
 
     # $SS_{ik}^{t}$ : Inventario de seguridad a tener del ingrediente $i$ en la planta $k$ al final del día $t$.
+    ss_df = pd.read_excel(file, sheet_name='consumo_proyectado')
+    ss_df.drop(columns=['ingrediente', 'planta'], inplace=True)
+    ss_df.set_index(keys='key', drop=True, inplace=True)
+    ss_df['SS'] = ss_df.apply(np.mean, axis=1)*10    
+    parametros['parametros']['safety_stock'] = {f'SS_{k}':ss_df.loc[k]['SS'] for k in ss_df.index}
 
     # $CS_{ik}^{t}$ : Costo de no satisfacer el inventario de seguridad para el ingrediente $i$ en la planta $k$ durante el día $t$.
+    parametros['parametros']['costo_no_safety_stock'] = {f'CS_{k}':1000000 for k in ss_df.index}
+
+    # $CD_{ik}^{t}$ : Costo de no satisfacer la demanda del ingrediente $i$  en la planta $k$ durante el día $t$.
+    parametros['parametros']['costo_no_demanda'] = {f'CD_{k}':10000000 for k in ss_df.index}
 
     # $TR_{im}^{t}$ : Cantidad en tránsito programada para llegar a la unidad de almacenamiento $m$ durante el día $t$,
 
