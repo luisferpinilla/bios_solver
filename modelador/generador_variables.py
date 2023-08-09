@@ -6,6 +6,7 @@ def generar_variables(parametros:dict)->dict:
     
     periodos = parametros['periodos']
     ingredientes = parametros['conjuntos']['ingredientes']
+    plantas = parametros['conjuntos']['plantas']
     unidades = parametros['conjuntos']['unidades_almacenamiento']  
     cargas = parametros['conjuntos']['cargas']
 
@@ -85,20 +86,27 @@ def generar_variables(parametros:dict)->dict:
             for periodo in range(periodos):
                 ## $IIU_{im}^{t}$ : Binaria, 1 sí el ingrediente $i$ esta almacenado en la unidad de almacenamiento $m$ al final del periodo $t$; 0 en otro caso
                 iiu_name = f'IIU_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}'
-                variables['IIU'][iiu_name] = pu.LpVariable(name=iiu_name, lowBound=0.0, cat=pu.LpBinary)
+                variables['IIU'][iiu_name] = pu.LpVariable(name=iiu_name, cat=pu.LpBinary)
                 ## $XIU_{m}^{t}$ : Cantidad de ingrediente almacenado en la unidad de almacenameinto $m$ al final del periodo $t$
                 xiu_name = f'XIU_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}'
                 variables['XIU'][xiu_name] = pu.LpVariable(name=xiu_name, lowBound=0.0, cat=pu.LpContinuous)    
                 ## $XDM_{im}^{t}$: Cantidad de producto $i$ a sacar de la unidad de almacenamiento $m$ para satisfacer la demanda e el día $t$.
                 xdm_name = f'XDM_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}'
                 variables['XDM'][xdm_name] = pu.LpVariable(name=xdm_name, lowBound=0.0, cat=pu.LpContinuous)    
+
+    
+    
+    for planta in plantas:
+        for ingrediente in ingredientes:
+            for periodo in range(periodos):    
                 ## $BSS_{ik}^{t}$ : Binaria, si se cumple que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté sobre el nivel de seguridad $SS_{ik}^{t}$
-                bss_name = f'BSS_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}'
-                variables['BSS'][bss_name] = pu.LpVariable(name=bss_name, lowBound=0.0, cat=pu.LpBinary)
+                bss_name = f'BSS_{planta}_{ingrediente}_{periodo}'
+                variables['BSS'][bss_name] = pu.LpVariable(name=bss_name, cat=pu.LpBinary)
                 ## $BCD_{ik}^{t}$ : si estará permitido que la demanda de un ingrediente $i$ no se satisfaga en la planta $k$ al final del día $t$
-                bcd_name = f'BCD_{empresa}_{planta}_{unidad}_{ingrediente}_{periodo}'
-                variables['BCD'][bcd_name] = pu.LpVariable(name=bcd_name, lowBound=0.0, cat=pu.LpBinary)
-    
-    
+                bcd_name = f'BCD_{planta}_{ingrediente}_{periodo}'
+                variables['BCD'][bcd_name] = pu.LpVariable(name=bcd_name, cat=pu.LpBinary)
+                
+
+
     return variables
 

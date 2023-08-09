@@ -231,15 +231,42 @@ def _balance_masa_ua(restricciones:list, variables:list, ingredientes:list, carg
                 restricciones['balance_ua'].append(rest)
     
     
-def _mantenimiento_ss_plantas(restricciones:list, variables:list):
+def _mantenimiento_ss_plantas(restricciones:list, variables:list, unidades:list, ingredientes:list, periodos=30):
     
     # sum(XDM) > SS * (1 - BSS)
     # sum(XDM) > SS - BSS*SS
+    # sum(XDM)  -SS + BSS*SS  > 0.0
     
     
+    restricciones['ss_plantas'] = list()
     
     
-    pass
+    for ingrediente in ingredientes:
+        for periodo in range (periodos):    
+            left_expesion = list()
+            
+            # -SS
+            ss_name = f'BSS_{}'
+            
+            
+            # sum(XDM)
+            for ua in unidades:
+                
+                campos = ua.split('_')
+                empresa = campos[0]
+                planta = campos[1]
+                # unidad = campos[2]
+                
+                xdm_name = f'XDM_{ua}_{ingrediente}_{periodo}'
+                if xdm_name in variables['XDM']:
+                    xdm_var = variables['XDM'][xdm_name]
+                    left_expesion.append(xdm_var)
+                
+    
+    
+        rest = (pu.lpSum(left_expesion)>=0, f'satisfacción ss {empresa}_{planta}_{ingrediente}_{periodo}')
+    
+    restricciones['ss_plantas'].append(rest)
 
 
 def _capacidad_camiones(restricciones:list, variables:list, cargas:list, unidades:list, periodos=30):
@@ -347,7 +374,7 @@ def generar_restricciones(parametros:list, variables:list):
     _satisfaccion_demanda_plantas(restricciones, variables, plantas, ingredientes, unidades, consumo_proyectado,periodos=periodos)
 
     # Mantenimiento del nivel de seguridad de igredientes en plantas
-    _mantenimiento_ss_plantas(restricciones, variables)
+    _mantenimiento_ss_plantas(restricciones, variables, unidades, ingredientes)
 
     # Capacidad de carga de los camiones
     _capacidad_camiones(restricciones, variables, cargas, unidades,periodos=periodos)
