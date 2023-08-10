@@ -7,13 +7,13 @@ Created on Sun Jul 30 15:11:39 2023
 
 import pandas as pd
 
-def generar_periodos(parametros:dict):
+def generar_periodos(problema:dict):
     
     periodos = dict()
     periodos['periodos'] = list()
     periodos['fechas'] =  list()
     
-    for k,v in parametros['conjuntos']['periodos'].items():
+    for k,v in problema['conjuntos']['periodos'].items():
         periodos['periodos'].append(k)
         periodos['fechas'].append(v)
         
@@ -22,7 +22,7 @@ def generar_periodos(parametros:dict):
     return periodos_df
 
 
-def generar_invenario_puerto(parametros:dict, variables:dict):
+def generar_invenario_puerto(problema:dict, variables:dict):
     
     invenatario_puertos = dict()
     invenatario_puertos['periodo'] = list()
@@ -33,8 +33,8 @@ def generar_invenario_puerto(parametros:dict, variables:dict):
     invenatario_puertos['inventario_final'] = list()
     
     
-    for carga in parametros['conjuntos']['cargas']:
-        for periodo in range(parametros['periodos']):
+    for carga in problema['conjuntos']['cargas']:
+        for periodo in range(problema['periodos']):
                 
             campos = carga.split('_')
             empresa = campos[0]
@@ -57,7 +57,7 @@ def generar_invenario_puerto(parametros:dict, variables:dict):
     return invenatario_puertos_df
     
 
-def generar_inventario_plantas(parametros:dict, variables:dict, verbose=False):
+def generar_inventario_plantas(problema:dict, variables:dict, verbose=False):
 
     inventario_plantas = dict()
     inventario_plantas['periodo'] = list()
@@ -71,9 +71,9 @@ def generar_inventario_plantas(parametros:dict, variables:dict, verbose=False):
     inventario_plantas['inventario_final'] = list()
     
     
-    for ingrediente in parametros['conjuntos']['ingredientes']:
-        for unidad in parametros['conjuntos']['unidades_almacenamiento']:
-            for periodo in range(parametros['periodos']):
+    for ingrediente in problema['conjuntos']['ingredientes']:
+        for unidad in problema['conjuntos']['unidades_almacenamiento']:
+            for periodo in range(problema['periodos']):
                 
                 if verbose:
                     print(unidad,ingrediente,periodo)
@@ -102,7 +102,7 @@ def generar_inventario_plantas(parametros:dict, variables:dict, verbose=False):
                 llegadas_barco = 0.0
                 Llegadas_almacen = 0.0
                 
-                for carga in parametros['conjuntos']['cargas']:
+                for carga in problema['conjuntos']['cargas']:
                     
                     xtr_name = f'XTR_{carga}_{unidad}_{ingrediente}_{periodo-2}'
                     xtd_name = f'XTD_{carga}_{unidad}_{ingrediente}_{periodo-2}'
@@ -127,7 +127,7 @@ def generar_inventario_plantas(parametros:dict, variables:dict, verbose=False):
     return inventario_plantas_df
 
 
-def generar_reporte_transitos(parametros:dict, variables:dict):
+def generar_reporte_transitos(problema:dict, variables:dict):
     
     transitos = dict()
     
@@ -148,7 +148,7 @@ def generar_reporte_transitos(parametros:dict, variables:dict):
     transitos['periodo_llegada'] = list()
     
     
-    for carga in parametros['conjuntos']['cargas']:
+    for carga in problema['conjuntos']['cargas']:
 
         campos = carga.split('_')
         empresa_origen = campos[0]
@@ -156,14 +156,14 @@ def generar_reporte_transitos(parametros:dict, variables:dict):
         puerto = campos[2]
         barco = campos[3]
         
-        for ua in parametros['conjuntos']['unidades_almacenamiento']:
+        for ua in problema['conjuntos']['unidades_almacenamiento']:
             
             campos_ua = ua.split('_')
             empresa_destino = campos_ua[0]
             planta = campos_ua[1]
             unidad = campos_ua[2]
             
-            for periodo in range(parametros['periodos']):
+            for periodo in range(problema['periodos']):
             
                 xtd_name = f'XTD_{empresa_origen}_{ingrediente_origen}_{puerto}_{barco}_{ua}_{ingrediente_origen}_{periodo}' 
                                       
@@ -173,13 +173,13 @@ def generar_reporte_transitos(parametros:dict, variables:dict):
                     xtd_val = xtd_var.varValue
                     
                     cf_name = f'CF_{puerto}_{empresa_destino}_{planta}'
-                    cf_val = parametros['parametros']['fletes_fijos'][cf_name]
+                    cf_val = problema['parametros']['fletes_fijos'][cf_name]
                 
                     ct_name = f'CT_{puerto}_{empresa_destino}_{planta}'
-                    ct_val = parametros['parametros']['fletes_variables'][ct_name]
+                    ct_val = problema['parametros']['fletes_variables'][ct_name]
                     
                     ci_name = f'CW_{empresa_origen}_{empresa_destino}'
-                    ci_value = parametros['parametros']['costo_venta_intercompany'][ci_name]
+                    ci_value = problema['parametros']['costo_venta_intercompany'][ci_name]
                     
                     ct = cf_val + (ct_val + ci_value)*xtd_val
                 
@@ -207,13 +207,13 @@ def generar_reporte_transitos(parametros:dict, variables:dict):
                     xtr_val = xtr_var.varValue
                         
                     cf_name = f'CF_{puerto}_{empresa_destino}_{planta}'
-                    cf_val = parametros['parametros']['fletes_fijos'][cf_name]
+                    cf_val = problema['parametros']['fletes_fijos'][cf_name]
                     
                     ct_name = f'CT_{puerto}_{empresa_destino}_{planta}'
-                    ct_val = parametros['parametros']['fletes_variables'][ct_name]
+                    ct_val = problema['parametros']['fletes_variables'][ct_name]
                         
                     ci_name = f'CW_{empresa_origen}_{empresa_destino}'
-                    ci_value = parametros['parametros']['costo_venta_intercompany'][ci_name]
+                    ci_value = problema['parametros']['costo_venta_intercompany'][ci_name]
                         
                     ct = cf_val + (ct_val + ci_value)*xtr_val
                     
@@ -241,32 +241,32 @@ def generar_reporte_transitos(parametros:dict, variables:dict):
     return transitos_df
             
     
-def generar_reporte(parametros:dict, variables:dict):
+def generar_reporte(problema:dict, variables:dict):
     
     
     print('guardando archivos')
     with pd.ExcelWriter('data.xlsx') as writer:
         
         print('guardar periodos')
-        periodos_df = generar_periodos(parametros=parametros)
+        periodos_df = generar_periodos(problema=problema)
         periodos_df.to_excel(writer, sheet_name='periodos', index=False)
         
         print('guardar transitos')
-        transitos_df = generar_reporte_transitos(parametros=parametros, variables=variables)
+        transitos_df = generar_reporte_transitos(problema=problema, variables=variables)
         transitos_df.to_excel(writer, sheet_name='transitos', index=False)
         
         print('guardar inventario_plantas')
-        inventarios_plantas_df = generar_inventario_plantas(parametros=parametros, variables=variables)
+        inventarios_plantas_df = generar_inventario_plantas(problema=problema, variables=variables)
         inventarios_plantas_df.to_excel(writer, sheet_name='inventario_plantas', index=False)
         
         print('guardar inventario_puertos')
-        inventarios_puertos_df = generar_invenario_puerto(parametros=parametros, variables=variables)
+        inventarios_puertos_df = generar_invenario_puerto(problema=problema, variables=variables)
         inventarios_puertos_df.to_excel(writer, sheet_name='inventario_puertos', index=False)
         
         print('listo')
     
 
-def guardar_data(parametros:dict, variables:dict):
+def guardar_data(problema:dict, variables:dict):
     
     data_dict = dict()
     data_dict['tipo'] = list()

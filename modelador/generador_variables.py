@@ -1,14 +1,14 @@
 import pulp as pu
 
-def generar_variables(parametros:dict)->dict:
+def generar_variables(problema:dict)->dict:
     
     variables = dict()    
     
-    periodos = parametros['periodos']
-    ingredientes = parametros['conjuntos']['ingredientes']
-    plantas = parametros['conjuntos']['plantas']
-    unidades = parametros['conjuntos']['unidades_almacenamiento']  
-    cargas = parametros['conjuntos']['cargas']
+    periodos = problema['periodos']
+    ingredientes = problema['conjuntos']['ingredientes']
+    plantas = problema['conjuntos']['plantas']
+    unidades = problema['conjuntos']['unidades_almacenamiento']  
+    cargas = problema['conjuntos']['cargas']
 
     # Variables asociadas al almacenamiento en puerto
 

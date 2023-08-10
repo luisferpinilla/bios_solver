@@ -12,21 +12,21 @@ def generar_problema(file:str):
     
     now = datetime(2023, 7, 7)
         
-    parametros = dict()
+    problema = dict()
         
-    parametros['fecha_inicial'] = now
+    problema['fecha_inicial'] = now
         
-    generar_conjuntos(parametros=parametros, file=file)
+    generar_conjuntos(problema=problema, file=file)
         
-    generar_parametros(parametros=parametros, file=file, now=now)
+    generar_parametros(problema=problema, file=file, now=now)
         
-    variables = generar_variables(parametros)
+    variables = generar_variables(problema)
             
-    restricciones = generar_restricciones(parametros, variables)    
+    restricciones = generar_restricciones(problema, variables)    
     
-    fobjetivo = generar_fob(parametros, variables)
+    fobjetivo = generar_fob(problema, variables)
     
-    return fobjetivo, restricciones, parametros, variables
+    return fobjetivo, restricciones, problema, variables
 
                                                     
 if __name__ == '__main__':
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     # Problema
     problema = pu.LpProblem("Bios", sense=pu.const.LpMinimize)
     
-    fobjetivo, restricciones, parametros, variables = generar_problema(file=file)
+    fobjetivo, restricciones, problema, variables = generar_problema(file=file)
     
     # Agregar función objetivo
     problema += fobjetivo
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     
     problema.solve()       
     
-    generar_reporte(parametros=parametros, variables=variables)
+    generar_reporte(problema=problema, variables=variables)
     
     
     

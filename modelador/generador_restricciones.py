@@ -42,10 +42,6 @@ def _balance_masa_bif(restricciones: list, variables:list, cargas: list, llegada
 
 def _balance_masa_bodega_puerto(restricciones:list, variables:list, cargas:list, unidades:list, inventario_inicial:dict, periodos=30):
     
-    # XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}: Cantidad de la carga $l$ en puerto al final del periodo $t$
-    # XPL_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo}: Cantidad de la carga $l$ que llega al puerto y que será almacenada en el mismo. 
-    # XTR_{empresa}_{ingrediente}_{puerto}_{barco}_{ua}_{periodo}: Cantidad de carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
-    
     # XIP_t-1 + XPL - sum(XTR) = XIP
     # XIP_t-1 + XPL - sum(XTR) - XIP = 0
     
@@ -246,7 +242,7 @@ def _mantenimiento_ss_plantas(restricciones:list, variables:list, unidades:list,
             left_expesion = list()
             
             # -SS
-            ss_name = f'BSS_{}'
+            # ss_name = f'BSS_{}'
             
             
             # sum(XDM)
@@ -354,21 +350,21 @@ def _asignacion_unidades_almacenamiento(restricciones: list, variables:list, uni
             restricciones['asignación de unidades de almacenamiento'].append(rest)              
 
 
-def generar_restricciones(parametros:list, variables:list):
+def generar_restricciones(problema:list, variables:list):
     
     restricciones = dict()
     
-    # empresas = parametros['conjuntos']['empresas']
-    periodos = parametros['periodos']    
-    plantas = parametros['conjuntos']['plantas']
-    consumo_proyectado = parametros['parametros']['consumo_proyectado']
-    ingredientes = parametros['conjuntos']['ingredientes']
-    inventario_inicial = parametros['parametros']['inventario_inicial_cargas']
-    llegadas = parametros['parametros']['llegadas_cargas']
-    unidades = parametros['conjuntos']['unidades_almacenamiento']
-    cargas = parametros['conjuntos']['cargas']
-    capacidad_unidades = parametros['parametros']['capacidad_almacenamiento_ua']
-    inventario_inicial_ua = parametros['parametros']['inventario_inicial_ua']
+    # empresas = problema['conjuntos']['empresas']
+    periodos = problema['periodos']    
+    plantas = problema['conjuntos']['plantas']
+    consumo_proyectado = problema['parametros']['consumo_proyectado']
+    ingredientes = problema['conjuntos']['ingredientes']
+    inventario_inicial = problema['parametros']['inventario_inicial_cargas']
+    llegadas = problema['parametros']['llegadas_cargas']
+    unidades = problema['conjuntos']['unidades_almacenamiento']
+    cargas = problema['conjuntos']['cargas']
+    capacidad_unidades = problema['parametros']['capacidad_almacenamiento_ua']
+    inventario_inicial_ua = problema['parametros']['inventario_inicial_ua']
     
     # Satisfaccion de la demanda en las plantas
     _satisfaccion_demanda_plantas(restricciones, variables, plantas, ingredientes, unidades, consumo_proyectado,periodos=periodos)

@@ -55,13 +55,13 @@ def _costo_variable_transporte(variables:dict, costos_transporte:dict, cargas:li
     
 
 
-def generar_fob(parametros:dict, variables:dict):
+def generar_fob(problema:dict, variables:dict):
 
-    costos_almacenamiento = parametros['parametros']['costos_almacenamiento']
-    costos_transporte = parametros['parametros']['fletes_variables']
-    periodos = parametros['periodos']
-    cargas = parametros['conjuntos']['cargas']
-    unidades = parametros['conjuntos']['unidades_almacenamiento']
+    costos_almacenamiento = problema['parametros']['costos_almacenamiento']
+    costos_transporte = problema['parametros']['fletes_variables']
+    periodos = problema['periodos']
+    cargas = problema['conjuntos']['cargas']
+    unidades = problema['conjuntos']['unidades_almacenamiento']
 
 
     fob = list()
