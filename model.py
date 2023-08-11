@@ -33,26 +33,24 @@ if __name__ == '__main__':
     
     file = './model_3.xlsm'
     # Problema
-    problema = pu.LpProblem("Bios", sense=pu.const.LpMinimize)
+    solver = pu.LpProblem("Bios", sense=pu.const.LpMinimize)
     
     fobjetivo, restricciones, problema, variables = generar_problema(file=file)
     
     # Agregar función objetivo
-    problema += fobjetivo
-    
-    rest_set = ['Satisfaccion_demanda', 'Capacidad de carga de camiones', 'capacidad de unidades de almacenamiento', 'balance_masa_bif', 'inventario_inicial_puerto', 'balance_puerto', 'balance_ua', 'inventario_inicial_ua', 'asignación de unidades de almacenamiento']
-    
+    solver += fobjetivo
+       
     
     # Agregar restricciones
-    for name,value in restricciones.items():
-        for rest in value:        
-            problema += rest
+    for name, rest_list in restricciones.items():
+        for rest in rest_list:        
+            solver += rest
     
-    problema.writeLP(filename='model.lp')
+    solver.writeLP(filename='model.lp')
     
-    problema.solve()       
+    solver.solve()       
     
-    generar_reporte(problema=problema, variables=variables)
+    # generar_reporte(problema=solver, variables=variables)
     
     
     
