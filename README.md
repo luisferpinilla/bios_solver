@@ -172,7 +172,7 @@ $ITD_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar directamente hac
 
 #### Variables asociadas a la operación en planta
 
-$IIU_{im}^{t}$ : Binaria, 1 sí el ingrediente $i$ esta almacenado en la unidad de almacenamiento $m$ al final del periodo $t$; 0 en otro caso
+$BIU_{im}^{t}$ : Binaria, 1 sí el ingrediente $i$ esta almacenado en la unidad de almacenamiento $m$ al final del periodo $t$; 0 en otro caso
 
 $XIU_{mi}^{t}$ : Cantidad de ingrediente $i$ almacenado en la unidad de almacenameinto $m$ al final del periodo $t$
 
@@ -180,7 +180,7 @@ $XDM_{im}^{t}$: Cantidad de producto $i$ a sacar de la unidad de almacenamiento 
 
 $BSS_{ik}^{t}$ : Binaria, si se cumple que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté sobre el nivel de seguridad $SS_{ik}^{t}$
 
-$BCD_{ik}^{t}$ : si estará permitido que la demanda de un ingrediente $i$ no se satisfaga en la planta $k$ al final del día $t$
+$BCD_{ik}^{t}$ : Binaria, si estará permitido que la demanda de un ingrediente $i$ no se satisfaga en la planta $k$ al final del día $t$
 
 ## Función Objetivo:
 
@@ -232,7 +232,7 @@ $$ \sum_{i}{\sum_{k}{\sum_{t}{CD_{ik}^{t} \cdot BCD_{ik}^{t}}}} $$
 
 Dado que se asume que las unidades de almaceamiento deberían usarse con la mayor eficiencia posible, se buscará tener la menor cantidad de estas ocupada con algún ingrediente
 
-$$ \sum_{i}{\sum_{m}{\sum_{t}{CI_{im}^{t} \cdot  IIU{im}_{t}}}} $$
+$$ \sum_{i}{\sum_{m}{\sum_{t}{CI_{im}^{t} \cdot  BIU{im}_{t}}}} $$
 
 ## Restricciones
 
@@ -312,15 +312,15 @@ $$ XIU_{m}^{t} = XIU_{m}^{t-1} + TR + XDT + \sum_{l}{XTR_{lm}^{t-TT}} - XDM_{km}
 
 Solamente se permitirá que un ingrediente $i$ esté asignado a una unidad de almacenamiento $m$ al final del periodo $t$
 
-$$ \sum_{t}{IIU_{im}^{t}} \leq 1 $$
+$$ \sum_{t}{BIU_{im}^{t}} \leq 1 $$
 
 En conjunto con la anterior, la cantidad de inventario de un ingrediente una unidad  unidad de almacenamiento al final de cualquier día no puede exceder la capacidad de almacenamiento según el ingrediente asignado
 
-$$ XIU_{im}^{t} \leq CA_{m}^{i} \cdot IIU_{im}^{t} $$
+$$ XIU_{im}^{t} \leq CA_{m}^{i} \cdot BIU_{im}^{t} $$
 
 Adicionalmente, la suma de todas las cargas de un ingrediente que se despachen desde el puerto deben estar habilitadas para ser guardadas en las unidades de almacenamiento
 
-$$ XTR_{lm}^{t=t-2} + XTD_{lm}^{t=t-2} \leq BigM \cdot IIU_{im}^{t} \hspace{1cm} \forall t \geq 2 $$
+$$ XTR_{lm}^{t=t-2} + XTD_{lm}^{t=t-2} \leq BigM \cdot BIU_{im}^{t} \hspace{1cm} \forall t \geq 2 $$
 
 # Esquematización de la ETL
 
