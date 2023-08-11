@@ -25,13 +25,13 @@ def _despacho_directo(variables: dict, cargas: list, unidades: list):
 
 def _decargue_barco_a_puerto(variables: dict, cargas: list, periodos: list):
     # $XPL_{l}^{t}$ : Cantidad de la carga $l$ que llega al puerto y que será almacenada en el mismo.
-
+    variables['XPL'] = list()
     for carga in cargas:
         for periodo in periodos:
             xpl_name = f'XPL_{carga}_{periodo}'
             xpl_var = pu.LpVariable(
                 name=xpl_name, lowBound=0.0, cat=pu.LpContinuous)
-            variables['XTD'].append(xpl_var)
+            variables['XPL'].append(xpl_var)
 
 
 def _despacho_desde_puerto(variables: dict, cargas: list):
