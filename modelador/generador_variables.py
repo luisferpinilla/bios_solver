@@ -34,8 +34,26 @@ def _decargue_barco_a_puerto(variables: dict, cargas: list, periodos: list):
             variables['XPL'].append(xpl_var)
 
 
-def _despacho_desde_puerto(variables: dict, cargas: list):
-    pass
+def _despacho_desde_puerto(variables: dict, cargas: list, unidades: list):
+
+    # $XTD_{lm}^{t}$ : Cantidad de carga $l$ en barco a transportar bajo despacho directo hacia la unidad $m$ durante el día $t$
+    variables['XTR'] = list()
+
+    # $ITD_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar directamente hacia la unidad $m$ durante el día $t$
+    variables['ITR'] = list()
+
+    for carga in cargas:
+        for unidad in unidades:
+            xtd_name = f'XTR_{carga}_{unidad}'
+            xtd_var = pu.LpVariable(
+                name=xtd_name, lowBound=0.0, cat=pu.LpContinuous)
+
+            itd_name = f'ITR_{carga}_{unidad}'
+            itd_var = pu.LpVariable(
+                name=itd_name, lowBound=0.0, cat=pu.LpInteger)
+
+            variables['XTR'].append(xtd_var)
+            variables['ITR'].append(itd_var)
 
 
 def generar_variables(problema: dict) -> dict:
@@ -59,10 +77,9 @@ def generar_variables(problema: dict) -> dict:
     variables['XIP'] = dict()
 
     # XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
-    variables['XTR'] = dict()
-
     # $ITR_{lm}^{t}$ : Cantidad de camiones con carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
-    variables['ITR'] = dict()
+    _despacho_desde_puerto(variables=variables,
+                           cargas=cargas, unidades=unidades)
 
     # $IIU_{im}^{t}$ : Binaria, 1 sí el ingrediente $i$ esta almacenado en la unidad de almacenamiento $m$ al final del periodo $t$; 0 en otro caso
     variables['IIU'] = dict()
