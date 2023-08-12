@@ -22,7 +22,7 @@ def _costos_almacenamiento_puerto(variables: dict, costos_almacenamiento: dict, 
     return fobj
 
 
-def _costo_transporte_directo(variables: dict, costos_transporte_variables: dict, costos_transporte_fijos:dict, cargas: list, unidades: list):
+def _costo_transporte(variables: dict, costos_transporte_variables: dict, costos_transporte_fijos:dict, cargas: list, unidades: list):
     # $CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
     # $XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
 
@@ -36,19 +36,29 @@ def _costo_transporte_directo(variables: dict, costos_transporte_variables: dict
 
             xtr_name = f'XTR_{carga}_{unidad}'
             xtr_var = variables['XTR'][xtr_name]
+            
+            xtd_name = f'XTD_{carga}_{unidad}'
+            xtd_var = variables['XTD'][xtd_name]
+            
             ct_coef_name = f'CT_{puerto}_{empresa_destino}'
             
             if ct_coef_name in costos_transporte_variables.keys():
                 ct_coef_value = costos_transporte_variables[ct_coef_name]
                 fobj.append(ct_coef_value*xtr_var)
+                fobj.append(ct_coef_value*xtd_var)
             
             itr_name = f'ITR_{carga}_{unidad}'
             itr_var = variables['ITR'][itr_name]
+            
+            itd_name = f'ITD_{carga}_{unidad}'
+            itd_var = variables['ITD'][itd_name]
+            
             cf_coef_name = f'CF_{puerto}_{empresa_destino}'
+            
             if cf_coef_name in costos_transporte_fijos.keys():
                 cf_coef_value = costos_transporte_fijos[cf_coef_name]
                 fobj.append(cf_coef_value*itr_var)
-            
+                fobj.append(cf_coef_value*itd_var)
 
     return fobj
 
@@ -72,13 +82,9 @@ def generar_fob(problema: dict, variables: dict):
 
     # Costos por transporte
 
-    # Costo variable de transportar cargas desde puertos hacia plantas
-    fob.append(_costo_transporte_directo(
+    # Costo variable y fijo de transportar cargas desde puertos hacia plantas
+    fob.append(_costo_transporte(
         variables, costos_transporte_variable, costos_transporte_fijos, cargas, unidades))
-
-    # Costo fijo de transportar un camion desde puerto hacia plantas
-
-    # Costos por Penalización
 
     # Costo de no respetar un inventario de seguridad de un ingrediente en una planta
 
