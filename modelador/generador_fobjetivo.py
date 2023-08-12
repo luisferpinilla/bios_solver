@@ -74,17 +74,16 @@ def generar_fob(problema: dict, variables: dict):
 
     fob = list()
 
-    # Costos por almacenamiento
-
     # Almacenamiento en puerto por corte de Facturación:
     fob.append(_costos_almacenamiento_puerto(
         variables, costos_almacenamiento, cargas, periodos))
 
     # Costos por transporte
-
-    # Costo variable y fijo de transportar cargas desde puertos hacia plantas
     fob.append(_costo_transporte(
         variables, costos_transporte_variable, costos_transporte_fijos, cargas, unidades))
+    
+    # Costo de venta intercompany
+    
 
     # Costo de no respetar un inventario de seguridad de un ingrediente en una planta
 
