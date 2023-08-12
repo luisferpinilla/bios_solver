@@ -76,8 +76,8 @@ def _almacenamiento_planta(variables: list, unidades: list, ingredientes: list):
 
     for unidad in unidades:
         for ingrediente in ingredientes:
-            # $IIU_{im}^{t}$ : Binaria, 1 sí el ingrediente $i$ esta almacenado en la unidad de almacenamiento $m$ al final del periodo $t$; 0 en otro caso
-            biu_name = f'IIU_{ingrediente}_{unidad}'
+            # $BIU_{im}^{t}$ : Binaria, 1 sí el ingrediente $i$ esta almacenado en la unidad de almacenamiento $m$ al final del periodo $t$; 0 en otro caso
+            biu_name = f'BIU_{ingrediente}_{unidad}'
             biu_var = pu.LpVariable(name=biu_name, cat=pu.LpBinary)
             variables['BIU'][biu_name] = biu_var
 

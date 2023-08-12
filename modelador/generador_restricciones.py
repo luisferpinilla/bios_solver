@@ -29,7 +29,7 @@ def _balance_masa_bif(restricciones: dict, variables: dict, cargas: list, llegad
 
             for ua in unidades:
 
-                ua_periodo = ua.split('_')[3]
+                ua_periodo = int(ua.split('_')[3])
 
                 if periodo == ua_periodo:
 
@@ -69,7 +69,37 @@ def _capacidad_camiones(restricciones: list, variables: list, cargas: list, unid
 
 
 def _capacidad_unidades_almacenamiento(restricciones: list, variables: list, unidades: list, ingredientes: list, capacidad_unidades: dict, periodos=30):
-    pass
+    
+    rest_list = list()
+    
+    for ingrediente in ingredientes:
+        for unidad in unidades:
+            campos = unidad.split('_')
+            unidad_empresa = campos[0]
+            unidad_planta = campos[1]
+            unidad_codigo = campos[2]
+            unidad_periodo = campos[3]
+            
+            
+            xiu_name = f'XIU_{ingrediente}_{unidad}'
+            xiu_var = variables['XIU'][xiu_name]
+            
+            biu_name = f'BIU_{ingrediente}_{unidad}'
+            biu_var = variables['BIU'][biu_name]
+            
+
+            cap_name = f'CA_{ingrediente}_{unidad_empresa}_{unidad_planta}_{unidad_codigo}'
+            
+            if cap_name in capacidad_unidades.keys():
+                cap_val = capacidad_unidades[cap_name]
+            else:
+                cap_val = 0.0
+            
+            rest_list.append((xiu_var <= cap_val*biu_var, f'capacidad de almacenamiento para {ingrediente} en {unidad}'))
+            
+            
+    restricciones['Capacidad_almacenamiento_UA'] = rest_list
+        
 
 
 def _asignacion_unidades_almacenamiento(restricciones: list, variables: list, unidades: list, ingredientes: list, periodos=30):
@@ -95,5 +125,7 @@ def generar_restricciones(problema: list, variables: list):
 
     _balance_masa_bif(restricciones=restricciones, variables=variables,
                       cargas=cargas, llegadas=llegadas, unidades=unidades, periodos=periodos)
+    
+    _capacidad_unidades_almacenamiento(restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes, capacidad_unidades=capacidad_unidades)
 
     return restricciones
