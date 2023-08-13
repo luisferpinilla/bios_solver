@@ -49,7 +49,6 @@ def _balance_masa_bodega_puerto(restricciones: list, variables: list, cargas: li
 
 
 def _satisfaccion_demanda_plantas(restricciones: list, variables: list, plantas: list, ingredientes: list, unidades: list, consumo_proyectado: list, periodos=30):
-
     pass
 
 
@@ -60,12 +59,34 @@ def _balance_masa_ua(restricciones: list, variables: list, ingredientes: list, c
 
 def _mantenimiento_ss_plantas(restricciones: list, variables: list, unidades: list, ingredientes: list, periodos=30):
 
-    pass
+    rest_list = list()
+
+    
+
+
+    restricciones['Safety stock en planta'] = rest_list    
+
 
 
 def _capacidad_camiones(restricciones: list, variables: list, cargas: list, unidades: list, periodos=30):
 
-    pass
+    # XTD <= 34*ITD
+    # XTR <= 34*ITR   
+
+    for carga in cargas:
+        
+        campos = carga.split('_')
+        carga_empresa = campos[1]
+        carga_ingrediente = campos[2]
+        carga_puerto = campos[3]
+        carga_motonave = campos[4]
+        
+        for unidad in unidades:
+            campos = unidad.split('_')
+            unidad_
+            
+        
+        
 
 
 def _capacidad_unidades_almacenamiento(restricciones: list, variables: list, unidades: list, ingredientes: list, capacidad_unidades: dict, periodos=30):
