@@ -41,5 +41,4 @@ def generar_conjuntos(problema: dict, file: str) -> dict:
 
     # Cargas
     inventarios_puerto_df = pd.read_excel(file, sheet_name='cargas_puerto')
-    problema['conjuntos']['cargas'] = list(
-        inventarios_puerto_df['key'].unique())
+    problema['conjuntos']['cargas'] = [f'{c}_{i}' for c in  list(inventarios_puerto_df['key'].unique()) for i in problema['conjuntos']['ingredientes']]
