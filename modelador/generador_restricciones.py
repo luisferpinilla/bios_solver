@@ -72,20 +72,26 @@ def _capacidad_camiones(restricciones: list, variables: list, cargas: list, unid
 
     # XTD <= 34*ITD
     # XTR <= 34*ITR   
+    
+    rest_list = list()
 
-    for carga in cargas:
+    for xtd_name, xtd_var in variables['XTD']:
         
-        campos = carga.split('_')
-        carga_empresa = campos[1]
-        carga_ingrediente = campos[2]
-        carga_puerto = campos[3]
-        carga_motonave = campos[4]
+        itd_name = xtd_name.replace('XTD', 'ITD')
+        itd_var = variables['ITD'][itd_name]
         
-        for unidad in unidades:
-            campos = unidad.split('_')
-            unidad_
+        rest_list.append((xtd_var <= 34*itd_var, 'capacidad carga en {xtd_name}'))
+        
+    for xtr_name, xtr_var in variables['XTR']:
+        
+        itr_name = xtr_name.replace('XTR', 'ITR')
+        itr_var = variables['ITR'][itr_name]
+        
+        rest_list.append((xtr_var <= 34*itr_var, 'capacidad carga en {xtr_name}'))
             
-        
+            
+            
+    restricciones['Capacidad carga de camiones'] = rest_list()
         
 
 
@@ -99,8 +105,7 @@ def _capacidad_unidades_almacenamiento(restricciones: list, variables: list, uni
             unidad_empresa = campos[0]
             unidad_planta = campos[1]
             unidad_codigo = campos[2]
-            unidad_periodo = campos[3]
-            
+            unidad_periodo = campos[3]            
             
             xiu_name = f'XIU_{ingrediente}_{unidad}'
             xiu_var = variables['XIU'][xiu_name]
