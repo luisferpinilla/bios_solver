@@ -63,6 +63,15 @@ def _costo_transporte(variables: dict, costos_transporte_variables: dict, costos
     return fobj
 
 
+def _costo_safety_stock(variables:dict):
+    
+    fobj = list()
+    
+    for name, var in variables['BSS'].items():
+        fobj.append(1000000*var)
+    
+    
+
 def generar_fob(problema: dict, variables: dict):
 
     costos_almacenamiento = problema['parametros']['costos_almacenamiento']
@@ -86,7 +95,8 @@ def generar_fob(problema: dict, variables: dict):
     
 
     # Costo de no respetar un inventario de seguridad de un ingrediente en una planta
-
+    fob.append(_costo_safety_stock(variables))
+    
     # Costo de no satisfacer una demanda en una planta
 
     # Costo por permitir guardar un ingrediente en una unidad de almacenamiento en una planta
