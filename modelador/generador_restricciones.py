@@ -56,13 +56,57 @@ def _balance_masa_ua(restricciones: list, variables: list, ingredientes: list, c
 
     pass
 
+def select_ua_by_period_planta(planta:str, period:int, unidades:list):
+    
+    list_to_return = list()
+    
+    for ua in unidades:
+        campos = ua.split('_')
+        ua_empresa = campos[0]
+        ua_planta = campos[1]
+        ua_codigo = campos[2]
+        ua_periodo = int(campos[3])
+        
+        if planta == f'{ua_empresa}_{ua_planta}' and period== ua_periodo:
+            list_to_return.append(ua)
+            
+    return list_to_return
 
-def _mantenimiento_ss_plantas(restricciones: list, variables: list, unidades: list, ingredientes: list, periodos=30):
+
+def _mantenimiento_ss_plantas(restricciones: list, variables: list, unidades: list, ingredientes: list, periodos:list, plantas:list, safety_stock:dict):
+
+    # sum(XIU, carga) >= (1-BIU)*SS
+    # sum(XIU, carga) >= SS - SS*BIU
+    # sum(XIU, carga) + SS*BIU >= SS
 
     rest_list = list()
-
     
-
+    
+    for ingrediente in ingredientes:
+        for planta in plantas:
+            for periodo in periodos:                
+                
+                left_expesion = list()
+                
+                ua_list = select_ua_by_period_planta(planta=planta, period=periodo, unidades=unidades)
+                
+                # sum(XIU, carga)
+                for ua in ua_list:
+                    xiu_name = f'XIU_{ingrediente}_{ua}'
+                    xiu_var = variables['XIU'][xiu_name]
+                    left_expesion.append(xiu_var)
+                    
+                # BSS
+                bss_name= f'BSS_{ingrediente}_{planta}_{periodo}'
+                bss_var = variables['BSS'][bss_name]
+                left_expesion.append(bss_var)
+                
+                ss_name = f'SS_{planta}_{ingrediente}'
+                ss_value = safety_stock[ss_name]
+                
+                rest = (pu.lpSum(left_expesion)>=ss_value, f'safety_stock {ingrediente} en {planta} en {periodo}')
+                    
+                rest_list.append(rest)   
 
     restricciones['Safety stock en planta'] = rest_list    
 
@@ -94,7 +138,6 @@ def _capacidad_camiones(restricciones: list, variables: list, cargas: list, unid
     restricciones['Capacidad carga de camiones'] = rest_list()
         
 
-
 def _capacidad_unidades_almacenamiento(restricciones: list, variables: list, unidades: list, ingredientes: list, capacidad_unidades: dict, periodos=30):
     
     rest_list = list()
@@ -125,7 +168,6 @@ def _capacidad_unidades_almacenamiento(restricciones: list, variables: list, uni
             
             
     restricciones['Capacidad_almacenamiento_UA'] = rest_list
-        
 
 
 def _asignacion_unidades_almacenamiento(restricciones: list, variables: list, unidades: list, ingredientes: list, periodos=30):
@@ -148,10 +190,14 @@ def generar_restricciones(problema: list, variables: list):
     cargas = problema['conjuntos']['cargas']
     capacidad_unidades = problema['parametros']['capacidad_almacenamiento_ua']
     inventario_inicial_ua = problema['parametros']['inventario_inicial_ua']
+    safety_stock = problema['parametros']['safety_stock']
 
     _balance_masa_bif(restricciones=restricciones, variables=variables,
                       cargas=cargas, llegadas=llegadas, unidades=unidades, periodos=periodos)
     
     _capacidad_unidades_almacenamiento(restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes, capacidad_unidades=capacidad_unidades)
+
+
+    _mantenimiento_ss_plantas(restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes, periodos=periodos, plantas=plantas, safety_stock=safety_stock)
 
     return restricciones

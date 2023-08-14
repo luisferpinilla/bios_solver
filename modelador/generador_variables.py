@@ -71,10 +71,16 @@ def _almacenamiento_planta(variables: list, unidades: list, ingredientes: list):
     variables['BIU'] = dict()
     variables['XIU'] = dict()
     variables['XDM'] = dict()
-    variables['XBS'] = dict()
+    variables['BSS'] = dict()
     variables['BCD'] = dict()
 
     for unidad in unidades:
+        campos = unidad.split('_')
+        ua_empresa = campos[0]
+        ua_planta = campos[1]
+        ua_codigo = campos[2]
+        ua_periodo = campos[3]
+        
         for ingrediente in ingredientes:
             # $BIU_{im}^{t}$ : Binaria, 1 sí el ingrediente $i$ esta almacenado en la unidad de almacenamiento $m$ al final del periodo $t$; 0 en otro caso
             biu_name = f'BIU_{ingrediente}_{unidad}'
@@ -94,12 +100,12 @@ def _almacenamiento_planta(variables: list, unidades: list, ingredientes: list):
             variables['XDM'][xdm_name] = xdm_var
 
             # $BSS_{ik}^{t}$ : Binaria, si se cumple que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté sobre el nivel de seguridad $SS_{ik}^{t}$
-            xbs_name = f'XBS_{ingrediente}_{unidad}'
+            xbs_name = f'BSS_{ingrediente}_{ua_empresa}_{ua_planta}_{ua_periodo}'
             xbs_var = pu.LpVariable(name=xbs_name, cat=pu.LpBinary)
-            variables['XBS'][xbs_name] = xbs_var
+            variables['BSS'][xbs_name] = xbs_var
 
             # $BCD_{ik}^{t}$ : si estará permitido que la demanda de un ingrediente $i$ no se satisfaga en la planta $k$ al final del día $t$
-            bcd_name = f'BCD_{ingrediente}_{unidad}'
+            bcd_name = f'BCD_{ingrediente}_{ua_empresa}_{ua_planta}_{ua_periodo}'
             bcd_var = pu.LpVariable(name=bcd_name, cat=pu.LpBinary)
             variables['BCD'][bcd_name] = bcd_var
 
