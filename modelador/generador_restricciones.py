@@ -53,11 +53,10 @@ def _satisfaccion_demanda_plantas(restricciones: list, variables: list, plantas:
 
 
 def _balance_masa_ua(restricciones: list, variables: list, ingredientes: list, cargas: list, unidades: list, inventario_inicial: dict(), periodos=30):
-
     pass
 
+
 def select_ua_by_period_planta(planta:str, period:int, unidades:list):
-    
     list_to_return = list()
     
     for ua in unidades:
@@ -70,7 +69,7 @@ def select_ua_by_period_planta(planta:str, period:int, unidades:list):
         if planta == f'{ua_empresa}_{ua_planta}' and period== ua_periodo:
             list_to_return.append(ua)
             
-    return list_to_return
+    return list_to_return    
 
 
 def _mantenimiento_ss_plantas(restricciones: list, variables: list, unidades: list, ingredientes: list, periodos:list, plantas:list, safety_stock:dict):
@@ -111,7 +110,6 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, unidades: li
     restricciones['Safety stock en planta'] = rest_list    
 
 
-
 def _capacidad_camiones(restricciones: list, variables: list, cargas: list, unidades: list, periodos=30):
 
     # XTD <= 34*ITD
@@ -119,23 +117,22 @@ def _capacidad_camiones(restricciones: list, variables: list, cargas: list, unid
     
     rest_list = list()
 
-    for xtd_name, xtd_var in variables['XTD']:
+    for xtd_name, xtd_var in variables['XTD'].items():
         
         itd_name = xtd_name.replace('XTD', 'ITD')
         itd_var = variables['ITD'][itd_name]
         
-        rest_list.append((xtd_var <= 34*itd_var, 'capacidad carga en {xtd_name}'))
+        rest_list.append((xtd_var <= 34*itd_var, f'capacidad carga directa {xtd_name}'))
         
-    for xtr_name, xtr_var in variables['XTR']:
+    for xtr_name, xtr_var in variables['XTR'].items():
         
         itr_name = xtr_name.replace('XTR', 'ITR')
         itr_var = variables['ITR'][itr_name]
         
-        rest_list.append((xtr_var <= 34*itr_var, 'capacidad carga en {xtr_name}'))
+        rest_list.append((xtr_var <= 34*itr_var, f'capacidad carga desde almacenamiento en {xtr_name}'))
             
             
-            
-    restricciones['Capacidad carga de camiones'] = rest_list()
+    restricciones['Capacidad carga de camiones'] = rest_list
         
 
 def _capacidad_unidades_almacenamiento(restricciones: list, variables: list, unidades: list, ingredientes: list, capacidad_unidades: dict, periodos=30):
@@ -170,9 +167,30 @@ def _capacidad_unidades_almacenamiento(restricciones: list, variables: list, uni
     restricciones['Capacidad_almacenamiento_UA'] = rest_list
 
 
-def _asignacion_unidades_almacenamiento(restricciones: list, variables: list, unidades: list, ingredientes: list, periodos=30):
+def _asignacion_unidades_almacenamiento(restricciones: list, variables: list, unidades: list, ingredientes: list):
+    # no se puede asignar más de un ingrediente a una unidad
+    
+    # SUM(BIU, ingrediente,planta, periodo) <= 1
+    
+    rest_list = list()
+    
+    for unidad in unidades:
+        
+        left_expesion = list()
+        
+        for ingrediente in ingredientes:
+            
+            biu_name = f'BIU_{ingrediente}_{unidad}'
+        
+            biu_var = variables['BIU'][biu_name]
+            
+            left_expesion.append(biu_var)
+            
+        rest = (pu.lpSum(left_expesion)<=1, f'asignación única sobre unidad {unidad}')
+        
+        rest_list.append(rest)
 
-    pass
+    restricciones['Asignación unica de ingredientes a unidades'] = rest_list
 
 
 def generar_restricciones(problema: list, variables: list):
@@ -199,5 +217,9 @@ def generar_restricciones(problema: list, variables: list):
 
 
     _mantenimiento_ss_plantas(restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes, periodos=periodos, plantas=plantas, safety_stock=safety_stock)
+
+    _capacidad_camiones(restricciones=restricciones, variables=variables, cargas=cargas, unidades=unidades)
+    
+    _asignacion_unidades_almacenamiento(restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes)
 
     return restricciones
