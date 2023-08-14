@@ -43,8 +43,8 @@ if __name__ == '__main__':
     
     # Agregar restricciones
     for name, rest_list in restricciones.items():
-        print('agregando restriccion', name)
-        for rest in rest_list:        
+        for rest in rest_list:     
+            # print('agregando restriccion', name, rest)
             solver += rest
     
     solver.writeLP(filename='model.lp')

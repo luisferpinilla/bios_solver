@@ -69,8 +69,29 @@ def _costo_safety_stock(variables:dict):
     
     for name, var in variables['BSS'].items():
         fobj.append(1000000*var)
+        
+    return fobj
     
+ 
+def _costo_no_satisfaccion_demanda(variables:dict):
     
+    fobj = list()
+    
+    for name, var in variables['BCD'].items():
+        fobj.append(10000000*var)
+        
+    return fobj
+
+
+def _costo_asignacion_ingrediente_unidad_almacenamiento(variables:dict):
+    
+    fobj = list()
+    
+    for name, var in variables['BIU'].items():
+        fobj.append(100000*var)
+        
+    return fobj
+
 
 def generar_fob(problema: dict, variables: dict):
 
@@ -98,7 +119,9 @@ def generar_fob(problema: dict, variables: dict):
     fob.append(_costo_safety_stock(variables))
     
     # Costo de no satisfacer una demanda en una planta
+    fob.append(_costo_no_satisfaccion_demanda(variables))
 
     # Costo por permitir guardar un ingrediente en una unidad de almacenamiento en una planta
+    fob.append(_costo_asignacion_ingrediente_unidad_almacenamiento(variables))
 
     return pu.lpSum(fob)
