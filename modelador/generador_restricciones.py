@@ -106,13 +106,84 @@ def _balance_masa_bodega_puerto(restricciones: list, variables: list, cargas: li
     restricciones['Balance_masa_bodega_puerto'] = rest_list
     
     
+def _balance_masa_ua(restricciones: list, variables: list, cargas: list, unidades: list, inventario_inicial:dict, ingredientes:list, periodos=list):
+    
+    # XIU = XIUt-1 + SUM(XTR) + SUM(XTD) - XDM
+    # XIU + XDM = XIUt-1 + SUM(XTR) + SUM(XTD)
+    
+    rest_list = list()
+    
+    for periodo in periodos:
+        for ingrediente in ingredientes:
+            for unidad in unidades:
+                campos = unidad.split('_')
+                u_empresa = campos[0]
+                u_planta = campos[1]
+                u_codigo = campos[2]
+                u_periodo = int(campos[3])
+                
+                if periodo == u_periodo:
+                
+                    left_expesion = list()
+                    rigth_expresion = list()
+                    
+                    # XIU
+                    xiu_name = f'XIU_{ingrediente}_{unidad}'
+                    xiu_var = variables['XIU'][xiu_name]
+                    left_expesion.append(xiu_var)
+                    
+                    # XDM
+                    xdm_name = f'XDM_{ingrediente}_{unidad}'
+                    xdm_var = variables['XDM'][xdm_name]
+                    left_expesion.append(xdm_var)
+                    
+                    # XIUt-1 / inventario inicial
+                    if periodo > 0:
+                        xiu_ant_name = f'XIU_{ingrediente}_{u_empresa}_{u_planta}_{u_codigo}_{periodo-1}'
+                        xiu_ant_var = variables['XIU'][xiu_ant_name]
+                        rigth_expresion.append(xiu_ant_var)           
+                    else:
+                        ii_name = f'II_{u_empresa}_{u_planta}_{u_codigo}_{ingrediente}'
+                        ii_value = inventario_inicial[ii_name]
+                        rigth_expresion.append(ii_value)
+                        
+                    
+                    for carga in cargas:
+                        campos = carga.split('_')
+                        c_empresa = campos[0]
+                        c_puerto = campos[1]
+                        c_motonave = campos[2]
+                        c_ingrediente = campos[3]
+                        
+                        # SUM(XTD) 
+                        # SUM(XTR)
+                        if c_ingrediente == ingrediente:
+                            xtd_name = f'XTD_{carga}_{unidad}'
+                            xtd_var = variables['XTD'][xtd_name]
+                            rigth_expresion.append(xtd_var)
+                            
+                            xtr_name = f'XTR_{carga}_{unidad}'
+                            xtr_var = variables['XTR'][xtr_name]
+                            rigth_expresion.append(xtr_var)
+                    
+                        
+                    
+                    
+                    
+                    
+                    rest = (pu.lpSum(left_expesion)==pu.lpSum(rigth_expresion), f'Balance masa de {ingrediente} en {unidad}')
+                
+                    rest_list.append(rest)
 
-
-def _satisfaccion_demanda_plantas(restricciones: list, variables: list, plantas: list, ingredientes: list, unidades: list, consumo_proyectado: list, periodos=30):
+    
+    
+    
+    restricciones['Balance_masa_unidades'] = rest_list
+    
     pass
 
 
-def _balance_masa_ua(restricciones: list, variables: list, ingredientes: list, cargas: list, unidades: list, inventario_inicial: dict(), periodos=30):
+def _satisfaccion_demanda_plantas(restricciones: list, variables: list, plantas: list, ingredientes: list, unidades: list, consumo_proyectado: list, periodos=30):
     pass
 
 
@@ -283,5 +354,7 @@ def generar_restricciones(problema: list, variables: list):
     _asignacion_unidades_almacenamiento(restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes)
 
     _balance_masa_bodega_puerto(restricciones=restricciones, variables=variables, cargas=cargas, unidades=unidades, inventario_inicial=inventario_inicial, periodos=periodos)
+
+    _balance_masa_ua(restricciones=restricciones, variables=variables, cargas=cargas, unidades=unidades, inventario_inicial=inventario_inicial_ua, ingredientes=ingredientes, periodos=periodos)
 
     return restricciones
