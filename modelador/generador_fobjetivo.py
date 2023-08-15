@@ -22,13 +22,14 @@ def _costos_almacenamiento_puerto(variables: dict, costos_almacenamiento: dict, 
     return fobj
 
 
-def _costo_transporte(variables: dict, costos_transporte_variables: dict, costos_transporte_fijos:dict, cargas: list, unidades: list):
+def _costo_transporte(variables: dict, costos_transporte_variables: dict, costos_transporte_fijos:dict, costos_intercompany:dict, cargas: list, unidades: list):
     # $CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
     # $XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
 
     fobj = list()
     
     for carga in cargas:
+        empresa_origen = carga.split('_')[0]
         puerto = carga.split('_')[2]        
         for unidad in unidades:
             empresa_destino = f"{unidad.split('_')[0]}_{unidad.split('_')[1]}"
@@ -41,9 +42,13 @@ def _costo_transporte(variables: dict, costos_transporte_variables: dict, costos
             xtd_var = variables['XTD'][xtd_name]
             
             ct_coef_name = f'CT_{puerto}_{empresa_destino}'
+            cw_iter_name = f"CW_{empresa_origen}_{empresa_destino.split('_')[0]}"
             
             if ct_coef_name in costos_transporte_variables.keys():
-                ct_coef_value = costos_transporte_variables[ct_coef_name]
+                
+                ct_coef_value = costos_transporte_variables[ct_coef_name] 
+                ct_coef_value += costos_intercompany[cw_iter_name]                
+                
                 fobj.append(ct_coef_value*xtr_var)
                 fobj.append(ct_coef_value*xtd_var)
             
@@ -96,6 +101,7 @@ def _costo_asignacion_ingrediente_unidad_almacenamiento(variables:dict):
 def generar_fob(problema: dict, variables: dict):
 
     costos_almacenamiento = problema['parametros']['costos_almacenamiento']
+    costos_intercompany = problema['parametros']['costo_venta_intercompany']
     costos_transporte_variable = problema['parametros']['fletes_variables']
     costos_transporte_fijos = problema['parametros']['fletes_fijos']
     periodos = problema['periodos']
@@ -110,7 +116,7 @@ def generar_fob(problema: dict, variables: dict):
 
     # Costos por transporte
     fob.append(_costo_transporte(
-        variables, costos_transporte_variable, costos_transporte_fijos, cargas, unidades))
+        variables, costos_transporte_variable, costos_transporte_fijos, costos_intercompany , cargas, unidades))
     
     # Costo de venta intercompany
     
