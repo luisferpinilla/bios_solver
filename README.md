@@ -127,6 +127,8 @@ $DM_{ki}^{t}$: Demanda del ingrediente $i$ en la planta $k$ durante el día $t$.
 
 $CD_{ik}^{t}$ : Costo de no satisfacer la demanda del ingrediente $i$  en la planta $k$ durante el día $t$.
 
+$CK_{ik}^{t}$ : Costo del backorder del ingrediente $i$  en la planta $k$ durante el día $t$.
+
 $CI_{im}^{t}$ : Costo de asignar el ingrediente $i$ a la unidad de almacenamiento $m$ durante el periodo $t$. Si la unidad de almacenamiento no puede contener el ingrediente, este costo será $infinito$.
 
 $SS_{ik}^{t}$ : Inventario de seguridad a tener del ingrediente $i$ en la planta $k$ al final del día $t$.
@@ -176,7 +178,9 @@ $BIU_{im}^{t}$ : Binaria, 1 sí el ingrediente $i$ esta almacenado en la unidad 
 
 $XIU_{mi}^{t}$ : Cantidad de ingrediente $i$ almacenado en la unidad de almacenameinto $m$ al final del periodo $t$
 
-$XDM_{im}^{t}$: Cantidad de producto $i$ a sacar de la unidad de almacenamiento $m$ para satisfacer la demanda e el día $t$.
+$XDM_{im}^{t}$: Cantidad de producto $i$ a sacar de la unidad de almacenamiento $m$ para satisfacer la demanda en el día $t$.
+
+$XBK_{ik}^{t}$: Cantidad de backorder del ingrediente $i$ en planta $k$ luego de no cumplir la demanda  del día $t$.
 
 $BSS_{ik}^{t}$ : Binaria, si se cumple que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté sobre el nivel de seguridad $SS_{ik}^{t}$
 
@@ -227,6 +231,12 @@ $$ \sum_{i}{\sum_{k}{\sum_{t}{CS_{ik}^{t} \cdot BSS_{ik}^{t}}}} $$
 Del mismo modo, si el nivel de escacéz de un ingrediente es tal, el solucionador permitirá que la demanda de la planta no sea satisfecha y se alertará al usuario de esta situación.
 
 $$ \sum_{i}{\sum_{k}{\sum_{t}{CD_{ik}^{t} \cdot BCD_{ik}^{t}}}} $$
+
+#### Costo de Backorder en planta
+
+Cuando el inventario en planta en todas las unidades de almacenamiento no llega a ser suficiente para satisfacer la demanda, se genera un backorder, éste último se penaliza en la función objetivo de modo que si bien no se cumple la demanda, se garantiza que se use todo el inventario para cumplir la mayor parte de ella.
+
+$$ \sum_{i}{\sum_{k}{\sum_{t}{CK_{ik}^{t} \cdot XBK_{ik}^{t}}}} $$
 
 #### Costo por permitir guardar un ingrediente en una unidad de almacenamiento en una planta
 
