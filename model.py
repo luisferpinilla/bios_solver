@@ -51,7 +51,7 @@ if __name__ == '__main__':
     
     solver.solve()       
     
-    generar_reporte(problema=solver, variables=variables)
+    generar_reporte(problema=problema, variables=variables)
     
     #guardar_data(problema, variables)
     
