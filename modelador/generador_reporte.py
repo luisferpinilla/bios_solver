@@ -38,9 +38,9 @@ def generar_invenario_puerto(problema:dict, variables:dict):
                 
             campos = carga.split('_')
             empresa = campos[0]
-            ingrediente = campos[1]
-            puerto = campos[2]
-            barco = campos[3]
+            puerto = campos[1]
+            barco = campos[2]
+            ingrediente = campos[3]
             
             xip_name = f'XIP_{carga}_{periodo}'
             xip_var = variables['XIP'][xip_name]
@@ -73,54 +73,48 @@ def generar_inventario_plantas(problema:dict, variables:dict, verbose=False):
     
     for ingrediente in problema['conjuntos']['ingredientes']:
         for unidad in problema['conjuntos']['unidades_almacenamiento']:
-            for periodo in range(problema['periodos']):
+              
+            campos = unidad.split('_')
+            empresa = campos[0]
+            planta = campos[1]
+            ua = campos[2]
+            periodo = int(campos[3])
+            
+            xiu_name = f'XIU_{ingrediente}_{unidad}'                
+            xiu_var = variables['XIU'][xiu_name]
                 
-                if verbose:
-                    print(unidad,ingrediente,periodo)
+            xdm_name = f'XDM_{ingrediente}_{unidad}'  
+            xdm_var = variables['XDM'][xdm_name]
                 
-                campos = unidad.split('_')
-                empresa = campos[0]
-                planta = campos[1]
-                ua = campos[2]
-                
-                xiu_name = f'XIU_{unidad}_{ingrediente}_{periodo}'                
-                xiu_var = variables['XIU'][xiu_name]
-                
-                xdm_name = f'XDM_{unidad}_{ingrediente}_{periodo}'  
-                xdm_var = variables['XDM'][xdm_name]
-                
-                inventario_plantas['periodo'].append(periodo)
-                inventario_plantas['empresa'].append(empresa)
-                inventario_plantas['planta'].append(planta)
-                inventario_plantas['unidad'].append(ua)
-                inventario_plantas['ingrediente'].append(ingrediente)
-                inventario_plantas['demanda'].append(xdm_var.varValue)
-                inventario_plantas['inventario_final'].append(xiu_var.varValue)
+            inventario_plantas['periodo'].append(periodo)
+            inventario_plantas['empresa'].append(empresa)
+            inventario_plantas['planta'].append(planta)
+            inventario_plantas['unidad'].append(ua)
+            inventario_plantas['ingrediente'].append(ingrediente)
+            inventario_plantas['demanda'].append(xdm_var.varValue)
+            inventario_plantas['inventario_final'].append(xiu_var.varValue)
                 
                 
-                # totalizar las llegadas desde puerto
-                llegadas_barco = 0.0
-                Llegadas_almacen = 0.0
+            # totalizar las llegadas desde puerto
+            llegadas_barco = 0.0
+            Llegadas_almacen = 0.0
                 
-                for carga in problema['conjuntos']['cargas']:
+            for carga in problema['conjuntos']['cargas']:
+                   
+                if periodo>=2:
+                
+                    xtr_name = f'XTR_{carga}_{empresa}_{planta}_{ua}_{periodo-2}'
+                    xtr_var = variables['XTR'][xtr_name]
+                    Llegadas_almacen = xtr_var.varValue
                     
-                    xtr_name = f'XTR_{carga}_{unidad}_{ingrediente}_{periodo-2}'
-                    xtd_name = f'XTD_{carga}_{unidad}_{ingrediente}_{periodo-2}'
                     
-                    if xtr_name in variables['XTR']:
-                        xtr_var = variables['XTR'][xtr_name]
-                        Llegadas_almacen = xtr_var.varValue
-                    else:
-                        print(xtr_name, 'no existe')
+                    xtd_name = f'XTD_{carga}_{empresa}_{planta}_{ua}_{periodo-2}'
+                    xtd_var = variables['XTD'][xtd_name]
+                    llegadas_barco = xtd_var.varValue
+
                 
-                    if xtd_name in variables['XTD']:
-                        xtd_var = variables['XTD'][xtd_name]
-                        llegadas_barco = xtd_var.varValue
-                    else:
-                        print(xtd_name, 'no existe')
-                
-                inventario_plantas['llegadas_barco'].append(llegadas_barco)
-                inventario_plantas['llegadas_almacen'].append(Llegadas_almacen)
+            inventario_plantas['llegadas_barco'].append(llegadas_barco)
+            inventario_plantas['llegadas_almacen'].append(Llegadas_almacen)
                 
     inventario_plantas_df = pd.DataFrame(inventario_plantas)
     
@@ -146,92 +140,86 @@ def generar_reporte_transitos(problema:dict, variables:dict):
     transitos['costo_total'] = list()
     transitos['periodo_despacho'] = list()
     transitos['periodo_llegada'] = list()
-    
-    
+        
     for carga in problema['conjuntos']['cargas']:
 
         campos = carga.split('_')
         empresa_origen = campos[0]
-        ingrediente_origen = campos[1]
-        puerto = campos[2]
-        barco = campos[3]
+        puerto = campos[1]
+        barco = campos[2]
+        ingrediente_origen = campos[3]
         
         for ua in problema['conjuntos']['unidades_almacenamiento']:
-            
+        
             campos_ua = ua.split('_')
             empresa_destino = campos_ua[0]
             planta = campos_ua[1]
             unidad = campos_ua[2]
+            periodo = int(campos_ua[3])
             
-            for periodo in range(problema['periodos']):
+
             
-                xtd_name = f'XTD_{empresa_origen}_{ingrediente_origen}_{puerto}_{barco}_{ua}_{ingrediente_origen}_{periodo}' 
-                                      
-                if xtd_name in variables['XTD']:
+            xtd_name = f'XTD_{carga}_{ua}' 
+            xtd_var = variables['XTD'][xtd_name]
+            xtd_val = xtd_var.varValue
                     
-                    xtd_var = variables['XTD'][xtd_name]
-                    xtd_val = xtd_var.varValue
-                    
-                    cf_name = f'CF_{puerto}_{empresa_destino}_{planta}'
-                    cf_val = problema['parametros']['fletes_fijos'][cf_name]
+            cf_name = f'CF_{puerto}_{empresa_destino}_{planta}'
+            cf_val = problema['parametros']['fletes_fijos'][cf_name]
                 
-                    ct_name = f'CT_{puerto}_{empresa_destino}_{planta}'
-                    ct_val = problema['parametros']['fletes_variables'][ct_name]
+            ct_name = f'CT_{puerto}_{empresa_destino}_{planta}'
+            ct_val = problema['parametros']['fletes_variables'][ct_name]
                     
-                    ci_name = f'CW_{empresa_origen}_{empresa_destino}'
-                    ci_value = problema['parametros']['costo_venta_intercompany'][ci_name]
+            ci_name = f'CW_{empresa_origen}_{empresa_destino}'
+            ci_value = problema['parametros']['costo_venta_intercompany'][ci_name]
                     
-                    ct = cf_val + (ct_val + ci_value)*xtd_val
+            ct = cf_val + (ct_val + ci_value)*xtd_val
                 
-                    transitos['tipo'].append('Barco->Planta')
-                    transitos['empresa_origen'].append(empresa_origen)
-                    transitos['puerto'].append(puerto)
-                    transitos['ingrediente'].append(ingrediente_origen)
-                    transitos['barco'].append(barco)
-                    transitos['empresa_destino'].append(empresa_destino)
-                    transitos['planta'].append(planta)
-                    transitos['unidad'].append(unidad)
-                    transitos['cantidad'].append(xtd_val)
-                    transitos['costo_fijo'].append(cf_val)
-                    transitos['costo_variable'].append(ct_val)
-                    transitos['costo_intercompany'].append(ci_value)
-                    transitos['costo_total'].append(ct)
-                    transitos['periodo_despacho'].append(periodo)
-                    transitos['periodo_llegada'].append(periodo+2)
+            transitos['tipo'].append('Barco->Planta')
+            transitos['empresa_origen'].append(empresa_origen)
+            transitos['puerto'].append(puerto)
+            transitos['ingrediente'].append(ingrediente_origen)
+            transitos['barco'].append(barco)
+            transitos['empresa_destino'].append(empresa_destino)
+            transitos['planta'].append(planta)
+            transitos['unidad'].append(unidad)
+            transitos['cantidad'].append(xtd_val)
+            transitos['costo_fijo'].append(cf_val)
+            transitos['costo_variable'].append(ct_val)
+            transitos['costo_intercompany'].append(ci_value)
+            transitos['costo_total'].append(ct)
+            transitos['periodo_despacho'].append(periodo)
+            transitos['periodo_llegada'].append(periodo+2)
                     
-                xtr_name = f'XTR_{empresa_origen}_{ingrediente_origen}_{puerto}_{barco}_{ua}_{ingrediente_origen}_{periodo}' 
-                                          
-                if xtr_name in variables['XTR']:
+            xtr_name = f'XTR_{carga}_{ua}' 
+            xtr_var = variables['XTR'][xtr_name]
+            xtr_val = xtr_var.varValue
                         
-                    xtr_var = variables['XTR'][xtr_name]
-                    xtr_val = xtr_var.varValue
-                        
-                    cf_name = f'CF_{puerto}_{empresa_destino}_{planta}'
-                    cf_val = problema['parametros']['fletes_fijos'][cf_name]
+            cf_name = f'CF_{puerto}_{empresa_destino}_{planta}'
+            cf_val = problema['parametros']['fletes_fijos'][cf_name]
                     
-                    ct_name = f'CT_{puerto}_{empresa_destino}_{planta}'
-                    ct_val = problema['parametros']['fletes_variables'][ct_name]
+            ct_name = f'CT_{puerto}_{empresa_destino}_{planta}'
+            ct_val = problema['parametros']['fletes_variables'][ct_name]
                         
-                    ci_name = f'CW_{empresa_origen}_{empresa_destino}'
-                    ci_value = problema['parametros']['costo_venta_intercompany'][ci_name]
+            ci_name = f'CW_{empresa_origen}_{empresa_destino}'
+            ci_value = problema['parametros']['costo_venta_intercompany'][ci_name]
                         
-                    ct = cf_val + (ct_val + ci_value)*xtr_val
+            ct = cf_val + (ct_val + ci_value)*xtr_val
                     
-                    transitos['tipo'].append('BodegaPuerto->Planta')
-                    transitos['empresa_origen'].append(empresa_origen)
-                    transitos['puerto'].append(puerto)
-                    transitos['ingrediente'].append(ingrediente_origen)
-                    transitos['barco'].append(barco)
-                    transitos['empresa_destino'].append(empresa_destino)
-                    transitos['planta'].append(planta)
-                    transitos['unidad'].append(unidad)
-                    transitos['cantidad'].append(xtr_val)
-                    transitos['costo_fijo'].append(cf_val)
-                    transitos['costo_variable'].append(ct_val)
-                    transitos['costo_intercompany'].append(ci_value)
-                    transitos['costo_total'].append(ct)
-                    transitos['periodo_despacho'].append(periodo)
-                    transitos['periodo_llegada'].append(periodo+2)
+            transitos['tipo'].append('BodegaPuerto->Planta')
+            transitos['empresa_origen'].append(empresa_origen)
+            transitos['puerto'].append(puerto)
+            transitos['ingrediente'].append(ingrediente_origen)
+            transitos['barco'].append(barco)
+            transitos['empresa_destino'].append(empresa_destino)
+            transitos['planta'].append(planta)
+            transitos['unidad'].append(unidad)
+            transitos['cantidad'].append(xtr_val)
+            transitos['costo_fijo'].append(cf_val)
+            transitos['costo_variable'].append(ct_val)
+            transitos['costo_intercompany'].append(ci_value)
+            transitos['costo_total'].append(ct)
+            transitos['periodo_despacho'].append(periodo)
+            transitos['periodo_llegada'].append(periodo+2)
             
             
     transitos_df = pd.DataFrame(transitos)
@@ -242,8 +230,7 @@ def generar_reporte_transitos(problema:dict, variables:dict):
             
     
 def generar_reporte(problema:dict, variables:dict):
-    
-    
+ 
     print('guardando archivos')
     with pd.ExcelWriter('data.xlsx') as writer:
         
