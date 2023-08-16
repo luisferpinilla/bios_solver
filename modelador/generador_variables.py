@@ -110,12 +110,40 @@ def _almacenamiento_planta(variables: list, unidades: list, ingredientes: list):
             variables['BCD'][bcd_name] = bcd_var
 
 
+def _satisfaccion_demanda(variables:list, plantas:list, unidades:list, ingredientes:list):
+    
+    variables['XBK'] = dict()
+
+    for ingrediente in ingredientes:
+        for planta in plantas:
+                
+            campos = planta.split('_')
+            c_empresa = campos[0]
+            c_planta = campos[1]
+        
+            for unidad in unidades:
+                    
+                campos = unidad.split('_')
+                u_empresa = campos[0]
+                u_planta = campos[1]
+                U_codigo = campos[2]
+                u_periodo = int(campos[3])
+                    
+                if c_empresa == u_empresa and c_planta == u_planta:
+                    
+                    # $XBK_{ik}^{t}$: Cantidad de backorder del ingrediente $i$ en planta $k$ luego de no cumplir la demanda  del día $t$.
+                    xbk_name = f'XBK_{planta}_{ingrediente}_{u_periodo}'
+                    xbk_var = pu.LpVariable(name=xbk_name, lowBound=0.0, cat=pu.LpContinuous)
+                    variables['XBK'][xbk_name] = xbk_var
+
+
 def generar_variables(problema: dict) -> dict:
 
     variables = dict()
 
     periodos = problema['conjuntos']['periodos']
     ingredientes = problema['conjuntos']['ingredientes']
+    plantas = problema['conjuntos']['plantas']
     unidades = problema['conjuntos']['unidades_almacenamiento']
     cargas = problema['conjuntos']['cargas']
 
@@ -131,5 +159,7 @@ def generar_variables(problema: dict) -> dict:
                            unidades=unidades, ingredientes=ingredientes)
     
     _almacenamiento_puerto(variables=variables, cargas=cargas, periodos=periodos)
+    
+    _satisfaccion_demanda(variables=variables, plantas=plantas, unidades=unidades, ingredientes=ingredientes)
 
     return variables

@@ -183,8 +183,70 @@ def _balance_masa_ua(restricciones: list, variables: list, cargas: list, unidade
     pass
 
 
-def _satisfaccion_demanda_plantas(restricciones: list, variables: list, plantas: list, ingredientes: list, unidades: list, consumo_proyectado: list, periodos=30):
-    pass
+def _satisfaccion_demanda_plantas(restricciones: list, variables: list, plantas: list, ingredientes: list, unidades: list, consumo_proyectado: list, periodos=list):
+    
+    # (1) SUM(XDM) + XBK >= DM*(1-BDC)
+    # (1) SUM(XDM) + XBK >= DM - DM*BDC
+    # (1) SUM(XDM) + XBK + DM*BDC >= DM
+    # (2) SUM(XDM) <= DM
+    
+    rest_list = list()
+    
+    for periodo in periodos:
+        for ingrediente in ingredientes:
+            for planta in plantas:
+                    
+                campos = planta.split('_')
+                c_empresa = campos[0]
+                c_planta = campos[1]
+                
+                left_expesion = list()
+   
+                # DM
+                dm_name = f'DM_{planta}_{ingrediente}_{periodo}'
+                dm_value = consumo_proyectado[dm_name]
+                
+                # $XBK_{ik}^{t}$: Cantidad de backorder del ingrediente $i$ en planta $k$ luego de no cumplir la demanda  del día $t$.
+                xbk_name = f'XBK_{planta}_{ingrediente}_{periodo}'
+                xbk_var = variables['XBK']                
+                
+                
+                # $BCD_{ik}^{t}$ : Binaria, si estará permitido que la demanda de un ingrediente $i$ no se satisfaga en la planta $k$ al final del día $t$
+                bdc_name = f'BCD_{ingrediente}_{planta}_{periodo}'
+                bdc_var = variables['BCD'][bdc_name]
+                
+                    
+                # SUM(XDM)
+                for unidad in unidades:
+                        
+                    campos = unidad.split('_')
+                    u_empresa = campos[0]
+                    u_planta = campos[1]
+                    U_codigo = campos[2]
+                    u_periodo = int(campos[3])
+                        
+                    if c_empresa == u_empresa and c_planta == u_planta and u_periodo == periodo:
+                        xdm_name = f'XDM_{ingrediente}_{unidad}'
+                        xdm_var = variables['XDM'][xdm_name]
+                        left_expesion.append(xdm_var)
+               
+                # Procesar (2)
+                # SUM(XDM) <= DM
+                rest_2 = (pu.lpSum(left_expesion)<=dm_value, f'MNo sobrepasar demanda en {planta} de {ingrediente} en {periodo}')
+                rest_list.append(rest_2)
+                
+                              
+                left_expesion.append(xbk_var)    
+                
+                left_expesion.append(dm_value*bdc_var)
+                               
+                
+                rest_1 = (pu.lpSum(left_expesion)>=dm_value, f'Minimizar backorder en {planta} de {ingrediente} en {periodo}')
+                
+                rest_list.append(rest_1)
+                
+    restricciones['minimizar backorder'] = rest_list
+                 
 
 
 def select_ua_by_period_planta(planta:str, period:int, unidades:list):
@@ -356,5 +418,8 @@ def generar_restricciones(problema: list, variables: list):
     _balance_masa_bodega_puerto(restricciones=restricciones, variables=variables, cargas=cargas, unidades=unidades, inventario_inicial=inventario_inicial, periodos=periodos)
 
     _balance_masa_ua(restricciones=restricciones, variables=variables, cargas=cargas, unidades=unidades, inventario_inicial=inventario_inicial_ua, ingredientes=ingredientes, periodos=periodos)
+
+
+    _satisfaccion_demanda_plantas(restricciones=restricciones, variables=variables, plantas=plantas, ingredientes=ingredientes, unidades=unidades, consumo_proyectado=consumo_proyectado, periodos=periodos)
 
     return restricciones

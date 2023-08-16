@@ -87,6 +87,17 @@ def _costo_no_satisfaccion_demanda(variables:dict):
         
     return fobj
 
+def _costo_bakorder(variables:dict):
+    
+    fobj = list()
+    
+    for name, var in variables['XBK'].items():
+        fobj.append(10000*var)
+        
+    return fobj
+    
+    
+
 
 def _costo_asignacion_ingrediente_unidad_almacenamiento(variables:dict):
     
@@ -126,6 +137,9 @@ def generar_fob(problema: dict, variables: dict):
     
     # Costo de no satisfacer una demanda en una planta
     fob.append(_costo_no_satisfaccion_demanda(variables))
+    
+    # Costo del backorder
+    fob.append(_costo_bakorder(variables))
 
     # Costo por permitir guardar un ingrediente en una unidad de almacenamiento en una planta
     fob.append(_costo_asignacion_ingrediente_unidad_almacenamiento(variables))

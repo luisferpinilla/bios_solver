@@ -112,10 +112,15 @@ def generar_parametros(problema:dict, file:str, now:datetime)->dict:
     problema['parametros']['safety_stock'] = {f'SS_{k}':ss_df.loc[k]['SS'] for k in ss_df.index}
 
     # $CS_{ik}^{t}$ : Costo de no satisfacer el inventario de seguridad para el ingrediente $i$ en la planta $k$ durante el día $t$.
-    problema['parametros']['costo_no_safety_stock'] = {f'CS_{k}':1000000 for k in ss_df.index}
+    # problema['parametros']['costo_no_safety_stock'] = {f'CS_{k}':1000000 for k in ss_df.index}
 
     # $CD_{ik}^{t}$ : Costo de no satisfacer la demanda del ingrediente $i$  en la planta $k$ durante el día $t$.
-    problema['parametros']['costo_no_demanda'] = {f'CD_{k}':10000000 for k in ss_df.index}
+    # problema['parametros']['costo_no_demanda'] = {f'CD_{k}':10000000 for k in ss_df.index}
+    
+    
+    # $CK_{ik}^{t}$ : Costo del backorder del ingrediente $i$  en la planta $k$ durante el día $t$.
+    # problema['parametros']['costo_backorder'] = {f'CK_{k}':10000 for k in ss_df.index}
+    
 
     # $TR_{im}^{t}$ : Cantidad en tránsito programada para llegar a la unidad de almacenamiento $m$ durante el día $t$,
 
