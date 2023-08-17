@@ -296,7 +296,7 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, unidades: li
                 ss_name = f'SS_{planta}_{ingrediente}'
                 ss_value = safety_stock[ss_name]
                 
-                rest = (pu.lpSum(left_expesion)>=ss_value, f'safety_stock {ingrediente} en {planta} en {periodo}')
+                rest = (pu.lpSum(left_expesion)>=ss_value*bss_var, f'safety_stock {ingrediente} en {planta} en {periodo}')
                     
                 rest_list.append(rest)   
 
