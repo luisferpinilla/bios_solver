@@ -281,7 +281,7 @@ def guardar_data(problema:dict, variables:dict):
             data_dict['nombre_variable'] = list()
             data_dict['valor'] = list()
             
-            print('guardando', tipo)
+            # print('guardando', tipo)
             for var_name, var_value in var_list.items():
                 
                 data_dict['tipo'].append(tipo)

@@ -48,24 +48,14 @@ if __name__ == '__main__':
     
     solver.writeLP(filename='model.lp')
     
-    glpk = pu.GLPK_CMD()
+    glpk = pu.GLPK_CMD(path=r'C:\Users\luisf\Documents\glpk-4.65\w64\glpsol.exe', timeLimit=60)
 
     try:
         solver.solve(solver=glpk)    
     except:
         print('No se puede usar GLPK')
-        solver_parameters = {
-                                'keepFiles': 0,
-                                'mip': True,
-                                'msg': True,
-                                'options': [],
-                                'solver': 'PULP_CBC_CMD',
-                                'timeLimit': 30,
-                                'warmStart': False
-                            }
-        cbc = pu.getSolverFromDict(solver_parameters)
-
-        cbc = pu.PULP_CBC_CMD(fracGap=0.000000001, maxSeconds=60)
+        
+        cbc = pu.PULP_CBC_CMD(gapAbs=0.00000000001, timeLimit=60,cuts=False, strong=True)
         solver.solve()   
     
     #generar_reporte(problema=problema, variables=variables)
