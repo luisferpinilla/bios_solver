@@ -5,7 +5,7 @@ from modelador.generador_parametros import generar_parametros
 from modelador.generador_variables import generar_variables
 from modelador.generador_restricciones import generar_restricciones
 from modelador.generador_fobjetivo import generar_fob
-from modelador.generador_reporte import generar_reporte
+from modelador.generador_reporte import generar_reporte, guardar_data
 
 
 def generar_problema(file:str):
@@ -49,11 +49,13 @@ if __name__ == '__main__':
     
     solver.writeLP(filename='model.lp')
     
-    solver.solve()       
+    glpk = pu.GLPK(path=r'C:\glpk-4.65\w64\gplsol.exe')
+
+    solver.solve(solver=glpk)      
     
-    generar_reporte(problema=problema, variables=variables)
+    #generar_reporte(problema=problema, variables=variables)
     
-    #guardar_data(problema, variables)
+    guardar_data(problema, variables)
     
     
 

@@ -6,6 +6,7 @@ Created on Sun Jul 30 15:11:39 2023
 """
 
 import pandas as pd
+import json
 
 def generar_periodos(problema:dict):
     
@@ -30,6 +31,7 @@ def generar_invenario_puerto(problema:dict, variables:dict):
     invenatario_puertos['puerto'] = list()
     invenatario_puertos['barco'] =  list()
     invenatario_puertos['ingrediente'] =  list()
+    invenatario_puertos['llegadas'] = list()
     invenatario_puertos['inventario_final'] = list()
     
     
@@ -45,12 +47,20 @@ def generar_invenario_puerto(problema:dict, variables:dict):
             xip_name = f'XIP_{carga}_{periodo}'
             xip_var = variables['XIP'][xip_name]
             
+            xpl_name = f'XPL_{carga}_{periodo}'
+            xpl_var = variables['XPL'][xpl_name]
+            
             invenatario_puertos['periodo'].append(periodo)
             invenatario_puertos['empresa'].append(empresa)
             invenatario_puertos['puerto'].append(puerto)
             invenatario_puertos['barco'].append(barco)
             invenatario_puertos['ingrediente'].append(ingrediente)
+            invenatario_puertos['llegadas'].append(xpl_var.varValue)
             invenatario_puertos['inventario_final'].append(xip_var.varValue)
+            
+                
+                    
+
             
     invenatario_puertos_df = pd.DataFrame(invenatario_puertos)
    
@@ -105,12 +115,12 @@ def generar_inventario_plantas(problema:dict, variables:dict, verbose=False):
                 
                     xtr_name = f'XTR_{carga}_{empresa}_{planta}_{ua}_{periodo-2}'
                     xtr_var = variables['XTR'][xtr_name]
-                    Llegadas_almacen = xtr_var.varValue
+                    Llegadas_almacen += xtr_var.varValue
                     
                     
                     xtd_name = f'XTD_{carga}_{empresa}_{planta}_{ua}_{periodo-2}'
                     xtd_var = variables['XTD'][xtd_name]
-                    llegadas_barco = xtd_var.varValue
+                    llegadas_barco += xtd_var.varValue
 
                 
             inventario_plantas['llegadas_barco'].append(llegadas_barco)
@@ -240,7 +250,7 @@ def generar_reporte(problema:dict, variables:dict):
         
         print('guardar transitos')
         transitos_df = generar_reporte_transitos(problema=problema, variables=variables)
-        transitos_df.to_excel(writer, sheet_name='transitos', index=False)
+        transitos_df.to_excel(writer, sheet_name='tr_puerto_planta', index=False)
         
         print('guardar inventario_plantas')
         inventarios_plantas_df = generar_inventario_plantas(problema=problema, variables=variables)
@@ -251,25 +261,78 @@ def generar_reporte(problema:dict, variables:dict):
         inventarios_puertos_df.to_excel(writer, sheet_name='inventario_puertos', index=False)
         
         print('listo')
+   
+    
+
+    
     
 
 def guardar_data(problema:dict, variables:dict):
     
-    data_dict = dict()
-    data_dict['tipo'] = list()
-    data_dict['nombre'] = list()
-    data_dict['value'] = list()
-    
-    
-    for tipo, var_list in variables.items():
-        for var_name, var_value in var_list.items():
-            data_dict['tipo'].append(tipo)
-            data_dict['nombre'].append(var_name)
-            data_dict['value'].append(var_value.varValue)  
+    with open('diccionario_datos.json') as file:
+        data = json.load(file)
+  
+    # Variables
+    with pd.ExcelWriter('solución.xlsx') as writer:
+        for tipo, var_list in variables.items():
             
-    df = pd.DataFrame(data_dict)
+            data_dict = dict()
+            data_dict['tipo'] = list()
+            data_dict['nombre_variable'] = list()
+            data_dict['valor'] = list()
+            
+            print('guardando', tipo)
+            for var_name, var_value in var_list.items():
+                
+                data_dict['tipo'].append(tipo)
+                data_dict['nombre_variable'].append(var_name)
+                data_dict['valor'].append(var_value.varValue)  
+                
+            df = pd.DataFrame(data_dict)
+            
+            df['slices'] = df['nombre_variable'].apply(lambda x: len(x.split('_')))
+            
+            columns = data[tipo]
+            
+            cont = 1
+            for column in columns:
+                
+                print('  ', 'trabajando con', column)
+
+                df[column] = df['nombre_variable'].apply(lambda x: x.split('_')[cont])
+                cont +=1
+                            
+            df.to_excel(writer, sheet_name=tipo, index=False)
+
+        for tipo, var_list in problema['parametros'].items(): 
+            
+            data_dict = dict()
+            data_dict['tipo'] = list()
+            data_dict['nombre_variable'] = list()
+            data_dict['valor'] = list()
+            
+            print('guardando', tipo)
+            for var_name, var_value in var_list.items():
+                
+                data_dict['tipo'].append(tipo)
+                data_dict['nombre_variable'].append(var_name)
+                data_dict['valor'].append(var_value)  
+                
+            df = pd.DataFrame(data_dict)
+            
+            df['slices'] = df['nombre_variable'].apply(lambda x: len(x.split('_')))
+            
+            columns = data[tipo]
+            
+            cont = 1
+            for column in columns:
+                
+                print('  ', 'trabajando con', column)
     
-    df.to_excel('borrame.xlsx', index=False)
+                df[column] = df['nombre_variable'].apply(lambda x: x.split('_')[cont])
+                cont +=1
+                            
+            df.to_excel(writer, sheet_name=tipo, index=False)
         
 
     

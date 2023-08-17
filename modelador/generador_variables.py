@@ -18,7 +18,7 @@ def _despacho_directo(variables: dict, cargas: list, unidades: list):
 
             itd_name = f'ITD_{carga}_{unidad}'
             itd_var = pu.LpVariable(
-                name=itd_name, lowBound=0.0, cat=pu.LpInteger)
+                name=itd_name, lowBound=0, cat=pu.LpInteger)
             variables['ITD'][itd_name] = itd_var
 
 
@@ -50,7 +50,7 @@ def _despacho_desde_puerto(variables: dict, cargas: list, unidades: list):
 
             itd_name = f'ITR_{carga}_{unidad}'
             itd_var = pu.LpVariable(
-                name=itd_name, lowBound=0.0, cat=pu.LpInteger)
+                name=itd_name, lowBound=0, cat=pu.LpInteger)
             variables['ITR'][itd_name] = itd_var
 
 
