@@ -297,7 +297,7 @@ def guardar_data(problema:dict, variables:dict):
             cont = 1
             for column in columns:
                 
-                print('  ', 'trabajando con', column)
+                # print('  ', 'trabajando con', column)
 
                 df[column] = df['nombre_variable'].apply(lambda x: x.split('_')[cont])
                 cont +=1
@@ -311,7 +311,7 @@ def guardar_data(problema:dict, variables:dict):
             data_dict['nombre_variable'] = list()
             data_dict['valor'] = list()
             
-            print('guardando', tipo)
+            # print('guardando', tipo)
             for var_name, var_value in var_list.items():
                 
                 data_dict['tipo'].append(tipo)
@@ -327,7 +327,7 @@ def guardar_data(problema:dict, variables:dict):
             cont = 1
             for column in columns:
                 
-                print('  ', 'trabajando con', column)
+                # print('  ', 'trabajando con', column)
     
                 df[column] = df['nombre_variable'].apply(lambda x: x.split('_')[cont])
                 cont +=1

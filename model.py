@@ -39,8 +39,7 @@ if __name__ == '__main__':
     
     # Agregar función objetivo
     solver += fobjetivo
-       
-    
+        
     # Agregar restricciones
     for name, rest_list in restricciones.items():
         for rest in rest_list:     
@@ -49,9 +48,25 @@ if __name__ == '__main__':
     
     solver.writeLP(filename='model.lp')
     
-    glpk = pu.GLPK(path=r'C:\glpk-4.65\w64\gplsol.exe')
+    glpk = pu.GLPK_CMD()
 
-    solver.solve(solver=glpk)      
+    try:
+        solver.solve(solver=glpk)    
+    except:
+        print('No se puede usar GLPK')
+        solver_parameters = {
+                                'keepFiles': 0,
+                                'mip': True,
+                                'msg': True,
+                                'options': [],
+                                'solver': 'PULP_CBC_CMD',
+                                'timeLimit': 30,
+                                'warmStart': False
+                            }
+        cbc = pu.getSolverFromDict(solver_parameters)
+
+        cbc = pu.PULP_CBC_CMD(fracGap=0.000000001, maxSeconds=60)
+        solver.solve()   
     
     #generar_reporte(problema=problema, variables=variables)
     
