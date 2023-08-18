@@ -8,61 +8,58 @@ from modelador.generador_fobjetivo import generar_fob
 from modelador.generador_reporte import generar_reporte, guardar_data
 
 
-def generar_problema(file:str):
-    
+def generar_problema(file: str):
+
     now = datetime(2023, 7, 7)
-        
+
     problema = dict()
-        
+
     problema['fecha_inicial'] = now
-        
+
     generar_conjuntos(problema=problema, file=file)
-        
+
     generar_parametros(problema=problema, file=file, now=now)
-        
+
     variables = generar_variables(problema)
-            
-    restricciones = generar_restricciones(problema, variables)    
-    
+
+    restricciones = generar_restricciones(problema, variables)
+
     fobjetivo = generar_fob(problema, variables)
-    
+
     return fobjetivo, restricciones, problema, variables
 
-                                                    
+
 if __name__ == '__main__':
-    
+
     file = './model_3.xlsm'
     # Problema
     solver = pu.LpProblem("Bios", sense=pu.const.LpMinimize)
-    
+
     fobjetivo, restricciones, problema, variables = generar_problema(file=file)
-    
+
     # Agregar función objetivo
     solver += fobjetivo
-        
+
     # Agregar restricciones
     for name, rest_list in restricciones.items():
-        for rest in rest_list:     
+        for rest in rest_list:
             # print('agregando restriccion', name, rest)
             solver += rest
-    
+
     solver.writeLP(filename='model.lp')
-    
-    glpk = pu.GLPK_CMD(path=r'C:\Users\luisf\Documents\glpk-4.65\w64\glpsol.exe', timeLimit=60)
+
+    glpk = pu.GLPK_CMD(
+        path=r'C:\Users\luisf\Documents\glpk-4.65\w64\glpsol.exe', timeLimit=100, options=["--mipgap", "0.00000000001", "--tmlim", "100000"])
 
     try:
-        solver.solve(solver=glpk)    
+        solver.solve(solver=glpk)
     except:
         print('No se puede usar GLPK')
-        
-        cbc = pu.PULP_CBC_CMD(gapAbs=0.00000000001, timeLimit=60,cuts=False, strong=True)
-        solver.solve()   
-    
-    #generar_reporte(problema=problema, variables=variables)
-    
+
+        cbc = pu.PULP_CBC_CMD(gapAbs=0.00000000001,
+                              timeLimit=60, cuts=False, strong=True)
+        solver.solve()
+
+    # generar_reporte(problema=problema, variables=variables)
+
     guardar_data(problema, variables)
-    
-    
-
-    
-
