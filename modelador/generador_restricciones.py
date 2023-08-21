@@ -220,14 +220,14 @@ def _satisfaccion_demanda_plantas(restricciones: list, variables: list, plantas:
                 # Procesar (2)
                 # SUM(XDM) <= DM
                 rest_2 = (pu.lpSum(left_expesion) <= dm_value,
-                          f'MNo sobrepasar demanda en {planta} de {ingrediente} en {periodo}')
+                          f'No sobrepasar demanda en {planta} de {ingrediente} en {periodo}')
                 rest_list.append(rest_2)
 
                 left_expesion.append(xbk_var)
 
                 left_expesion.append(dm_value*bdc_var)
 
-                rest_1 = (pu.lpSum(left_expesion) >= dm_value*bdc_var,
+                rest_1 = (pu.lpSum(left_expesion) == dm_value*bdc_var,
                           f'Minimizar backorder en {planta} de {ingrediente} en {periodo}')
 
                 rest_list.append(rest_1)
