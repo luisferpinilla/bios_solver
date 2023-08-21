@@ -48,8 +48,8 @@ if __name__ == '__main__':
 
     solver.writeLP(filename='model.lp')
 
-    glpk = pu.GLPK_CMD(
-        path=r'C:\Users\luisf\Documents\glpk-4.65\w64\glpsol.exe', timeLimit=100, options=["--mipgap", "0.00000000001", "--tmlim", "100000"])
+    glpk = pu.GLPK_CMD(timeLimit=100, options=[
+                       "--mipgap", "0.00000000001", "--tmlim", "100000"])
 
     try:
         solver.solve(solver=glpk)
@@ -60,6 +60,6 @@ if __name__ == '__main__':
                               timeLimit=60, cuts=False, strong=True)
         solver.solve()
 
-    # generar_reporte(problema=problema, variables=variables)
+    generar_reporte(problema=problema, variables=variables)
 
-    guardar_data(problema, variables)
+    # guardar_data(problema, variables)
