@@ -106,9 +106,6 @@ else:
 
         st.write(inventario_to_show)
 
-        with st.expander(label='Ver Explicación', expanded=False):
-            st.write(inventario_to_show)
-
     despachos_df = pd.concat([solucion['XTR'], solucion['XTD']])
 
     despachos_df = despachos_df[despachos_df['valor'] > 0]
