@@ -60,6 +60,6 @@ if __name__ == '__main__':
                               timeLimit=60, cuts=False, strong=True)
         solver.solve()
 
-    generar_reporte(problema=problema, variables=variables)
+    # generar_reporte(problema=problema, variables=variables)
 
-    # guardar_data(problema, variables)
+    guardar_data(problema, variables)

@@ -174,10 +174,7 @@ def _balance_masa_ua(restricciones: list, variables: list, cargas: list, unidade
 
 def _satisfaccion_demanda_plantas(restricciones: list, variables: list, plantas: list, ingredientes: list, unidades: list, consumo_proyectado: list, periodos=list):
 
-    # (1) SUM(XDM) + XBK >= DM*(1-BDC)
-    # (1) SUM(XDM) + XBK >= DM - DM*BDC
-    # (1) SUM(XDM) + XBK + DM*BDC >= DM
-    # (2) SUM(XDM) <= DM
+    # (1) SUM(XDM) + XBK == DM
 
     rest_list = list()
 
@@ -197,11 +194,11 @@ def _satisfaccion_demanda_plantas(restricciones: list, variables: list, plantas:
 
                 # $XBK_{ik}^{t}$: Cantidad de backorder del ingrediente $i$ en planta $k$ luego de no cumplir la demanda  del día $t$.
                 xbk_name = f'XBK_{planta}_{ingrediente}_{periodo}'
-                xbk_var = variables['XBK']
+                xbk_var = variables['XBK'][xbk_name]
 
                 # $BCD_{ik}^{t}$ : Binaria, si estará permitido que la demanda de un ingrediente $i$ no se satisfaga en la planta $k$ al final del día $t$
-                bdc_name = f'BCD_{ingrediente}_{planta}_{periodo}'
-                bdc_var = variables['BCD'][bdc_name]
+                # bdc_name = f'BCD_{ingrediente}_{planta}_{periodo}'
+                # bdc_var = variables['BCD'][bdc_name]
 
                 # SUM(XDM)
                 for unidad in unidades:
@@ -217,20 +214,12 @@ def _satisfaccion_demanda_plantas(restricciones: list, variables: list, plantas:
                         xdm_var = variables['XDM'][xdm_name]
                         left_expesion.append(xdm_var)
 
-                # Procesar (2)
-                # SUM(XDM) <= DM
-                rest_2 = (pu.lpSum(left_expesion) <= dm_value,
-                          f'No sobrepasar demanda en {planta} de {ingrediente} en {periodo}')
-                rest_list.append(rest_2)
-
                 left_expesion.append(xbk_var)
 
-                left_expesion.append(dm_value*bdc_var)
+                rest = (pu.lpSum(left_expesion) == dm_value,
+                        f'Minimizar backorder en {planta} de {ingrediente} en {periodo}')
 
-                rest_1 = (pu.lpSum(left_expesion) == dm_value*bdc_var,
-                          f'Minimizar backorder en {planta} de {ingrediente} en {periodo}')
-
-                rest_list.append(rest_1)
+                rest_list.append(rest)
 
     restricciones['minimizar backorder'] = rest_list
 
