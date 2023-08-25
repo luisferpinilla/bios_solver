@@ -36,7 +36,31 @@ def formatear(solucion: str, parametro: str, variable: str) -> pd.DataFrame:
     return df
 
 
+def __backorder(solucion: dict) -> pd.DataFrame:
+
+    backorder_df = solucion['XBK']
+
+    renamer = {'ingrediente': 'Empresa',
+               'empresa': 'Planta', 'planta': 'Ingrediente', }
+
+    # Renombrar columnas
+    backorder_df.rename(columns=renamer, inplace=True)
+
+    backorder_df['Variable'] = 'Backorder esperado'
+
+    backorder_df = backorder_df.pivot_table(index=['Variable', 'Planta', 'Ingrediente'],
+                                            columns='periodo', values='valor', aggfunc=np.sum).reset_index()
+
+    st.write(backorder_df)
+
+    return backorder_df
+
+
 def _preparar_inventario_planta(solucion):
+
+    # Columnas a mostrar:
+    # Ingrediente | Planta | Unidad | Variable | periodos ->
+
     demanda_stock_df = formatear(
         solucion=solucion, parametro='XDM', variable='Demanda durante el día')
 
@@ -49,8 +73,7 @@ def _preparar_inventario_planta(solucion):
     safety_stock_pr_df = formatear(
         solucion=solucion, parametro='safety_stock', variable='safety stock')
 
-    backorder_df = formatear(
-        solucion=solucion, parametro='XBK', variable='Backorder')
+    backorder_df = __backorder(solucion=solucion)
 
     consumo_proyectado_df = formatear(
         solucion=solucion, parametro='consumo_proyectado', variable='Demanda Total')
