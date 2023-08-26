@@ -51,12 +51,27 @@ def __backorder(solucion: dict) -> pd.DataFrame:
     backorder_df = backorder_df.pivot_table(index=['Variable', 'Planta', 'Ingrediente'],
                                             columns='periodo', values='valor', aggfunc=np.sum).reset_index()
 
-    st.write(backorder_df)
-
     return backorder_df
 
 
-def _preparar_inventario_planta(solucion):
+def __inventario_planta_arrivals(solucion: dict) -> pd.DataFrame:
+
+    df = pd.concat([solucion['XTD'], solucion['XTR']])
+
+    df = df.pivot_table(values='valor', index=[
+                        'ingrediente', 'planta', 'unidad_almacenamiento'], columns='periodo', aggfunc=np.sum).reset_index()
+
+    df.rename(columns={'ingrediente': 'Ingrediente',
+                       'empresa_destino': 'Empresa',
+                       'planta': 'Planta',
+                       'unidad_almacenamiento': 'Unidad'}, inplace=True)
+
+    df['Variable'] = 'Llegadas desde puerto'
+
+    return df
+
+
+def _preparar_inventario_planta(solucion: dict) -> pd.DataFrame:
 
     # Columnas a mostrar:
     # Ingrediente | Planta | Unidad | Variable | periodos ->
@@ -66,6 +81,8 @@ def _preparar_inventario_planta(solucion):
 
     inventario_planta_df = formatear(
         solucion=solucion, parametro='XIU', variable='Inventario al final del día')
+
+    arrivals_df = __inventario_planta_arrivals(solucion=solucion)
 
     safety_stock_df = formatear(
         solucion=solucion, parametro='BSS', variable='Cumple inventario al final del día')
@@ -80,6 +97,7 @@ def _preparar_inventario_planta(solucion):
 
     inventario_to_show = pd.concat(
         [demanda_stock_df,
+         arrivals_df,
          inventario_planta_df,
          consumo_proyectado_df,
          safety_stock_df,
