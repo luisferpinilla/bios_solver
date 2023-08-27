@@ -335,4 +335,22 @@ def guardar_data(problema: dict, variables: dict):
 
             solucion[tipo] = df
 
+        # Periodos
+
+        data_dict = dict()
+        data_dict['tipo'] = list()
+        data_dict['nombre_variable'] = list()
+        data_dict['valor'] = list()
+
+        for periodo, fecha in problema['conjuntos']['periodos'].items():
+            data_dict['tipo'].append('Periodos')
+            data_dict['nombre_variable'].append(periodo)
+            data_dict['valor'].append(fecha)
+
+            df = pd.DataFrame(data_dict)
+
+            solucion['periodos'] = df
+
+            df.to_excel(writer, sheet_name='peridos', index=False)
+
     return solucion
