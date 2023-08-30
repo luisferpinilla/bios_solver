@@ -1,4 +1,107 @@
 import pandas as pd
+from datetime import datetime
+
+
+def __remover_underscores(x:str)->str:
+    
+    x = x.lower()
+    x = x.replace('_', '')
+    x = x.replace(' ', '')
+    
+    return x
+
+
+def _generar_periodos(problema:dict, file:str):
+    
+    # extraer los periodos de los títulos del archivo
+    
+    df = pd.read_excel(io=file, sheet_name='consumo_proyectado')
+    
+    columns = df.columns
+    
+    columns_to_remove = ['key', 'ingrediente', 'planta']
+    
+    dates = [datetime.strptime(x, '%d/%m/%Y') for x in columns if not x in columns_to_remove]
+    
+    dates = sorted(dates)
+    
+    problema['conjuntos']['periodos'] = len(dates)
+    
+    problema['conjuntos']['fechas'] = dates
+
+
+def _generar_empresas(problema:dict, file:str):
+    
+    empresas_df = pd.read_excel(file, sheet_name='empresas')
+    
+    empresas_df[''] = empresas_df[''].apply(__remover_underscores) 
+    
+    problema['conjuntos']['empresas'] = empresas_df['empresa'].to_list()
+
+
+def _generar_ingredientes(problema:dict, file:str):
+    
+    ingredientes_df = pd.read_excel(file, sheet_name='ingredientes')
+    
+    ingredientes_df['ingrediente'] = ingredientes_df['ingrediente'].apply(__remover_underscores)
+    
+    problema['conjuntos']['ingredientes'] = ingredientes_df['ingrediente'].to_list()
+ 
+    
+def _generar_operadores(problema:dict, file:str):
+    
+    puertos_df = pd.read_excel(file, sheet_name='puertos')
+    
+    puertos_df['operador'] = puertos_df['operador'].apply(__remover_underscores)
+    
+    
+    problema['conjuntos']['puertos'] = puertos_df['operador'].to_list()
+    
+
+def _generar_plantas(problema:dict, file:str):
+
+    plantas_df = pd.read_excel(file, sheet_name='plantas')
+    
+    plantas_df['planta'] = plantas_df['planta'].apply(__remover_underscores)
+    
+    plantas_df['empresa'] = plantas_df['empresa'].apply(__remover_underscores)
+    
+    plantas_df['key'] = plantas_df.apply(
+        lambda x: x['empresa'] + "_" + x['planta'], axis=1)
+    
+    problema['conjuntos']['plantas'] = plantas_df['key'].to_list()
+
+
+def _generar_unidades_almacenamiento(problema:dict, file:str):
+    
+    unidades_df = pd.read_excel(
+        file, sheet_name='unidades_almacenamiento')
+    
+    unidades_df['key'] = unidades_df['key'].apply(__remover_underscores)
+    
+    unidades = unidades_df['key'].to_list()
+    
+    periodos = problema['conjuntos']['periodos']
+    
+    unidades = [f'{x}_{t}' for x in unidades for t in range(periodos)]
+
+    problema['conjuntos']['unidades_almacenamiento'] = unidades    
+    
+
+def _generar_cargas_en_puerto(problema:list, file=str):
+    
+    transitos_a_puerto_df = pd.read_excel(file, sheet_name='tto_puerto')
+    inventarios_puerto_df = pd.read_excel(file, sheet_name='inventario_puerto')
+    
+    transitos_a_puerto_df['']
+    
+    cargas_transito = [f'{c}' for c in  list(transitos_a_puerto_df['key'].unique())]
+    cargas_inventario = [f'{c}' for c in  list(inventarios_puerto_df['key'].unique())]
+    
+    cargas = list(set(cargas_inventario + cargas_transito))
+      
+    problema['conjuntos']['cargas'] = cargas
+    
 
 
 def generar_conjuntos(problema: dict, file: str) -> dict:
@@ -6,39 +109,24 @@ def generar_conjuntos(problema: dict, file: str) -> dict:
     problema['conjuntos'] = dict()
 
     # Empresas
-    empresas_df = pd.read_excel(file, sheet_name='empresas')
-    problema['conjuntos']['empresas'] = empresas_df['empresa'].to_list()
+    _generar_empresas(problema=problema, file=file)
 
     # Calendario
-    periodos_df = pd.read_excel(file, sheet_name='periodos')
-    problema['conjuntos']['periodos'] = {
-        periodos_df.loc[i]['Id']: periodos_df.loc[i]['Fecha'] for i in periodos_df.index}
-    problema['conjuntos']['fechas'] = {
-        periodos_df.loc[i]['Fecha']: periodos_df.loc[i]['Id'] for i in periodos_df.index}
-    problema['periodos'] = len(problema['conjuntos']['periodos'])
+    _generar_periodos(problema=problema, file=file)
 
     # Ingredientes
-    ingredientes_df = pd.read_excel(file, sheet_name='ingredientes')
-    problema['conjuntos']['ingredientes'] = ingredientes_df['ingrediente'].to_list()
+    _generar_ingredientes(problema=problema, file=file)
 
     # Puertos
-    puertos_df = pd.read_excel(file, sheet_name='puertos')
-    problema['conjuntos']['puertos'] = puertos_df['puerto'].to_list()
+    _generar_operadores(problema=problema, file=file)
 
     # plantas
-    plantas_df = pd.read_excel(file, sheet_name='plantas')
-    plantas_df['key'] = plantas_df.apply(
-        lambda x: x['empresa'] + "_" + x['planta'], axis=1)
-    problema['conjuntos']['plantas'] = plantas_df['key'].to_list()
+    _generar_plantas(problema=problema, file=file)
 
     # Unidades de almacenamiento
-    unidades_df = pd.read_excel(
-        file, sheet_name='unidades_almacenamiento', skiprows=1)
-    unidades = unidades_df['key'].to_list()
-    unidades = [
-        f'{u}_{t}' for u in unidades for t in problema['conjuntos']['periodos']]
-    problema['conjuntos']['unidades_almacenamiento'] = unidades
+    _generar_unidades_almacenamiento(problema=problema, file=file)
 
     # Cargas
-    inventarios_puerto_df = pd.read_excel(file, sheet_name='cargas_puerto')
-    problema['conjuntos']['cargas'] = [f'{c}' for c in  list(inventarios_puerto_df['key'].unique())]
+    _generar_cargas_en_puerto(problema=problema, file=file)
+    
+
