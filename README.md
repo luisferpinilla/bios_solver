@@ -107,6 +107,8 @@ $AR_{l}^{t}$ : Cantidad de material que va a llegar a la carga $l$ durante el d�
 
 $CC_{l}^{t}$ : Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $J$.
 
+$PA$ : Costo de la Operación portuaria por tonelada almacenada en puerto
+
 #### Parámetros asociados al transporte entre puertos y plantas
 
 $CF_{lm}$ : Costo fijo de transporte por camión despachado llevando la carga $l$ hasta la unidad de almacenamiento $m$.
@@ -114,6 +116,8 @@ $CF_{lm}$ : Costo fijo de transporte por camión despachado llevando la carga $l
 $CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
 
 $CW_{lm}$ : Costo de vender una carga perteneciente a una empresa a otra.
+
+$PD$ : Costo de la operación porturaria por tonelada despachada de manera directa
 
 $TT_{jk}$ : tiempo en días para transportar la carga desde el puerto $j$ hacia la planta $k$.
 
@@ -191,6 +195,20 @@ $BCD_{ik}^{t}$ : Binaria, si estará permitido que la demanda de un ingrediente 
 La función objetivo es el criterio general que toma el solucionador del modelo para seleccionar la mejor decisión que cumple con todas las restrucciones. 
 
 Para efectos del problema, se ha definido que esta función esta relacionada con los costos totales causados al final del horizonte de planeación. Estos costos son el resultado del cobro por almacenamiento en puerto durante los cortes de facturación para cada carga y, los costos de transporte causados para despachar la carga desde el puerto a la planta según la tabla de fletes suministrada.
+
+### Costos por operaciones portuarias
+
+En el momento en el que el barco ha atracado en el terminal y está siendo descargado, la operación tendrá un costo por tonelada descargada que depende de si el ingrediente que está siendo descargado se pone en un camión con destino a una planta o si se lleva a una bodega de almacenamiento.
+
+#### Costo por descargar el barco directamente sobre un camión
+
+Este costo se adicionará al valor pagado al flete hasta la planta
+
+$$ \sum_{l \in j}\sum_{m \in E}{PD \cdot XTD_{lm}^{t}} \forall t \in T$$ 
+
+#### Costo por descargar el barco y llevar el producto a bodega en puerto 
+
+$$ \sum_{l \in j}\sum_{m \in E}{PA \cdot XPL_{lm}^{t}} \forall t \in T$$
 
 ### Costos por almacenamiento
 
