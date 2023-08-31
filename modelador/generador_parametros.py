@@ -3,41 +3,91 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
+def __remover_underscores(x:str)->str:
+    
+    x = x.lower()
+    x = x.replace('_', '')
+    x = x.replace('-', '')
+    x = x.replace(' ', '')
+    
+    return x
+
+
+def __inventario_inicial_puerto(problema:dict, file:str, now:datetime):
+    # $IP_{l}$ : inventario inicial en puerto para la carga $l$.
+
+    inventarios_puerto_df = pd.read_excel(file, sheet_name='inventario_puerto')
+    
+    campos = ['empresa', 'operador', 'imp-moto-nave','ingrediente']
+    
+    for campo in campos: 
+        inventarios_puerto_df[campo] = inventarios_puerto_df[campo].apply(__remover_underscores)
+    
+    
+    inventarios_puerto_df['key'] = inventarios_puerto_df.apply(lambda field: '_'.join([field[x] for x in campos]) ,axis=1)
+
+    problema['parametros']['inventario_inicial_cargas'] = {f"IP_{inventarios_puerto_df.iloc[fila]['key']}": inventarios_puerto_df.iloc[fila]['cantidad'] for fila in range(inventarios_puerto_df.shape[0])}
+
+    
+def __llegadas_a_puerto(problema:dict, file:str):
+
+    # $AR_{l}^{t}$ : Cantidad de material que va a llegar a la carga $l$ durante el día $t$, sabiendo que: $material \in I$ y $carga \in J$.
+
+    inventarios_puerto_df = pd.read_excel(file, sheet_name='tto_puerto')
+    
+    campos = ['empresa', 'operador', 'imp-moto-nave', 'ingrediente']
+    
+    for campo in campos: 
+        inventarios_puerto_df[campo] = inventarios_puerto_df[campo].apply(__remover_underscores)
+
+    # regenerar key
+    inventarios_puerto_df['key'] = inventarios_puerto_df.apply(lambda field: '_'.join([field[x] for x in campos]) ,axis=1)    
+
+    fechas_dict = {problema['conjuntos']['fechas'][x]:x for x in range(len(problema['conjuntos']['fechas']))}
+
+    inventarios_puerto_df['periodo'] = inventarios_puerto_df['fecha_llegada'].map(fechas_dict)
+    
+    # Extraer los que caen fuera del horizonte de planeación
+    inventarios_puerto_df = inventarios_puerto_df[~inventarios_puerto_df['periodo'].isna()]
+    
+    problema['parametros']['llegadas_cargas'] = {f"AR_{inventarios_puerto_df.iloc[i]['key']}_{inventarios_puerto_df.iloc[i]['periodo']}": inventarios_puerto_df.iloc[i]['cantidad'] for i in range(inventarios_puerto_df.shape[0])}
+
+
+def __costo_almacenamiento_puerto(problema:dict, file:str):
+    
+    # $CC_{l}^{t}$ : Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $J$.
+
+    cc_df = pd.read_excel(file, sheet_name='costos_almacenamiento_cargas')
+    
+    campos = ['empresa', 'ingrediente', 'operador', 'imp-moto-nave']
+    
+    for campo in campos: 
+        cc_df[campo] = cc_df[campo].apply(__remover_underscores)
+
+    # regenerar key
+    cc_df['key'] = cc_df.apply(lambda field: '_'.join([field[x] for x in campos]) ,axis=1)    
+
+    cc_df = cc_df[cc_df['fecha_corte'].isin(problema['conjuntos']['fechas'])].copy()
+    
+    fechas_dict = {problema['conjuntos']['fechas'][x]:x for x in range(len(problema['conjuntos']['fechas']))}
+
+    cc_df['periodo'] = cc_df['fecha_corte'].map(fechas_dict)
+
+    problema['parametros']['costos_almacenamiento'] = {f"CC_{cc_df.iloc[i]['key']}_{cc_df.iloc[i]['periodo']}": cc_df.iloc[i]['valor_kg'] for i in range(cc_df.shape[0])}
+
+    
 
 def generar_parametros(problema:dict, file:str, now:datetime)->dict:
     
     problema['parametros'] = dict()
     
-    # $IP_{l}$ : inventario inicial en puerto para la carga $l$.
-
-    inventarios_puerto_df = pd.read_excel(file, sheet_name='cargas_puerto')
+    __inventario_inicial_puerto(problema=problema, file=file, now=now)
     
-    inventarios_puerto_df['status'] = inventarios_puerto_df['fecha_llegada'].apply(lambda x: 'arrival' if x >= now else 'inventory')
-
-    ip_df = inventarios_puerto_df[inventarios_puerto_df['status'] == 'inventory'].groupby(['key'])[['cantidad']].sum().reset_index()
+    __llegadas_a_puerto(problema=problema, file=file)
     
-    # problema['diccionarios']['ingredientes_puerto'] = {ingrediente: list(inventarios_puerto_df[inventarios_puerto_df['ingrediente'] == ingrediente]['barco'].unique()) for ingrediente in problema['conjuntos']['ingredientes']}
-
-    problema['parametros']['inventario_inicial_cargas'] = {f"IP_{ip_df.iloc[fila]['key']}": ip_df.iloc[fila]['cantidad'] for fila in range(ip_df.shape[0])}
-
-    # $AR_{l}^{t}$ : Cantidad de material que va a llegar a la carga $l$ durante el día $t$, sabiendo que: $material \in I$ y $carga \in J$.
-
-    ar_df = inventarios_puerto_df[inventarios_puerto_df['status'] == 'arrival'].groupby(['key', 'fecha_llegada'])[['cantidad']].sum().reset_index()
-
-    ar_df['periodo'] = ar_df['fecha_llegada'].map(problema['conjuntos']['fechas'])
-
-    problema['parametros']['llegadas_cargas'] = {f"AR_{ar_df.iloc[i]['key']}_{ar_df.iloc[i]['periodo']}": ar_df.iloc[i]['cantidad'] for i in range(ar_df.shape[0])}
-
-    # $CC_{l}^{t}$ : Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $J$.
-
-    cc_df = pd.read_excel(file, sheet_name='costos_almacenamiento_cargas')
-
-    cc_df = cc_df[cc_df['fecha_llegada'].isin(problema['conjuntos']['fechas'])].copy()
-
-    cc_df['periodo'] = cc_df['fecha_llegada'].map(problema['conjuntos']['fechas'])
-
-    problema['parametros']['costos_almacenamiento'] = {f"CC_{cc_df.iloc[i]['key']}_{cc_df.iloc[i]['periodo']}": cc_df.iloc[i]['Valor_por_tonelada'] for i in range(cc_df.shape[0])}
-
+    __costo_almacenamiento_puerto(problema=problema, file=file)
+    
+    
     # $CF_{lm}$ : Costo fijo de transporte por camión despachado llevando la carga $l$ hasta la unidad de almacenamiento $m$.
 
     problema['parametros']['fletes_fijos'] = dict()
