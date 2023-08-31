@@ -20,7 +20,7 @@ def _generar_periodos(problema:dict, file:str):
     
     columns = df.columns
     
-    columns_to_remove = ['key', 'ingrediente', 'planta']
+    columns_to_remove = ['key', 'empresa', 'ingrediente', 'planta']
     
     dates = [datetime.strptime(x, '%d/%m/%Y') for x in columns if not x in columns_to_remove]
     
