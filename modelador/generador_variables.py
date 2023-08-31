@@ -141,7 +141,7 @@ def generar_variables(problema: dict) -> dict:
 
     variables = dict()
 
-    periodos = problema['conjuntos']['periodos']
+    periodos = range(problema['conjuntos']['periodos'])
     ingredientes = problema['conjuntos']['ingredientes']
     plantas = problema['conjuntos']['plantas']
     unidades = problema['conjuntos']['unidades_almacenamiento']

@@ -26,9 +26,13 @@ def _generar_periodos(problema:dict, file:str):
     
     dates = sorted(dates)
     
+    problema['fecha_inicial'] = dates[0]
+    
     problema['conjuntos']['periodos'] = len(dates)
     
     problema['conjuntos']['fechas'] = dates
+    
+    
 
 
 def _generar_empresas(problema:dict, file:str):

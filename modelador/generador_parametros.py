@@ -13,7 +13,7 @@ def __remover_underscores(x:str)->str:
     return x
 
 
-def __inventario_inicial_puerto(problema:dict, file:str, now:datetime):
+def __inventario_inicial_puerto(problema:dict, file:str):
     # $IP_{l}$ : inventario inicial en puerto para la carga $l$.
 
     inventarios_puerto_df = pd.read_excel(file, sheet_name='inventario_puerto')
@@ -235,11 +235,11 @@ def __transitos_programados_hacia_planta(problema:dict, file:str):
     pass
 
 
-def generar_parametros(problema:dict, file:str, now:datetime)->dict:
+def generar_parametros(problema:dict, file:str)->dict:
     
     problema['parametros'] = dict()
     
-    __inventario_inicial_puerto(problema=problema, file=file, now=now)
+    __inventario_inicial_puerto(problema=problema, file=file)
     
     __llegadas_a_puerto(problema=problema, file=file)
     
