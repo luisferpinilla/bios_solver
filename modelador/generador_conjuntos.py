@@ -6,6 +6,7 @@ def __remover_underscores(x:str)->str:
     
     x = x.lower()
     x = x.replace('_', '')
+    x = x.replace('-', '')
     x = x.replace(' ', '')
     
     return x
@@ -34,7 +35,7 @@ def _generar_empresas(problema:dict, file:str):
     
     empresas_df = pd.read_excel(file, sheet_name='empresas')
     
-    empresas_df[''] = empresas_df[''].apply(__remover_underscores) 
+    empresas_df['empresa'] = empresas_df['empresa'].apply(__remover_underscores) 
     
     problema['conjuntos']['empresas'] = empresas_df['empresa'].to_list()
 
@@ -77,7 +78,7 @@ def _generar_unidades_almacenamiento(problema:dict, file:str):
     unidades_df = pd.read_excel(
         file, sheet_name='unidades_almacenamiento')
     
-    unidades_df['key'] = unidades_df['key'].apply(__remover_underscores)
+    # unidades_df['key'] = unidades_df['key'].apply(__remover_underscores)
     
     unidades = unidades_df['key'].to_list()
     
@@ -93,10 +94,20 @@ def _generar_cargas_en_puerto(problema:list, file=str):
     transitos_a_puerto_df = pd.read_excel(file, sheet_name='tto_puerto')
     inventarios_puerto_df = pd.read_excel(file, sheet_name='inventario_puerto')
     
-    transitos_a_puerto_df['']
+    campos = ['empresa', 'ingrediente', 'operador',  'imp-moto-nave']
+    
+    for campo in campos:
+        inventarios_puerto_df[campo] = inventarios_puerto_df[campo].apply(__remover_underscores)
+        transitos_a_puerto_df[campo] = transitos_a_puerto_df[campo].apply(__remover_underscores)
+    
+    transitos_a_puerto_df['key'] = transitos_a_puerto_df.apply(lambda field: '_'.join([field[x] for x in campos]) ,axis=1)
+    inventarios_puerto_df['key'] = inventarios_puerto_df.apply(lambda field: '_'.join([field[x] for x in campos]) ,axis=1)
+    
     
     cargas_transito = [f'{c}' for c in  list(transitos_a_puerto_df['key'].unique())]
     cargas_inventario = [f'{c}' for c in  list(inventarios_puerto_df['key'].unique())]
+    
+    
     
     cargas = list(set(cargas_inventario + cargas_transito))
       
