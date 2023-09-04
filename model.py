@@ -1,24 +1,19 @@
-from datetime import datetime
 import pulp as pu
 from modelador.generador_conjuntos import generar_conjuntos
 from modelador.generador_parametros import generar_parametros
 from modelador.generador_variables import generar_variables
 from modelador.generador_restricciones import generar_restricciones
 from modelador.generador_fobjetivo import generar_fob
-from modelador.generador_reporte import generar_reporte, guardar_data
+# from modelador.generador_reporte import generar_reporte, guardar_data
 
 
 def generar_problema(file: str):
 
-    now = datetime(2023, 7, 7)
-
-    problema = dict()
-
-    problema['fecha_inicial'] = now
+    problema = dict() 
 
     generar_conjuntos(problema=problema, file=file)
 
-    generar_parametros(problema=problema, file=file, now=now)
+    generar_parametros(problema=problema, file=file)
 
     variables = generar_variables(problema)
 
@@ -29,9 +24,19 @@ def generar_problema(file: str):
     return fobjetivo, restricciones, problema, variables
 
 
+def test():
+    
+    [x for x in variables['BSS'].keys() if 'union' in x]
+    
+    [x for x in problema['conjuntos']['unidades_almacenamiento'] if 'union' in x]
+
+
+
+
+
 if __name__ == '__main__':
 
-    file = './model_3.xlsm'
+    file = './model_rev_20230831.xlsm'
     # Problema
     solver = pu.LpProblem("Bios", sense=pu.const.LpMinimize)
 

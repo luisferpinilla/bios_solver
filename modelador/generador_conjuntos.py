@@ -33,8 +33,6 @@ def _generar_periodos(problema:dict, file:str):
     problema['conjuntos']['fechas'] = dates
     
     
-
-
 def _generar_empresas(problema:dict, file:str):
     
     empresas_df = pd.read_excel(file, sheet_name='empresas')
@@ -57,10 +55,14 @@ def _generar_operadores(problema:dict, file:str):
     
     puertos_df = pd.read_excel(file, sheet_name='puertos')
     
-    puertos_df['operador'] = puertos_df['operador'].apply(__remover_underscores)
+    campos = ['operador-puerto', 'puerto']
     
-    
-    problema['conjuntos']['puertos'] = puertos_df['operador'].to_list()
+    for campo in campos:
+        puertos_df[campo] = puertos_df[campo].apply(__remover_underscores)
+        
+    puertos_df['key'] = puertos_df.apply(lambda field: '_'.join([field[x] for x in campos]) ,axis=1)
+      
+    problema['conjuntos']['puertos'] = puertos_df['key'].to_list()
     
 
 def _generar_plantas(problema:dict, file:str):
@@ -82,6 +84,9 @@ def _generar_unidades_almacenamiento(problema:dict, file:str):
     unidades_df = pd.read_excel(
         file, sheet_name='unidades_almacenamiento')
     
+    
+    
+    
     # unidades_df['key'] = unidades_df['key'].apply(__remover_underscores)
     
     unidades = unidades_df['key'].to_list()
@@ -98,7 +103,7 @@ def _generar_cargas_en_puerto(problema:list, file=str):
     transitos_a_puerto_df = pd.read_excel(file, sheet_name='tto_puerto')
     inventarios_puerto_df = pd.read_excel(file, sheet_name='inventario_puerto')
     
-    campos = ['empresa', 'ingrediente', 'operador',  'imp-moto-nave']
+    campos = ['empresa', 'ingrediente', 'operador',  'imp-motonave']
     
     for campo in campos:
         inventarios_puerto_df[campo] = inventarios_puerto_df[campo].apply(__remover_underscores)

@@ -16,9 +16,9 @@ def __remover_underscores(x:str)->str:
 def __inventario_inicial_puerto(problema:dict, file:str):
     # $IP_{l}$ : inventario inicial en puerto para la carga $l$.
 
-    inventarios_puerto_df = pd.read_excel(file, sheet_name='inventario_puerto')
+    inventarios_puerto_df = pd.read_excel(file, sheet_name='inventario_puerto', usecols='B:H')
     
-    campos = ['empresa', 'operador', 'imp-moto-nave','ingrediente']
+    campos = ['empresa', 'operador', 'imp-motonave','ingrediente']
     
     for campo in campos: 
         inventarios_puerto_df[campo] = inventarios_puerto_df[campo].apply(__remover_underscores)
@@ -26,16 +26,16 @@ def __inventario_inicial_puerto(problema:dict, file:str):
     
     inventarios_puerto_df['key'] = inventarios_puerto_df.apply(lambda field: '_'.join([field[x] for x in campos]) ,axis=1)
 
-    problema['parametros']['inventario_inicial_cargas'] = {f"IP_{inventarios_puerto_df.iloc[fila]['key']}": inventarios_puerto_df.iloc[fila]['cantidad'] for fila in range(inventarios_puerto_df.shape[0])}
+    problema['parametros']['inventario_inicial_cargas'] = {f"IP_{inventarios_puerto_df.iloc[fila]['key']}": inventarios_puerto_df.iloc[fila]['cantidad_kg'] for fila in range(inventarios_puerto_df.shape[0])}
 
     
 def __llegadas_a_puerto(problema:dict, file:str):
 
     # $AR_{l}^{t}$ : Cantidad de material que va a llegar a la carga $l$ durante el día $t$, sabiendo que: $material \in I$ y $carga \in J$.
 
-    inventarios_puerto_df = pd.read_excel(file, sheet_name='tto_puerto')
+    inventarios_puerto_df = pd.read_excel(file, sheet_name='tto_puerto', usecols='B:H')
     
-    campos = ['empresa', 'operador', 'imp-moto-nave', 'ingrediente']
+    campos = ['empresa', 'operador', 'imp-motonave', 'ingrediente']
     
     for campo in campos: 
         inventarios_puerto_df[campo] = inventarios_puerto_df[campo].apply(__remover_underscores)
@@ -50,16 +50,16 @@ def __llegadas_a_puerto(problema:dict, file:str):
     # Extraer los que caen fuera del horizonte de planeación
     inventarios_puerto_df = inventarios_puerto_df[~inventarios_puerto_df['periodo'].isna()]
     
-    problema['parametros']['llegadas_cargas'] = {f"AR_{inventarios_puerto_df.iloc[i]['key']}_{inventarios_puerto_df.iloc[i]['periodo']}": inventarios_puerto_df.iloc[i]['cantidad'] for i in range(inventarios_puerto_df.shape[0])}
+    problema['parametros']['llegadas_cargas'] = {f"AR_{inventarios_puerto_df.iloc[i]['key']}_{inventarios_puerto_df.iloc[i]['periodo']}": inventarios_puerto_df.iloc[i]['cantidad_kg'] for i in range(inventarios_puerto_df.shape[0])}
 
 
 def __costo_almacenamiento_puerto(problema:dict, file:str):
     
     # $CC_{l}^{t}$ : Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $J$.
 
-    cc_df = pd.read_excel(file, sheet_name='costos_almacenamiento_cargas')
+    cc_df = pd.read_excel(file, sheet_name='costos_almacenamiento_cargas', usecols='B:G')
     
-    campos = ['empresa', 'ingrediente', 'operador', 'imp-moto-nave']
+    campos = ['empresa', 'ingrediente', 'operador-puerto', 'imp-motonave']
     
     for campo in campos: 
         cc_df[campo] = cc_df[campo].apply(__remover_underscores)
@@ -83,13 +83,13 @@ def __costos_transporte(problema:dict, file:str):
     problema['parametros']['fletes_fijos'] = dict()
     
     fletes_fijos_df = pd.read_excel(file, sheet_name='fletes_fijos')
-    fletes_fijos_df.set_index('operador-ing', drop=True, inplace=True)
+    fletes_fijos_df.set_index('operador-puerto-ing', drop=True, inplace=True)
     fletes_fijos_df.fillna(0.0, inplace=True)
 
     problema['parametros']['fletes_variables'] = dict()
 
     fletes_variables_df = pd.read_excel(file, sheet_name='fletes_variables')
-    fletes_variables_df.set_index('operador-ing', drop=True, inplace=True)    
+    fletes_variables_df.set_index('operador-puerto-ing', drop=True, inplace=True)    
     fletes_variables_df.fillna(0.0, inplace=True)
     
     
@@ -143,6 +143,8 @@ def __capacidad_almacenamiento_planta(problema:dict, file:str):
             
     capacidad_ua_df = inventario_planta_df.melt(id_vars=['key'], value_vars=problema['conjuntos']['ingredientes'],var_name='ingrediente', value_name='capacidad').rename(columns={'key':'unidad_almacenamiento'})
 
+    capacidad_ua_df.fillna(0.0, inplace=True)
+
     problema['parametros']['capacidad_almacenamiento_ua'] = {f"CA_{capacidad_ua_df.iloc[x]['ingrediente']}_{capacidad_ua_df.iloc[x]['unidad_almacenamiento']}":capacidad_ua_df.iloc[x]['capacidad'] for x in range(capacidad_ua_df.shape[0])}
 
 
@@ -160,13 +162,13 @@ def __consumo_proyectado(problema:dict, file:str):
     
     # $DM_{ki}^{t}$: Demanda del ingrediente $i$ en la planta $k$ durante el día $t$.
 
-    demanda_df = pd.read_excel(file, sheet_name='consumo_proyectado')
+    demanda_df = pd.read_excel(file, sheet_name='consumo_proyectado', usecols='B:AH')
     
     demanda_df.fillna(0.0, inplace=True)
 
     demanda_df = demanda_df.melt(id_vars=['empresa', 'ingrediente', 'planta'], var_name='fecha', value_name='consumo')
 
-    fechas_dict = {problema['conjuntos']['fechas'][x]:x for x in range(len(problema['conjuntos']['fechas']))}
+    fechas_dict = {problema['conjuntos']['fechas'][x]:str(x) for x in range(len(problema['conjuntos']['fechas']))}
 
     demanda_df['periodo'] = demanda_df['fecha'].map(fechas_dict)
     

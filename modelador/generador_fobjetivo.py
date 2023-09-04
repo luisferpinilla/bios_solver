@@ -116,7 +116,7 @@ def generar_fob(problema: dict, variables: dict):
     costos_intercompany = problema['parametros']['costo_venta_intercompany']
     costos_transporte_variable = problema['parametros']['fletes_variables']
     costos_transporte_fijos = problema['parametros']['fletes_fijos']
-    periodos = problema['periodos']
+    periodos = problema['conjuntos']['periodos']
     cargas = problema['conjuntos']['cargas']
     unidades = problema['conjuntos']['unidades_almacenamiento']
 

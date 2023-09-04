@@ -3,7 +3,7 @@ import pulp as pu
 
 def _balance_masa_bif(restricciones: dict, variables: dict, cargas: list, llegadas: dict, unidades: list, periodos: list):
 
-    print('trabajando')
+    print('generando restricciones de balance de masa en bifurcación')
     # AR = XPL + XTD
 
     rest_list = list()
@@ -43,8 +43,11 @@ def _balance_masa_bif(restricciones: dict, variables: dict, cargas: list, llegad
 
     restricciones['balance_masa_bif'] = rest_list
 
+    
 
 def _balance_masa_bodega_puerto(restricciones: list, variables: list, cargas: list, unidades: list, inventario_inicial: dict, periodos=list):
+    
+    print('generando restricciones de balance de masa en almacenamiento de puerto')
     # XIP = XIPt-1 + XPL - sum(XTR)
     # XIP + sum(XTR) = XIPt-1 + XPL
 
@@ -55,9 +58,10 @@ def _balance_masa_bodega_puerto(restricciones: list, variables: list, cargas: li
 
             campos = carga.split('_')
             c_empresa = campos[0]
-            c_puerto = campos[1]
-            c_motonave = campos[2]
-            c_ingrediente = campos[3]
+            c_ingrediente = campos[1]
+            c_puerto = campos[2]
+            c_motonave = campos[3]
+            
 
             left_expresion = list()
             rigth_expresion = list()
@@ -73,7 +77,7 @@ def _balance_masa_bodega_puerto(restricciones: list, variables: list, cargas: li
                 xip_anterior_var = variables['XIP'][xip_anterior_name]
                 rigth_expresion.append(xip_anterior_var)
             else:
-                ii_name = f'IP_{carga}'
+                ii_name = f'IP_{c_empresa}_{c_puerto}_{c_motonave}_{c_ingrediente}'
                 ii_value = inventario_inicial[ii_name]
                 rigth_expresion.append(ii_value)
 
@@ -105,6 +109,7 @@ def _balance_masa_bodega_puerto(restricciones: list, variables: list, cargas: li
 
 def _balance_masa_ua(restricciones: list, variables: list, cargas: list, unidades: list, inventario_inicial: dict, ingredientes: list, periodos=list):
 
+    print('generando restricciones de balance de masa en unidades de almacenamiento en planta')
     # XIU = XIUt-1 + SUM(XTR) + SUM(XTD) - XDM
     # XIU + XDM = XIUt-1 + SUM(XTR) + SUM(XTD)
 
@@ -141,15 +146,18 @@ def _balance_masa_ua(restricciones: list, variables: list, cargas: list, unidade
                         rigth_expresion.append(xiu_ant_var)
                     else:
                         ii_name = f'II_{u_empresa}_{u_planta}_{u_codigo}_{ingrediente}'
-                        ii_value = inventario_inicial[ii_name]
+                        if ii_name in inventario_inicial.keys():
+                            ii_value = inventario_inicial[ii_name]
+                        else:
+                            ii_value = 0.0
                         rigth_expresion.append(ii_value)
 
                     for carga in cargas:
                         campos = carga.split('_')
                         c_empresa = campos[0]
-                        c_puerto = campos[1]
-                        c_motonave = campos[2]
-                        c_ingrediente = campos[3]
+                        c_ingrediente = campos[1]
+                        c_puerto = campos[2]
+                        c_motonave = campos[3]                        
 
                         # SUM(XTD)
                         # SUM(XTR)
@@ -174,6 +182,8 @@ def _balance_masa_ua(restricciones: list, variables: list, cargas: list, unidade
 
 def _satisfaccion_demanda_plantas(restricciones: list, variables: list, plantas: list, ingredientes: list, unidades: list, consumo_proyectado: list, periodos=list):
 
+    print('generando restricciones de demanda en planta')    
+
     # (1) SUM(XDM) + XBK == DM
 
     rest_list = list()
@@ -190,7 +200,10 @@ def _satisfaccion_demanda_plantas(restricciones: list, variables: list, plantas:
 
                 # DM
                 dm_name = f'DM_{planta}_{ingrediente}_{periodo}'
-                dm_value = consumo_proyectado[dm_name]
+                if dm_name in consumo_proyectado.keys():
+                    dm_value = consumo_proyectado[dm_name]
+                else:
+                    dm_value = 0.0
 
                 # $XBK_{ik}^{t}$: Cantidad de backorder del ingrediente $i$ en planta $k$ luego de no cumplir la demanda  del día $t$.
                 xbk_name = f'XBK_{planta}_{ingrediente}_{periodo}'
@@ -242,6 +255,8 @@ def select_ua_by_period_planta(planta: str, period: int, unidades: list):
 
 def _mantenimiento_ss_plantas(restricciones: list, variables: list, unidades: list, ingredientes: list, periodos: list, plantas: list, safety_stock: dict):
 
+    print('Generando restricciones de mantnimiento de safety stock en planta')    
+
     # sum(XIU, carga) >= (1-BIU)*SS
     # sum(XIU, carga) >= SS - SS*BIU
     # sum(XIU, carga) + SS*BIU >= SS
@@ -281,6 +296,8 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, unidades: li
 
 def _capacidad_camiones(restricciones: list, variables: list, cargas: list, unidades: list, periodos=30):
 
+    print('Restricciones de capacidad de carga de camiones')    
+
     # XTD <= 34*ITD
     # XTR <= 34*ITR
 
@@ -307,6 +324,7 @@ def _capacidad_camiones(restricciones: list, variables: list, cargas: list, unid
 
 def _capacidad_unidades_almacenamiento(restricciones: list, variables: list, unidades: list, ingredientes: list, capacidad_unidades: dict, periodos=30):
 
+    print('Generando restriccion de no sobrepaso de capacidad de unidades de almacenamiento')
     rest_list = list()
 
     for ingrediente in ingredientes:
@@ -337,6 +355,8 @@ def _capacidad_unidades_almacenamiento(restricciones: list, variables: list, uni
 
 
 def _asignacion_unidades_almacenamiento(restricciones: list, variables: list, unidades: list, ingredientes: list):
+    
+    print('Generando restricciones sobre asignaciòn de unidades de almacenamiento')
     # no se puede asignar más de un ingrediente a una unidad
 
     # SUM(BIU, ingrediente,planta, periodo) <= 1
@@ -368,7 +388,7 @@ def generar_restricciones(problema: list, variables: list):
     restricciones = dict()
 
     # empresas = problema['conjuntos']['empresas']
-    periodos = list(problema['conjuntos']['periodos'].keys())
+    periodos = range(problema['conjuntos']['periodos'])
     plantas = problema['conjuntos']['plantas']
     consumo_proyectado = problema['parametros']['consumo_proyectado']
     ingredientes = problema['conjuntos']['ingredientes']
@@ -379,6 +399,8 @@ def generar_restricciones(problema: list, variables: list):
     capacidad_unidades = problema['parametros']['capacidad_almacenamiento_ua']
     inventario_inicial_ua = problema['parametros']['inventario_inicial_ua']
     safety_stock = problema['parametros']['safety_stock']
+
+
 
     _balance_masa_bif(restricciones=restricciones, variables=variables,
                       cargas=cargas, llegadas=llegadas, unidades=unidades, periodos=periodos)
@@ -395,8 +417,7 @@ def generar_restricciones(problema: list, variables: list):
     _asignacion_unidades_almacenamiento(
         restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes)
 
-    _balance_masa_bodega_puerto(restricciones=restricciones, variables=variables, cargas=cargas,
-                                unidades=unidades, inventario_inicial=inventario_inicial, periodos=periodos)
+
 
     _balance_masa_ua(restricciones=restricciones, variables=variables, cargas=cargas, unidades=unidades,
                      inventario_inicial=inventario_inicial_ua, ingredientes=ingredientes, periodos=periodos)
