@@ -72,8 +72,8 @@ def _costo_safety_stock(variables: dict):
     fobj = list()
     costo_bss = 1000000
     for name, var in variables['BSS'].items():
-        # fobj.append(costo_bss)
-        fobj.append(costo_bss*var)
+        periodo = int(name.split('_')[4])
+        fobj.append((costo_bss-periodo*1000)*var)
 
     return fobj
 
@@ -84,7 +84,6 @@ def _costo_no_satisfaccion_demanda(variables: dict):
     fobj = list()
     costo_ddm = 100000000
     for name, var in variables['BCD'].items():
-        # fobj.append(costo_ddm)
         fobj.append(costo_ddm*var)
 
     return fobj
@@ -93,9 +92,10 @@ def _costo_no_satisfaccion_demanda(variables: dict):
 def _costo_bakorder(variables: dict):
 
     fobj = list()
-
+    costo_xbk = 1000000000
     for name, var in variables['XBK'].items():
-        fobj.append(1000000000*var)
+        periodo = int(name.split('_')[4])
+        fobj.append((costo_xbk - periodo*10000)*var)
 
     return fobj
 

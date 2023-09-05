@@ -6,351 +6,162 @@ Created on Sun Jul 30 15:11:39 2023
 """
 
 import pandas as pd
-import json
 
 
-def generar_periodos(problema: dict):
+def __procesar_listado_variables(variable_dict: dict, campos: list):
 
-    periodos = dict()
-    periodos['periodos'] = list()
-    periodos['fechas'] = list()
+    dict_var = dict()
+    dict_var['name'] = list()
+    dict_var['value'] = list()
 
-    for k, v in problema['conjuntos']['periodos'].items():
-        periodos['periodos'].append(k)
-        periodos['fechas'].append(v)
+    for name, var in variable_dict.items():
 
-    periodos_df = pd.DataFrame(periodos)
+        dict_var['name'].append(name)
+        dict_var['value'].append(var.varValue)
 
-    return periodos_df
+    df = pd.DataFrame(dict_var)
 
+    for i in range(len(campos)):
+        campo = campos[i]
+        df[campo] = df['name'].apply(lambda x: str(x).split('_')[i])
 
-def generar_invenario_puerto(problema: dict, variables: dict):
+    df.drop(columns=['name'], inplace=True)
 
-    invenatario_puertos = dict()
-    invenatario_puertos['periodo'] = list()
-    invenatario_puertos['empresa'] = list()
-    invenatario_puertos['puerto'] = list()
-    invenatario_puertos['barco'] = list()
-    invenatario_puertos['ingrediente'] = list()
-    invenatario_puertos['llegadas'] = list()
-    invenatario_puertos['inventario_final'] = list()
+    df['periodo'] = pd.to_numeric(df['periodo'])
 
-    for carga in problema['conjuntos']['cargas']:
-        for periodo in range(problema['periodos']):
+    df['value'] = pd.to_numeric(df['value'])
 
-            campos = carga.split('_')
-            empresa = campos[0]
-            puerto = campos[1]
-            barco = campos[2]
-            ingrediente = campos[3]
+    df = df[campos + ['value']]
 
-            xip_name = f'XIP_{carga}_{periodo}'
-            xip_var = variables['XIP'][xip_name]
-
-            xpl_name = f'XPL_{carga}_{periodo}'
-            xpl_var = variables['XPL'][xpl_name]
-
-            invenatario_puertos['periodo'].append(periodo)
-            invenatario_puertos['empresa'].append(empresa)
-            invenatario_puertos['puerto'].append(puerto)
-            invenatario_puertos['barco'].append(barco)
-            invenatario_puertos['ingrediente'].append(ingrediente)
-            invenatario_puertos['llegadas'].append(xpl_var.varValue)
-            invenatario_puertos['inventario_final'].append(xip_var.varValue)
-
-    invenatario_puertos_df = pd.DataFrame(invenatario_puertos)
-
-    return invenatario_puertos_df
+    return df
 
 
-def generar_inventario_plantas(problema: dict, variables: dict, verbose=False):
+def _procesar_variables_transporte(df_dict: dict, variables: dict):
 
-    inventario_plantas = dict()
-    inventario_plantas['periodo'] = list()
-    inventario_plantas['empresa'] = list()
-    inventario_plantas['planta'] = list()
-    inventario_plantas['unidad'] = list()
-    inventario_plantas['ingrediente'] = list()
-    inventario_plantas['llegadas_barco'] = list()
-    inventario_plantas['llegadas_almacen'] = list()
-    inventario_plantas['demanda'] = list()
-    inventario_plantas['inventario_final'] = list()
+    campos = ['tipo',
+              'empresa_origen',
+              'ingrediente',
+              'operador',
+              'importacion',
+              'empresa_destino',
+              'planta',
+              'unidad',
+              'periodo']
 
-    for ingrediente in problema['conjuntos']['ingredientes']:
-        for unidad in problema['conjuntos']['unidades_almacenamiento']:
+    # Cargar data
+    xdt_df = __procesar_listado_variables(variables['XTD'], campos)
+    xdt_df.drop(columns=['tipo'], inplace=True)
+    xdt_df.rename(columns={'value': 'kilos_despachados'}, inplace=True)
 
-            campos = unidad.split('_')
-            empresa = campos[0]
-            planta = campos[1]
-            ua = campos[2]
-            periodo = int(campos[3])
+    itd_df = __procesar_listado_variables(variables['ITD'], campos)
+    itd_df.drop(columns=['tipo'], inplace=True)
+    itd_df.rename(columns={'value': 'camiones_despachados'}, inplace=True)
 
-            xiu_name = f'XIU_{ingrediente}_{unidad}'
-            xiu_var = variables['XIU'][xiu_name]
+    xtr_df = __procesar_listado_variables(variables['XTR'], campos)
+    xtr_df.drop(columns=['tipo'], inplace=True)
+    xtr_df.rename(columns={'value': 'kilos_despachados'}, inplace=True)
 
-            xdm_name = f'XDM_{ingrediente}_{unidad}'
-            xdm_var = variables['XDM'][xdm_name]
+    itr_df = __procesar_listado_variables(variables['ITR'], campos)
+    itr_df.drop(columns=['tipo'], inplace=True)
+    itr_df.rename(columns={'value': 'camiones_despachados'}, inplace=True)
 
-            inventario_plantas['periodo'].append(periodo)
-            inventario_plantas['empresa'].append(empresa)
-            inventario_plantas['planta'].append(planta)
-            inventario_plantas['unidad'].append(ua)
-            inventario_plantas['ingrediente'].append(ingrediente)
-            inventario_plantas['demanda'].append(xdm_var.varValue)
-            inventario_plantas['inventario_final'].append(xiu_var.varValue)
+    campos.remove('tipo')
 
-            # totalizar las llegadas desde puerto
-            llegadas_barco = 0.0
-            Llegadas_almacen = 0.0
+    dt_df = pd.merge(left=xdt_df, right=itd_df,
+                     left_on=campos,
+                     right_on=campos,
+                     how='inner')
 
-            for carga in problema['conjuntos']['cargas']:
+    dt_df['Variable'] = 'Despacho Directo'
 
-                if periodo >= 2:
+    tr_df = pd.merge(left=xtr_df, right=itr_df,
+                     left_on=campos,
+                     right_on=campos,
+                     how='inner')
 
-                    xtr_name = f'XTR_{carga}_{empresa}_{planta}_{ua}_{periodo-2}'
-                    xtr_var = variables['XTR'][xtr_name]
-                    Llegadas_almacen += xtr_var.varValue
+    tr_df['Variable'] = "Despacho desde bodega en puerto"
 
-                    xtd_name = f'XTD_{carga}_{empresa}_{planta}_{ua}_{periodo-2}'
-                    xtd_var = variables['XTD'][xtd_name]
-                    llegadas_barco += xtd_var.varValue
-
-            inventario_plantas['llegadas_barco'].append(llegadas_barco)
-            inventario_plantas['llegadas_almacen'].append(Llegadas_almacen)
-
-    inventario_plantas_df = pd.DataFrame(inventario_plantas)
-
-    return inventario_plantas_df
+    df_dict['Despacho directo'] = dt_df
+    df_dict['Despacho desde Bodega'] = tr_df
 
 
-def generar_reporte_transitos(problema: dict, variables: dict):
+def _procesar_variables_alacenamiento_puerto(df_dict: dict, variables: dict):
 
-    transitos = dict()
+    campos = ['tipo', 'empresa', 'ingrediente',
+              'operador', 'importacion', 'periodo']
 
-    transitos['tipo'] = list()
-    transitos['empresa_origen'] = list()
-    transitos['ingrediente'] = list()
-    transitos['puerto'] = list()
-    transitos['barco'] = list()
-    transitos['empresa_destino'] = list()
-    transitos['planta'] = list()
-    transitos['unidad'] = list()
-    transitos['cantidad'] = list()
-    transitos['costo_fijo'] = list()
-    transitos['costo_variable'] = list()
-    transitos['costo_intercompany'] = list()
-    transitos['costo_total'] = list()
-    transitos['periodo_despacho'] = list()
-    transitos['periodo_llegada'] = list()
+    variable_dict = variables['XPL']
 
-    for carga in problema['conjuntos']['cargas']:
+    df = __procesar_listado_variables(variable_dict, campos)
 
-        campos = carga.split('_')
-        empresa_origen = campos[0]
-        puerto = campos[1]
-        barco = campos[2]
-        ingrediente_origen = campos[3]
+    df_dict['Almacenamiento en Puerto'] = df
 
-        for ua in problema['conjuntos']['unidades_almacenamiento']:
+    variable_dict = variables['XIP']
 
-            campos_ua = ua.split('_')
-            empresa_destino = campos_ua[0]
-            planta = campos_ua[1]
-            unidad = campos_ua[2]
-            periodo = int(campos_ua[3])
+    df = __procesar_listado_variables(variable_dict, campos)
 
-            xtd_name = f'XTD_{carga}_{ua}'
-            xtd_var = variables['XTD'][xtd_name]
-            xtd_val = xtd_var.varValue
+    df_dict['Inventario en Puerto'] = df
 
-            cf_name = f'CF_{puerto}_{empresa_destino}_{planta}'
-            cf_val = problema['parametros']['fletes_fijos'][cf_name]
 
-            ct_name = f'CT_{puerto}_{empresa_destino}_{planta}'
-            ct_val = problema['parametros']['fletes_variables'][ct_name]
+def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict):
 
-            ci_name = f'CW_{empresa_origen}_{empresa_destino}'
-            ci_value = problema['parametros']['costo_venta_intercompany'][ci_name]
+    campos = ['tipo', 'ingrediente', 'empresa', 'planta', 'unidad', 'periodo']
 
-            ct = cf_val + (ct_val + ci_value)*xtd_val
+    variable_dict = variables['XIU']
 
-            transitos['tipo'].append('Barco->Planta')
-            transitos['empresa_origen'].append(empresa_origen)
-            transitos['puerto'].append(puerto)
-            transitos['ingrediente'].append(ingrediente_origen)
-            transitos['barco'].append(barco)
-            transitos['empresa_destino'].append(empresa_destino)
-            transitos['planta'].append(planta)
-            transitos['unidad'].append(unidad)
-            transitos['cantidad'].append(xtd_val)
-            transitos['costo_fijo'].append(cf_val)
-            transitos['costo_variable'].append(ct_val)
-            transitos['costo_intercompany'].append(ci_value)
-            transitos['costo_total'].append(ct)
-            transitos['periodo_despacho'].append(periodo)
-            transitos['periodo_llegada'].append(periodo+2)
+    df = __procesar_listado_variables(variable_dict, campos)
 
-            xtr_name = f'XTR_{carga}_{ua}'
-            xtr_var = variables['XTR'][xtr_name]
-            xtr_val = xtr_var.varValue
+    df_dict['Almacenamiento en Planta'] = df
 
-            cf_name = f'CF_{puerto}_{empresa_destino}_{planta}'
-            cf_val = problema['parametros']['fletes_fijos'][cf_name]
 
-            ct_name = f'CT_{puerto}_{empresa_destino}_{planta}'
-            ct_val = problema['parametros']['fletes_variables'][ct_name]
+def _procesar_variables_demanda(df_dict: dict, variables: dict):
 
-            ci_name = f'CW_{empresa_origen}_{empresa_destino}'
-            ci_value = problema['parametros']['costo_venta_intercompany'][ci_name]
+    campos = ['tipo', 'ingrediente', 'empresa', 'planta', 'unidad', 'periodo']
 
-            ct = cf_val + (ct_val + ci_value)*xtr_val
+    variable_dict = variables['XDM']
 
-            transitos['tipo'].append('BodegaPuerto->Planta')
-            transitos['empresa_origen'].append(empresa_origen)
-            transitos['puerto'].append(puerto)
-            transitos['ingrediente'].append(ingrediente_origen)
-            transitos['barco'].append(barco)
-            transitos['empresa_destino'].append(empresa_destino)
-            transitos['planta'].append(planta)
-            transitos['unidad'].append(unidad)
-            transitos['cantidad'].append(xtr_val)
-            transitos['costo_fijo'].append(cf_val)
-            transitos['costo_variable'].append(ct_val)
-            transitos['costo_intercompany'].append(ci_value)
-            transitos['costo_total'].append(ct)
-            transitos['periodo_despacho'].append(periodo)
-            transitos['periodo_llegada'].append(periodo+2)
+    df = __procesar_listado_variables(variable_dict, campos)
 
-    transitos_df = pd.DataFrame(transitos)
+    df.rename(columns={'value': 'kilos_consumidos'}, inplace=True)
 
-    transitos_df = transitos_df[transitos_df['cantidad'] > 0]
+    df_dict['Ingrediente a consumir'] = df
 
-    return transitos_df
+
+def _procesar_variables_safety_stock(df_dict: dict, variables: dict):
+
+    campos = ['tipo', 'ingrediente', 'empresa', 'planta', 'periodo']
+
+    variable_dict = variables['BSS']
+
+    df = __procesar_listado_variables(variable_dict, campos)
+
+    df.rename(columns={'value': 'safety_stock_activado'}, inplace=True)
+
+    df_dict['Safety stock'] = df
+
+    variable_dict = variables['XBK']
+
+    df = __procesar_listado_variables(variable_dict, campos)
+
+    df.rename(columns={'value': 'Backorder'}, inplace=True)
+
+    df_dict['Backorder'] = df
 
 
 def generar_reporte(problema: dict, variables: dict):
 
-    print('guardando archivos')
-    with pd.ExcelWriter('data.xlsx') as writer:
+    df_dict = dict()
 
-        print('guardar periodos')
-        periodos_df = generar_periodos(problema=problema)
-        periodos_df.to_excel(writer, sheet_name='periodos', index=False)
+    _procesar_variables_transporte(df_dict, variables)
 
-        print('guardar transitos')
-        transitos_df = generar_reporte_transitos(
-            problema=problema, variables=variables)
-        transitos_df.to_excel(
-            writer, sheet_name='tr_puerto_planta', index=False)
+    _procesar_variables_alacenamiento_puerto(df_dict, variables)
 
-        print('guardar inventario_plantas')
-        inventarios_plantas_df = generar_inventario_plantas(
-            problema=problema, variables=variables)
-        inventarios_plantas_df.to_excel(
-            writer, sheet_name='inventario_plantas', index=False)
+    _procesar_variables_almacenamiento_planta(df_dict, variables)
 
-        print('guardar inventario_puertos')
-        inventarios_puertos_df = generar_invenario_puerto(
-            problema=problema, variables=variables)
-        inventarios_puertos_df.to_excel(
-            writer, sheet_name='inventario_puertos', index=False)
+    _procesar_variables_demanda(df_dict, variables)
 
-        print('listo')
+    _procesar_variables_safety_stock(df_dict, variables)
 
+    return df_dict
 
-def guardar_data(problema: dict, variables: dict):
-
-    with open('diccionario_datos.json') as file:
-        data = json.load(file)
-
-    solucion = dict()
-
-    # Variables
-    with pd.ExcelWriter('solución.xlsx') as writer:
-        for tipo, var_list in variables.items():
-
-            data_dict = dict()
-            data_dict['tipo'] = list()
-            data_dict['nombre_variable'] = list()
-            data_dict['valor'] = list()
-
-            # print('guardando', tipo)
-            for var_name, var_value in var_list.items():
-
-                data_dict['tipo'].append(tipo)
-                data_dict['nombre_variable'].append(var_name)
-                data_dict['valor'].append(var_value.varValue)
-
-            df = pd.DataFrame(data_dict)
-
-            # df['slices'] = df['nombre_variable'].apply(
-            #     lambda x: len(x.split('_')))
-
-            columns = data[tipo]
-
-            cont = 1
-            for column in columns:
-
-                # print('  ', 'trabajando con', column)
-
-                df[column] = df['nombre_variable'].apply(
-                    lambda x: x.split('_')[cont])
-                cont += 1
-
-            df.to_excel(writer, sheet_name=tipo, index=False)
-
-            solucion[tipo] = df
-
-        for tipo, var_list in problema['parametros'].items():
-
-            data_dict = dict()
-            data_dict['tipo'] = list()
-            data_dict['nombre_variable'] = list()
-            data_dict['valor'] = list()
-
-            # print('guardando', tipo)
-            for var_name, var_value in var_list.items():
-
-                data_dict['tipo'].append(tipo)
-                data_dict['nombre_variable'].append(var_name)
-                data_dict['valor'].append(var_value)
-
-            df = pd.DataFrame(data_dict)
-
-            df['slices'] = df['nombre_variable'].apply(
-                lambda x: len(x.split('_')))
-
-            columns = data[tipo]
-
-            cont = 1
-            for column in columns:
-
-                # print('  ', 'trabajando con', column)
-
-                df[column] = df['nombre_variable'].apply(
-                    lambda x: x.split('_')[cont])
-                cont += 1
-
-            df.to_excel(writer, sheet_name=tipo, index=False)
-
-            solucion[tipo] = df
-
-        # Periodos
-
-        data_dict = dict()
-        data_dict['tipo'] = list()
-        data_dict['nombre_variable'] = list()
-        data_dict['valor'] = list()
-
-        for periodo, fecha in problema['conjuntos']['periodos'].items():
-            data_dict['tipo'].append('Periodos')
-            data_dict['nombre_variable'].append(periodo)
-            data_dict['valor'].append(fecha)
-
-            df = pd.DataFrame(data_dict)
-
-            solucion['periodos'] = df
-
-            df.to_excel(writer, sheet_name='peridos', index=False)
-
-    return solucion
+    ['BIU', 'XDM', 'BSS', 'XBK']
