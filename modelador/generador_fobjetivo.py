@@ -28,7 +28,10 @@ def _costo_transporte(variables: dict, costos_transporte_variables: dict, costos
 
     fobj = list()
 
+    print(cargas)
+
     for carga in cargas:
+
         empresa_origen = carga.split('_')[0]
         puerto = carga.split('_')[2]
         for unidad in unidades:
@@ -73,7 +76,8 @@ def _costo_safety_stock(variables: dict):
     costo_bss = 1000000
     for name, var in variables['BSS'].items():
         periodo = int(name.split('_')[4])
-        fobj.append((costo_bss-periodo*1000)*var)
+        # fobj.append((costo_bss-periodo*1000)*var)
+        fobj.append(costo_bss*var)
 
     return fobj
 
@@ -95,7 +99,8 @@ def _costo_bakorder(variables: dict):
     costo_xbk = 1000000000
     for name, var in variables['XBK'].items():
         periodo = int(name.split('_')[4])
-        fobj.append((costo_xbk - periodo*10000)*var)
+        # fobj.append((costo_xbk - periodo*10000)*var)
+        fobj.append(costo_xbk*var)
 
     return fobj
 

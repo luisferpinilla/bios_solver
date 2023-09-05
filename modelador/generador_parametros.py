@@ -96,37 +96,30 @@ def __costos_transporte(problema: dict, file: str):
     # $CF_{lm}$ : Costo fijo de transporte por camión despachado llevando la carga $l$ hasta la unidad de almacenamiento $m$.
     # $ CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
 
-    problema['parametros']['fletes_fijos'] = dict()
+    fletes = ['fletes_fijos', 'fletes_variables']
 
-    fletes_fijos_df = pd.read_excel(file, sheet_name='fletes_fijos')
-    fletes_fijos_df.set_index('operador-puerto-ing', drop=True, inplace=True)
-    fletes_fijos_df.fillna(0.0, inplace=True)
+    for flete in fletes:
 
-    problema['parametros']['fletes_variables'] = dict()
+        problema['parametros'][flete] = dict()
 
-    fletes_variables_df = pd.read_excel(file, sheet_name='fletes_variables')
-    fletes_variables_df.set_index(
-        'operador-puerto-ing', drop=True, inplace=True)
-    fletes_variables_df.fillna(0.0, inplace=True)
+        df = pd.read_excel(file, sheet_name=flete)
 
-    for puerto in problema['conjuntos']['puertos']:
-        for planta in problema['conjuntos']['plantas']:
-            for ingrediente in problema['conjuntos']['ingredientes']:
+        df = df.melt(id_vars=['operador-puerto-ing'], value_vars=list(df.columns).remove(
+            'operador-puerto-ing'), var_name='planta', value_name='costo')
 
-                if f'{puerto}_{ingrediente}' in fletes_fijos_df.index:
-                    problema['parametros']['fletes_fijos'][
-                        f'CF_{puerto}_{planta}'] = fletes_fijos_df.loc[f'{puerto}_{ingrediente}'][planta]
-                else:
-                    # print(f'{puerto}_{ingrediente}')
-                    problema['parametros']['fletes_fijos'][f'CF_{puerto}_{planta}'] = 0.0
+        df['operador'] = df['operador-puerto-ing'].apply(
+            lambda x: str(x).split('_')[0])
 
-                if f'{puerto}_{ingrediente}' in fletes_variables_df.index:
+        df['ingrediente'] = df['operador-puerto-ing'].apply(
+            lambda x: str(x).split('_')[1])
 
-                    problema['parametros']['fletes_variables'][
-                        f'CT_{puerto}_{planta}'] = fletes_variables_df.loc[f'{puerto}_{ingrediente}'][planta]
-                else:
-                    # print(f'{puerto}_{ingrediente}')
-                    problema['parametros']['fletes_variables'][f'CT_{puerto}_{planta}'] = 0.0
+        df['key'] = df['operador'] + "_" + \
+            df['planta'] + "_" + df['ingrediente']
+
+        values_dict = {df.iloc[i]['key']: df.iloc[i]['costo']
+                       for i in range(df.shape[0])}
+
+        problema['parametros'][flete] = values_dict
 
 
 def __venta_intercompany(problema: dict, file: str):

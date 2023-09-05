@@ -7,12 +7,11 @@ from modelador.generador_fobjetivo import generar_fob
 from modelador.generador_reporte import generar_reporte
 
 
-
 if __name__ == '__main__':
 
     file = './model_rev_20230831.xlsm'
-    
-    problema = dict() 
+
+    problema = dict()
 
     generar_conjuntos(problema=problema, file=file)
 
@@ -23,7 +22,7 @@ if __name__ == '__main__':
     restricciones = generar_restricciones(problema, variables)
 
     fobjetivo = generar_fob(problema, variables)
-    
+
     # Problema
     solver = pu.LpProblem("Bios", sense=pu.const.LpMinimize)
 
@@ -39,7 +38,7 @@ if __name__ == '__main__':
     solver.writeLP(filename='model.lp')
 
     glpk = pu.GLPK_CMD(timeLimit=100, options=[
-                       "--mipgap", "0.00000000001", "--tmlim", "100000"])
+                       "--mipgap", "0.0001", "--tmlim", "60"])
 
     try:
         solver.solve(solver=glpk)

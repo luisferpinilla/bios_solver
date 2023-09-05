@@ -106,26 +106,24 @@ else:
 
         try:
 
-            glpk = pu.GLPK_CMD(timeLimit=100, options=[
-                               # "--mipgap", "0.00000000001",
-                               "--tmlim", "100000"])
-
-            solver.solve(solver=glpk)
-
+            engine = pu.GLPK_CMD(timeLimit=3600, options=[
+                "--mipgap", "0.0001",
+                "--tmlim", "3600"])
         except:
 
             print('No se puede usar GLPK')
 
-            cbc = pu.PULP_CBC_CMD(
+            engine = pu.PULP_CBC_CMD(
                 # gapAbs=0.00000000001,
-                timeLimit=60,
+                timeLimit=3600,
                 cuts=False,
                 strong=True)
-            solver.solve()
+
+        solver.solve(solver=engine)
 
         estatus = pu.LpStatus[solver.status]
 
-        solver.write(filename='model.lp')
+        # solver.writeLP(filename='model.lp')
 
         if estatus == 'Infeasible':
             st.error('El solucionador reporta infeasibilidad')
