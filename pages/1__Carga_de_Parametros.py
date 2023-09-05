@@ -104,7 +104,7 @@ else:
                 # print('agregando restriccion', name, rest)
                 solver += rest
 
-        try:
+        '''try:
 
             engine = pu.GLPK_CMD(timeLimit=3600, options=[
                 "--mipgap", "0.0001",
@@ -118,8 +118,10 @@ else:
                 timeLimit=3600,
                 cuts=False,
                 strong=True)
+        
+        solver.solve(solver=engine)'''
 
-        solver.solve(solver=engine)
+        solver.solve()
 
         estatus = pu.LpStatus[solver.status]
 
