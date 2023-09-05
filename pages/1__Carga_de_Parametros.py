@@ -104,24 +104,20 @@ else:
                 # print('agregando restriccion', name, rest)
                 solver += rest
 
-        '''try:
+        # try:
+        #    engine = pu.GLPK_CMD(timeLimit=3600, options=[
+        #        "--mipgap", "0.0001",
+        #        "--tmlim", "3600"])
+        # except:
+        #    engine = pu.PULP_CBC_CMD(
+        #        # gapAbs=0.00000000001,
+        #        timeLimit=3600,
+        #        cuts=False,
+        #        strong=True)
 
-            engine = pu.GLPK_CMD(timeLimit=3600, options=[
-                "--mipgap", "0.0001",
-                "--tmlim", "3600"])
-        except:
+        # solver.solve(solver=engine)
 
-            print('No se puede usar GLPK')
-
-            engine = pu.PULP_CBC_CMD(
-                # gapAbs=0.00000000001,
-                timeLimit=3600,
-                cuts=False,
-                strong=True)
-        
-        solver.solve(solver=engine)'''
-
-        solver.solve()
+        # solver.solve()
 
         estatus = pu.LpStatus[solver.status]
 
