@@ -179,6 +179,8 @@ def __consumo_proyectado(problema: dict, file: str, usecols='B:AH'):
 
     # $DM_{ki}^{t}$: Demanda del ingrediente $i$ en la planta $k$ durante el día $t$.
 
+    usecols='B:R'
+
     demanda_df = pd.read_excel(
         file, sheet_name='consumo_proyectado', usecols=usecols)
 
@@ -186,6 +188,8 @@ def __consumo_proyectado(problema: dict, file: str, usecols='B:AH'):
 
     demanda_df = demanda_df.melt(
         id_vars=['empresa', 'ingrediente', 'planta'], var_name='fecha', value_name='consumo')
+    
+    demanda_df['fecha'] =  pd.to_datetime(demanda_df['fecha'],format='%d/%m/%Y')
 
     fechas_dict = {problema['conjuntos']['fechas'][x]: str(
         x) for x in range(len(problema['conjuntos']['fechas']))}

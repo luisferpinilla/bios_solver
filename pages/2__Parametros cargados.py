@@ -17,6 +17,7 @@ def _procesar_parametros(parametros: dict, campos: list):
 
     for i in range(len(campos)):
         campo = campos[i]
+
         df[campo] = df['name'].apply(lambda x: str(x).split('_')[i])
 
     df = df[campos + ['value']]
@@ -58,12 +59,13 @@ with st.expander(label='Costos de Transporte'):
 
     parametros = problema['parametros']['fletes_variables']
 
-    campos = ['tipo', 'operador', 'puerto', 'empresa', 'planta']
+    campos = ['operador', 'empresa', 'planta', 'ingrediente']
 
     df = _procesar_parametros(parametros=parametros, campos=campos)
 
-    df = df.pivot_table(index=['puerto', 'operador'],
-                        columns='planta', values='value').reset_index()
+    df = df.pivot_table(index=['operador', 'ingrediente'],
+                        columns='planta',
+                        values='value', aggfunc=sum)
 
     st.write(df)
 
@@ -75,8 +77,7 @@ with st.expander(label='Inventario inicial de cargas'):
 
     df = _procesar_parametros(parametros=parametros, campos=campos)
 
-    df = df.pivot_table(index=['empresa', 'operador', 'importacion'],
-                        columns='ingrediente', values='value').reset_index()
+    df = df[['empresa', 'operador', 'importacion', 'ingrediente', 'value']]
 
     st.write(df)
 
@@ -89,8 +90,8 @@ with st.expander(label='Llegada de cargas a puerto'):
 
     df = _procesar_parametros(parametros=parametros, campos=campos)
 
-    df = df.pivot_table(index=['empresa', 'operador', 'importacion', 'ingrediente'],
-                        columns='periodo', values='value').reset_index()
+    df = df[['empresa', 'operador', 'importacion',
+             'ingrediente', 'periodo', 'value']]
 
     st.write(df)
 
@@ -103,10 +104,12 @@ with st.expander(label='Consumo Proyectado'):
 
     df = _procesar_parametros(parametros=parametros, campos=campos)
 
+    df['periodo'] = df['periodo'].map(fechas_map)
+
     df = df.pivot_table(index=['empresa', 'planta', 'ingrediente'],
                         columns='periodo', values='value').reset_index()
 
     st.write(df)
 
 
-st.write(problema)
+# st.write(problema)
