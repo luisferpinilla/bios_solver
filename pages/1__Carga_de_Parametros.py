@@ -1,12 +1,6 @@
 from datetime import datetime
-import pulp as pu
-from modelador.generador_conjuntos import generar_conjuntos
-from modelador.generador_parametros import generar_parametros
-from modelador.generador_variables import generar_variables
-from modelador.generador_restricciones import generar_restricciones
-from modelador.generador_fobjetivo import generar_fob
-from modelador.generador_reporte import generar_reporte
-from validador import Validador
+from modelo.problema import Problema
+from modelo.validador import Validador
 
 
 import streamlit as st
@@ -16,24 +10,6 @@ import numpy as np
 st.set_page_config(layout="wide")
 
 st.title('Visualizador BIOS')
-
-
-def generar_problema(file: str):
-
-    problema = dict()
-
-    generar_conjuntos(problema=problema, file=file)
-
-    generar_parametros(problema=problema, file=file)
-
-    variables = generar_variables(problema)
-
-    restricciones = generar_restricciones(problema, variables)
-
-    fobjetivo = generar_fob(problema, variables)
-
-    return fobjetivo, restricciones, problema, variables
-
 
 uploaded_file = st.file_uploader("Choose a file")
 
@@ -62,73 +38,44 @@ else:
 
     if validador.cantidad_errores == 0:
 
-        problema = dict()
+        problema = Problema(excel_file_path=file)
 
         cols_consumo_proyectado_periods = 'B:R'
 
         progress_bar = st.progress(value=0, text='Generando conjuntos')
 
-        generar_conjuntos(problema=problema, file=file,
-                          usecols=cols_consumo_proyectado_periods)
+        problema.generar_sets()
 
         progress_bar.progress(value=5, text='Generando lista de parámetros')
 
-        generar_parametros(problema=problema, file=file,
-                           usecols=cols_consumo_proyectado_periods)
+        problema.generar_parameters()
 
         progress_bar.progress(value=20, text='Generando lista de variables')
 
-        variables = generar_variables(problema)
+        problema.generar_vars()
 
         progress_bar.progress(
             value=40, text='Construyendo lista de restricciones')
 
-        restricciones = generar_restricciones(problema, variables)
+        problema.gen_constrains()
 
         progress_bar.progress(value=50, text='Construyendo función objetivo')
 
-        fobjetivo = generar_fob(problema, variables)
+        problema.generar_target()
 
         progress_bar.progress(
             value=70, text='Ejecutando el soluccionador del modelo')
 
-        # Problema
-        solver = pu.LpProblem("Bios", sense=pu.const.LpMinimize)
+        problema.solve()
 
-        # Agregar función objetivosolver += fobjetivo
-        solver += fobjetivo
-
-        # Agregar restricciones
-        for name, rest_list in restricciones.items():
-            for rest in rest_list:
-                # print('agregando restriccion', name, rest)
-                solver += rest
-
-        # try:
-        #    engine = pu.GLPK_CMD(timeLimit=3600, options=[
-        #        "--mipgap", "0.0001",
-        #        "--tmlim", "3600"])
-        # except:
-        #    engine = pu.PULP_CBC_CMD(
-        #        # gapAbs=0.00000000001,
-        #        timeLimit=3600,
-        #        cuts=False,
-        #        strong=True)
-
-        # solver.solve(solver=engine)
-
-        # solver.solve()
-
-        estatus = pu.LpStatus[solver.status]
-
-        # solver.writeLP(filename='model.lp')
+        estatus = problema.status
 
         if estatus == 'Infeasible':
             st.error('El solucionador reporta infeasibilidad')
 
         progress_bar.progress(value=90, text='Generando reporte de resultados')
 
-        solucion = generar_reporte(problema, variables)
+        solucion = problema.generar_reporte()
 
         progress_bar.progress(value=95, text='Generando reporte de resultados')
 

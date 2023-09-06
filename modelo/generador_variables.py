@@ -1,3 +1,4 @@
+from problema import Problema
 import pulp as pu
 
 
@@ -137,15 +138,15 @@ def _satisfaccion_demanda(variables: list, plantas: list, unidades: list, ingred
                     variables['XBK'][xbk_name] = xbk_var
 
 
-def generar_variables(problema: dict) -> dict:
+def generar_variables(problema: Problema) -> dict:
 
     variables = dict()
 
-    periodos = range(problema['conjuntos']['periodos'])
-    ingredientes = problema['conjuntos']['ingredientes']
-    plantas = problema['conjuntos']['plantas']
-    unidades = problema['conjuntos']['unidades_almacenamiento']
-    cargas = problema['conjuntos']['cargas']
+    periodos = range(problema.conjuntos['periodos'])
+    ingredientes = problema.conjuntos['ingredientes']
+    plantas = problema.conjuntos['plantas']
+    unidades = problema.conjuntos['unidades_almacenamiento']
+    cargas = problema.conjuntos['cargas']
 
     _despacho_directo(variables=variables, cargas=cargas, unidades=unidades)
 
@@ -164,4 +165,4 @@ def generar_variables(problema: dict) -> dict:
     _satisfaccion_demanda(variables=variables, plantas=plantas,
                           unidades=unidades, ingredientes=ingredientes)
 
-    return variables
+    problema.variables = variables
