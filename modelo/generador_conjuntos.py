@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime
-from problema import Problema
+from modelo.problema import Problema
 
 
 def __remover_underscores(x: str) -> str:

@@ -1,4 +1,4 @@
-from problema import Problema
+from modelo.problema import Problema
 import pulp as pu
 
 

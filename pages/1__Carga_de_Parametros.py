@@ -1,11 +1,6 @@
-from datetime import datetime
 from modelo.problema import Problema
 from modelo.validador import Validador
-
-
 import streamlit as st
-import pandas as pd
-import numpy as np
 
 st.set_page_config(layout="wide")
 

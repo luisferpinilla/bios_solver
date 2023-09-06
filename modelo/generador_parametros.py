@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
-from problema import Problema
+from modelo.problema import Problema
 
 
 def __remover_underscores(x: str) -> str:

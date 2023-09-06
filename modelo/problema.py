@@ -1,9 +1,9 @@
-from generador_conjuntos import generar_conjuntos
-from generador_parametros import generar_parametros
-from generador_variables import generar_variables
-from generador_restricciones import generar_restricciones
-from generador_fobjetivo import generar_fob
-from generador_reporte import generar_reporte
+from modelo.generador_conjuntos import generar_conjuntos
+from modelo.generador_parametros import generar_parametros
+from modelo.generador_variables import generar_variables
+from modelo.generador_restricciones import generar_restricciones
+from modelo.generador_fobjetivo import generar_fob
+from modelo.generador_reporte import generar_reporte
 import pulp as pu
 
 

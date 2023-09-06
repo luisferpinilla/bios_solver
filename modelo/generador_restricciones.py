@@ -1,5 +1,5 @@
 import pulp as pu
-from problema import Problema
+from modelo.problema import Problema
 
 
 def _balance_masa_bif(restricciones: dict, variables: dict, cargas: list, llegadas: dict, unidades: list, periodos: list):

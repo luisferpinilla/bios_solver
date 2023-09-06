@@ -6,7 +6,7 @@ Created on Sun Jul 30 15:11:39 2023
 """
 
 import pandas as pd
-from problema import Problema
+from modelo.problema import Problema
 
 
 def __procesar_listado_variables(variable_dict: dict, campos: list):
