@@ -82,17 +82,6 @@ def _costo_safety_stock(variables: dict):
     return fobj
 
 
-@DeprecationWarning
-def _costo_no_satisfaccion_demanda(variables: dict):
-
-    fobj = list()
-    costo_ddm = 100000000
-    for name, var in variables['BCD'].items():
-        fobj.append(costo_ddm*var)
-
-    return fobj
-
-
 def _costo_bakorder(variables: dict):
 
     fobj = list()
@@ -115,15 +104,15 @@ def _costo_asignacion_ingrediente_unidad_almacenamiento(variables: dict):
     return fobj
 
 
-def generar_fob(problema: dict, variables: dict):
+def generar_fob(parametros: dict, conjuntos:dict, variables: dict):
 
-    costos_almacenamiento = problema['parametros']['costos_almacenamiento']
-    costos_intercompany = problema['parametros']['costo_venta_intercompany']
-    costos_transporte_variable = problema['parametros']['fletes_variables']
-    costos_transporte_fijos = problema['parametros']['fletes_fijos']
-    periodos = problema['conjuntos']['periodos']
-    cargas = problema['conjuntos']['cargas']
-    unidades = problema['conjuntos']['unidades_almacenamiento']
+    costos_almacenamiento = parametros['costos_almacenamiento']
+    costos_intercompany = parametros['costo_venta_intercompany']
+    costos_transporte_variable = parametros['fletes_variables']
+    costos_transporte_fijos = parametros['fletes_fijos']
+    periodos = conjuntos['periodos']
+    cargas = conjuntos['cargas']
+    unidades = conjuntos['unidades_almacenamiento']
 
     fob = list()
 

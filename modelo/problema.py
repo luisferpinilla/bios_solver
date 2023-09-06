@@ -33,31 +33,33 @@ class Problema():
 
         print('generando conjuntos')
 
-        generar_conjuntos(problema=self)
+        generar_conjuntos(problema=self.conjuntos,
+                          file=self.file, usecols=self.usecols)
 
     def generar_parameters(self):
 
         print('generando parametros')
 
-        generar_parametros(problema=self)
+        generar_parametros(parametros=self.parametros, conjuntos=self.conjuntos,
+                           file=self.file, usecols=self.usecols)
 
     def generar_vars(self):
 
         print('generando variables')
 
-        generar_variables(problema=self)
+        generar_variables(conjuntos=self.conjuntos, variables=self.variables)
 
     def gen_constrains(self):
 
         print('generando restricciones')
 
-        generar_restricciones(problema=self)
+        generar_restricciones(problema=self.restricciones)
 
     def generar_target(self):
 
         print('generar funcion objetivo')
 
-        generar_fob(problema=self)
+        generar_fob(problema=self.funcion_objetivo)
 
     def solve(self):
 

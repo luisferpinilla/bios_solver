@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
-from modelo.problema import Problema
 
 
 def __remover_underscores(x: str) -> str:
@@ -14,7 +13,7 @@ def __remover_underscores(x: str) -> str:
     return x
 
 
-def __inventario_inicial_puerto(problema: Problema, file: str):
+def __inventario_inicial_puerto(parametros: dict, file: str):
     # $IP_{l}$ : inventario inicial en puerto para la carga $l$.
 
     inventarios_puerto_df = pd.read_excel(
@@ -29,11 +28,11 @@ def __inventario_inicial_puerto(problema: Problema, file: str):
     inventarios_puerto_df['key'] = inventarios_puerto_df.apply(
         lambda field: '_'.join([field[x] for x in campos]), axis=1)
 
-    problema.parametros['inventario_inicial_cargas'] = {
+    parametros['inventario_inicial_cargas'] = {
         f"IP_{inventarios_puerto_df.iloc[fila]['key']}": inventarios_puerto_df.iloc[fila]['cantidad_kg'] for fila in range(inventarios_puerto_df.shape[0])}
 
 
-def __llegadas_a_puerto(problema: Problema, file: str):
+def __llegadas_a_puerto(parametros: dict, conjuntos: dict, file: str):
 
     # $AR_{l}^{t}$ : Cantidad de material que va a llegar a la carga $l$ durante el día $t$, sabiendo que: $material \in I$ y $carga \in J$.
 
@@ -50,8 +49,8 @@ def __llegadas_a_puerto(problema: Problema, file: str):
     inventarios_puerto_df['key'] = inventarios_puerto_df.apply(
         lambda field: '_'.join([field[x] for x in campos]), axis=1)
 
-    fechas_dict = {problema['conjuntos']['fechas'][x]: str(
-        x) for x in range(len(problema['conjuntos']['fechas']))}
+    fechas_dict = {conjuntos['fechas'][x]: str(
+        x) for x in conjuntos['periodos']}
 
     inventarios_puerto_df['periodo'] = inventarios_puerto_df['fecha_llegada'].map(
         fechas_dict)
@@ -60,11 +59,11 @@ def __llegadas_a_puerto(problema: Problema, file: str):
     inventarios_puerto_df = inventarios_puerto_df[~inventarios_puerto_df['periodo'].isna(
     )]
 
-    problema.parametros['llegadas_cargas'] = {
+    parametros['llegadas_cargas'] = {
         f"AR_{inventarios_puerto_df.iloc[i]['key']}_{inventarios_puerto_df.iloc[i]['periodo']}": inventarios_puerto_df.iloc[i]['cantidad_kg'] for i in range(inventarios_puerto_df.shape[0])}
 
 
-def __costo_almacenamiento_puerto(problema: Problema, file: str):
+def __costo_almacenamiento_puerto(parametros: dict, conjuntos: dict, file: str):
 
     # $CC_{l}^{t}$ : Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $J$.
 
@@ -81,18 +80,18 @@ def __costo_almacenamiento_puerto(problema: Problema, file: str):
         [field[x] for x in campos]), axis=1)
 
     cc_df = cc_df[cc_df['fecha_corte'].isin(
-        problema['conjuntos']['fechas'])].copy()
+        conjuntos['fechas'])].copy()
 
-    fechas_dict = {problema['conjuntos']['fechas'][x]: x for x in range(
-        len(problema['conjuntos']['fechas']))}
+    fechas_dict = {conjuntos['fechas'][x]: x for x in range(
+        len(conjuntos['fechas']))}
 
     cc_df['periodo'] = cc_df['fecha_corte'].map(fechas_dict)
 
-    problema.parametros['costos_almacenamiento'] = {
+    parametros['costos_almacenamiento'] = {
         f"CC_{cc_df.iloc[i]['key']}_{cc_df.iloc[i]['periodo']}": cc_df.iloc[i]['valor_kg'] for i in range(cc_df.shape[0])}
 
 
-def __costos_transporte(problema: Problema, file: str):
+def __costos_transporte(parametros: dict, file: str):
     # $CF_{lm}$ : Costo fijo de transporte por camión despachado llevando la carga $l$ hasta la unidad de almacenamiento $m$.
     # $ CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
 
@@ -100,7 +99,7 @@ def __costos_transporte(problema: Problema, file: str):
 
     for flete in fletes:
 
-        problema.parametros[flete] = dict()
+        parametros[flete] = dict()
 
         df = pd.read_excel(file, sheet_name=flete)
 
@@ -119,10 +118,10 @@ def __costos_transporte(problema: Problema, file: str):
         values_dict = {df.iloc[i]['key']: df.iloc[i]['costo']
                        for i in range(df.shape[0])}
 
-        problema.parametros[flete] = values_dict
+        parametros[flete] = values_dict
 
 
-def __venta_intercompany(problema: Problema, file: str):
+def __venta_intercompany(parametros: dict, file: str):
     # $CW_{lm}$ : Costo de vender una carga perteneciente a una empresa a otra.
 
     costo_cambio_empresa_df = pd.read_excel(file, 'venta_entre_empresas')
@@ -130,52 +129,52 @@ def __venta_intercompany(problema: Problema, file: str):
     costo_cambio_empresa_df = costo_cambio_empresa_df.melt(
         id_vars='origen', value_vars=['contegral', 'finca'], var_name='destino')
 
-    problema.parametros['costo_venta_intercompany'] = {
+    parametros['costo_venta_intercompany'] = {
         f"CW_{costo_cambio_empresa_df.iloc[x]['origen']}_{costo_cambio_empresa_df.iloc[x]['destino']}": costo_cambio_empresa_df.iloc[x]['value'] for x in range(costo_cambio_empresa_df.shape[0])}
 
 
-def __tiempo_transporte(problema: Problema, file: str):
+def __tiempo_transporte(parametros: dict, conjuntos: dict, file: str):
 
     # $TT_{jk}$ : tiempo en días para transportar la carga desde el puerto $j$ hacia la planta $k$.
 
-    problema.parametros['tiempo_transporte'] = dict()
+    parametros['tiempo_transporte'] = dict()
 
-    for puerto in problema['conjuntos']['puertos']:
-        for planta in problema['conjuntos']['plantas']:
-            lista_ua = [ua for ua in problema['conjuntos']
+    for puerto in conjuntos['puertos']:
+        for planta in conjuntos['plantas']:
+            lista_ua = [ua for ua in conjuntos
                         ['unidades_almacenamiento'] if planta in ua.split('_')[0]]
             for ua in lista_ua:
-                problema.parametros['tiempo_transporte'][f"TT_{puerto}_{ua}"] = 2
+                parametros.dict['tiempo_transporte'][f"TT_{puerto}_{ua}"] = 0
 
 
-def __capacidad_almacenamiento_planta(problema: Problema, file: str):
+def __capacidad_almacenamiento_planta(parametros: dict, conjuntos: dict, file: str):
 
     # $CA_{m}^{i}$ : Capacidad de almacenamiento de la unidad $m$ en toneladas del ingrediente $i$, tenendo en cuenta que $m \in K$.
 
     inventario_planta_df = pd.read_excel(
         file, sheet_name='unidades_almacenamiento')
 
-    capacidad_ua_df = inventario_planta_df.melt(id_vars=['key'], value_vars=problema['conjuntos']['ingredientes'],
+    capacidad_ua_df = inventario_planta_df.melt(id_vars=['key'], value_vars=conjuntos['ingredientes'],
                                                 var_name='ingrediente', value_name='capacidad').rename(columns={'key': 'unidad_almacenamiento'})
 
     capacidad_ua_df.fillna(0.0, inplace=True)
 
-    problema.parametros['capacidad_almacenamiento_ua'] = {
+    parametros['capacidad_almacenamiento_ua'] = {
         f"CA_{capacidad_ua_df.iloc[x]['ingrediente']}_{capacidad_ua_df.iloc[x]['unidad_almacenamiento']}": capacidad_ua_df.iloc[x]['capacidad'] for x in range(capacidad_ua_df.shape[0])}
 
 
-def __inventario_planta(problema: Problema, file: str):
+def __inventario_planta(parametros: dict, file: str):
 
     # $II_{m}^{i}$ : Inventario inicial del ingrediente $i$ en la unidad $m$, teniendo en cuenta que $m \in K$
 
     inventario_planta_df = pd.read_excel(
         file, sheet_name='unidades_almacenamiento')
 
-    problema.parametros['inventario_inicial_ua'] = {
+    parametros['inventario_inicial_ua'] = {
         f"II_{inventario_planta_df.iloc[x]['key']}_{inventario_planta_df.iloc[x]['ingrediente_actual']}": inventario_planta_df.iloc[x]['cantidad_actual'] for x in range(inventario_planta_df.shape[0])}
 
 
-def __consumo_proyectado(problema: Problema, file: str, usecols='B:AH'):
+def __consumo_proyectado(parametros: dict, conjuntos: dict, file: str, usecols='B:AH'):
 
     # $DM_{ki}^{t}$: Demanda del ingrediente $i$ en la planta $k$ durante el día $t$.
 
@@ -192,8 +191,8 @@ def __consumo_proyectado(problema: Problema, file: str, usecols='B:AH'):
     demanda_df['fecha'] = pd.to_datetime(
         demanda_df['fecha'], format='%d/%m/%Y')
 
-    fechas_dict = {problema['conjuntos']['fechas'][x]: str(
-        x) for x in range(len(problema['conjuntos']['fechas']))}
+    fechas_dict = {conjuntos['fechas'][x]: str(
+        x) for x in range(len(conjuntos['fechas']))}
 
     demanda_df['periodo'] = demanda_df['fecha'].map(fechas_dict)
 
@@ -206,10 +205,10 @@ def __consumo_proyectado(problema: Problema, file: str, usecols='B:AH'):
     demanda_dict = {f"DM_{demanda_df.iloc[i]['key']}": demanda_df.iloc[i]['consumo'] for i in range(
         demanda_df.shape[0])}
 
-    problema.parametros['consumo_proyectado'] = demanda_dict
+    parametros['consumo_proyectado'] = demanda_dict
 
 
-def __safety_stock_planta(problema: Problema, file: str):
+def __safety_stock_planta(parametros: dict, file: str):
 
     # $SS_{ik}^{t}$ : Inventario de seguridad a tener del ingrediente $i$ en la planta $k$ al final del día $t$.
     ss_df = pd.read_excel(file, sheet_name='consumo_proyectado')
@@ -229,73 +228,70 @@ def __safety_stock_planta(problema: Problema, file: str):
 
     ss_df['SS'] = ss_df.apply(np.mean, axis=1)*10
 
-    problema.parametros['safety_stock'] = {
+    parametros['safety_stock'] = {
         f'SS_{k}': ss_df.loc[k]['SS'] for k in ss_df.index}
 
 
-def __costo_asignacion_ingrediantes_ua(problema: dict, file: str):
+def __costo_asignacion_ingrediantes_ua(parametros: dict, file: str):
 
     # $CI_{im}^{t}$ : Costo de asignar el ingrediente $i$ a la unidad de almacenamiento $m$ durante el periodo $t$. Si la unidad de almacenamiento no puede contener el ingrediente, este costo será $infinito$.
     pass
 
 
-def __costo_insatisfaccion_ss(problema: dict, file: str):
+def __costo_insatisfaccion_ss(parametros: dict, file: str):
     # $CS_{ik}^{t}$ : Costo de no satisfacer el inventario de seguridad para el ingrediente $i$ en la planta $k$ durante el día $t$.
     # problema.parametros['costo_no_safety_stock'] = {f'CS_{k}':1000000 for k in ss_df.index}
     pass
 
 
-def __costo_insatisfaccion_demanda(problema: dict, file: str):
+def __costo_insatisfaccion_demanda(parametros: dict, file: str):
     # $CD_{ik}^{t}$ : Costo de no satisfacer la demanda del ingrediente $i$  en la planta $k$ durante el día $t$.
     # problema.parametros['costo_no_demanda'] = {f'CD_{k}':10000000 for k in ss_df.index}
     pass
 
 
-def __costo_backorder_planta(problema: dict, file: str):
+def __costo_backorder_planta(parametros: dict, file: str):
     # $CK_{ik}^{t}$ : Costo del backorder del ingrediente $i$  en la planta $k$ durante el día $t$.
     # problema.parametros['costo_backorder'] = {f'CK_{k}':10000 for k in ss_df.index}
     pass
 
 
-def __transitos_programados_hacia_planta(problema: dict, file: str):
+def __transitos_programados_hacia_planta(parametros: dict, file: str):
     # $TR_{im}^{t}$ : Cantidad en tránsito programada para llegar a la unidad de almacenamiento $m$ durante el día $t$,
     pass
 
 
-def generar_parametros(problema: Problema) -> dict:
+def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: str) -> dict:
 
-    file = problema.file
+    __inventario_inicial_puerto(parametros=parametros, file=file)
 
-    usecols = problema.usecols
+    __llegadas_a_puerto(parametros=parametros, conjuntos=conjuntos, file=file)
 
-    problema.parametros = dict()
+    __costo_almacenamiento_puerto(
+        parametros=parametros, conjuntos=conjuntos, file=file)
 
-    __inventario_inicial_puerto(problema=problema, file=file)
+    __costos_transporte(parametros=parametros, file=file)
 
-    __llegadas_a_puerto(problema=problema, file=file)
+    __venta_intercompany(parametros=parametros, file=file)
 
-    __costo_almacenamiento_puerto(problema=problema, file=file)
+    __tiempo_transporte(parametros=parametros, conjuntos=conjuntos, file=file)
 
-    __costos_transporte(problema=problema, file=file)
+    __capacidad_almacenamiento_planta(
+        parametros=parametros, conjuntos=conjuntos, file=file)
 
-    __venta_intercompany(problema=problema, file=file)
+    __inventario_planta(parametros=parametros, file=file)
 
-    __tiempo_transporte(problema=problema, file=file)
+    __consumo_proyectado(parametros=parametros,
+                         conjuntos=conjuntos, file=file, usecols=usecols)
 
-    __capacidad_almacenamiento_planta(problema=problema, file=file)
+    __safety_stock_planta(parametros=parametros, file=file)
 
-    __inventario_planta(problema=problema, file=file)
+    __costo_asignacion_ingrediantes_ua(parametros=parametros, file=file)
 
-    __consumo_proyectado(problema=problema, file=file, usecols=usecols)
+    __costo_insatisfaccion_ss(parametros=parametros, file=file)
 
-    __safety_stock_planta(problema=problema, file=file)
+    __costo_insatisfaccion_demanda(parametros=parametros, file=file)
 
-    __costo_asignacion_ingrediantes_ua(problema=problema, file=file)
+    __costo_backorder_planta(parametros=parametros, file=file)
 
-    __costo_insatisfaccion_ss(problema=problema, file=file)
-
-    __costo_insatisfaccion_demanda(problema=problema, file=file)
-
-    __costo_backorder_planta(problema=problema, file=file)
-
-    __transitos_programados_hacia_planta(problema=problema, file=file)
+    __transitos_programados_hacia_planta(parametros=parametros, file=file)

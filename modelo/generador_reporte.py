@@ -6,7 +6,6 @@ Created on Sun Jul 30 15:11:39 2023
 """
 
 import pandas as pd
-from modelo.problema import Problema
 
 
 def __procesar_listado_variables(variable_dict: dict, campos: list):
@@ -149,11 +148,9 @@ def _procesar_variables_safety_stock(df_dict: dict, variables: dict):
     df_dict['Backorder'] = df
 
 
-def generar_reporte(problema: Problema):
+def generar_reporte(variables: dict):
 
     df_dict = dict()
-
-    variables = problema.variables
 
     _procesar_variables_transporte(df_dict, variables)
 

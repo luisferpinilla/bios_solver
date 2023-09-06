@@ -1,6 +1,5 @@
 import pandas as pd
 from datetime import datetime
-from modelo.problema import Problema
 
 
 def __remover_underscores(x: str) -> str:
@@ -13,7 +12,7 @@ def __remover_underscores(x: str) -> str:
     return x
 
 
-def _generar_periodos(problema: Problema, file: str, usecols='B:AH'):
+def _generar_periodos(problema: dict, file: str, usecols='B:AH'):
 
     # extraer los periodos de los títulos del archivo
 
@@ -29,11 +28,7 @@ def _generar_periodos(problema: Problema, file: str, usecols='B:AH'):
 
     dates = sorted(dates)
 
-    problema['fecha_inicial'] = dates[0]
-
-    problema.conjuntos['periodos'] = len(dates)
-
-    problema.conjuntos['fechas'] = dates
+    return [x for x in range(len(dates))], dates
 
 
 def _generar_empresas(file: str):
@@ -123,38 +118,29 @@ def _generar_cargas_en_puerto(file=str):
     return cargas
 
 
-def generar_conjuntos(problema: Problema) -> dict:
-
-    file = problema.file
-
-    usecols = problema.usecols
-
-    problema.conjuntos = dict()
+def generar_conjuntos(problema: dict, file: str, usecols: str) -> dict:
 
     # Empresas
-    problema.conjuntos['empresas'] = _generar_empresas(
-        problema=problema, file=file)
+    problema['empresas'] = _generar_empresas(file=file)
 
     # Calendario
-    problema.conjuntos['periodos'] = _generar_periodos(
+    periodos, fechas = _generar_periodos(
         problema=problema, file=file, usecols=usecols)
+    problema['periodos'] = periodos
+    problema['fechas'] = fechas
 
     # Ingredientes
-    problema.conjuntos['ingredientes'] = _generar_ingredientes(
-        problema=problema, file=file)
+    problema['ingredientes'] = _generar_ingredientes(file=file)
 
     # Puertos
-    problema.conjuntos['puertos'] = _generar_operadores(
-        problema=problema, file=file)
+    problema['puertos'] = _generar_operadores(file=file)
 
     # plantas
-    problema.conjuntos['plantas'] = _generar_plantas(
-        problema=problema, file=file)
+    problema['plantas'] = _generar_plantas(file=file)
 
     # Unidades de almacenamiento
-    problema.conjuntos['unidades_almacenamiento'] = _generar_unidades_almacenamiento(
-        problema=problema, file=file)
+    problema['unidades_almacenamiento'] = _generar_unidades_almacenamiento(
+        file=file)
 
     # Cargas
-    problema.conjuntos['cargas'] = _generar_cargas_en_puerto(
-        problema=problema, file=file)
+    problema['cargas'] = _generar_cargas_en_puerto(file=file)
