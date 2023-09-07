@@ -49,8 +49,6 @@ def _procesar_variables_transporte(df_dict: dict, variables: dict):
 
     # Cargar data
 
-    print(variables['XTD'])
-
     xdt_df = __procesar_listado_variables(variables['XTD'], campos)
     xdt_df.drop(columns=['tipo'], inplace=True)
     xdt_df.rename(columns={'value': 'kilos_despachados'}, inplace=True)

@@ -17,10 +17,10 @@ def _despacho_directo(variables: dict, periodos: list,  cargas: list, plantas: l
                     name=xtd_name, lowBound=0.0, cat=pu.LpContinuous)
                 variables['XTD'][xtd_name] = xtd_var
 
-                itd_name = f'ITD_{carga}_{planta}_{periodo}'
-                itd_var = pu.LpVariable(
-                    name=itd_name, lowBound=0, cat=pu.LpInteger)
-                variables['ITD'][itd_name] = itd_var
+                # itd_name = f'ITD_{carga}_{planta}_{periodo}'
+                # itd_var = pu.LpVariable(
+                #    name=itd_name, lowBound=0, cat=pu.LpInteger)
+                # variables['ITD'][itd_name] = itd_var
 
 
 def _decargue_barco_a_puerto(variables: dict, cargas: list, periodos: list):

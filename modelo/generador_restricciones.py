@@ -131,13 +131,23 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
                 # SUM(XTD)
                 # SUM(XTR)
                 for carga in cargas:
-                    xtd_name = f'XTD_{carga}_{planta}_{periodo}'
-                    xtd_var = variables['XTD'][xtd_name]
-                    rigth_expresion.append(xtd_var)
 
-                    xtr_name = f'XTR_{carga}_{planta}_{periodo}'
-                    xtr_var = variables['XTR'][xtr_name]
-                    rigth_expresion.append(xtr_var)
+                    # ['empresa', 'operador',  'imp-motonave', 'ingrediente']
+                    campos = carga.split('_')
+                    c_empresa = campos[0]
+                    c_operador = campos[1]
+                    c_importacion = campos[2]
+                    c_ingrediente = campos[3]
+
+                    if ingrediente == c_ingrediente:
+
+                        xtd_name = f'XTD_{carga}_{planta}_{periodo}'
+                        xtd_var = variables['XTD'][xtd_name]
+                        rigth_expresion.append(xtd_var)
+
+                        xtr_name = f'XTR_{carga}_{planta}_{periodo}'
+                        xtr_var = variables['XTR'][xtr_name]
+                        rigth_expresion.append(xtr_var)
 
                 # XBK
                 xdm_name = f'XBK_{planta}_{ingrediente}_{periodo}'
@@ -385,8 +395,8 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
     _mantenimiento_ss_plantas(restricciones=restricciones, variables=variables,
                               ingredientes=ingredientes, periodos=periodos, plantas=plantas, safety_stock=safety_stock)
 
-    _capacidad_camiones(restricciones=restricciones,
-                        variables=variables, cargas=cargas, unidades=unidades)
+    # _capacidad_camiones(restricciones=restricciones,
+    #                    variables=variables, cargas=cargas, unidades=unidades)
 
     # _asignacion_unidades_almacenamiento(
     #    restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes)

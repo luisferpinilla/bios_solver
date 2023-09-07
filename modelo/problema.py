@@ -77,22 +77,20 @@ class Problema():
                 # print('agregando restriccion', name, rest)
                 self.solver += rest
 
-        try:
+        # try:
 
-            engine = pu.GLPK_CMD(timeLimit=3600, options=[
-                "--mipgap", "0.001",
-                "--tmlim", "3600"])
+        engine = pu.GLPK_CMD(timeLimit=3600, options=[
+            "--mipgap", "0.05",
+            "--tmlim", "1200"])
+        self.solver.solve(solver=engine)
 
-            self.solver.solve(solver=engine)
-
-        except:
-            engine = pu.PULP_CBC_CMD(
-                gapAbs=0.001,
-                timeLimit=3600,
-                cuts=False,
-                strong=True)
-
-            self.solver.solve(solver=engine)
+        # except:
+        # engine = pu.PULP_CBC_CMD(
+        #    gapAbs=0.1,
+        #    timeLimit=1200,
+        #    cuts=False,
+        #    strong=True)
+        # self.solver.solve(solver=engine)
 
         self.estatus = pu.LpStatus[self.solver.status]
 

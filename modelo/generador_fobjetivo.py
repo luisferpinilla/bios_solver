@@ -56,18 +56,18 @@ def _costo_transporte(variables: dict, costos_transporte_variables: dict, costos
                     fobj.append(ct_coef_value*xtr_var)
                     fobj.append(ct_coef_value*xtd_var)
 
-                itr_name = f'ITR_{carga}_{planta}_{periodo}'
-                itr_var = variables['ITR'][itr_name]
+                #itr_name = f'ITR_{carga}_{planta}_{periodo}'
+                #itr_var = variables['ITR'][itr_name]
 
-                itd_name = f'ITD_{carga}_{planta}_{periodo}'
-                itd_var = variables['ITD'][itd_name]
+                #itd_name = f'ITD_{carga}_{planta}_{periodo}'
+                #itd_var = variables['ITD'][itd_name]
 
-                cf_coef_name = f'CF_{operador}_{puerto}_{planta}_{ingrediente}'
+                #cf_coef_name = f'CF_{operador}_{puerto}_{planta}_{ingrediente}'
 
-                if cf_coef_name in costos_transporte_fijos.keys():
-                    cf_coef_value = costos_transporte_fijos[cf_coef_name]
-                    fobj.append(cf_coef_value*itr_var)
-                    fobj.append(cf_coef_value*itd_var)
+                #if cf_coef_name in costos_transporte_fijos.keys():
+                #    cf_coef_value = costos_transporte_fijos[cf_coef_name]
+                #    fobj.append(cf_coef_value*itr_var)
+                #    fobj.append(cf_coef_value*itd_var)
 
     return fobj
 
@@ -78,8 +78,8 @@ def _costo_safety_stock(variables: dict):
     costo_bss = 10000000
     for name, var in variables['BSS'].items():
         periodo = int(name.split('_')[4])
-        # fobj.append((costo_bss-periodo*1000)*var)
-        fobj.append(costo_bss*var)
+        fobj.append((costo_bss-periodo*1000)*var)
+        # fobj.append(costo_bss*var)
 
     return fobj
 
@@ -90,8 +90,8 @@ def _costo_bakorder(variables: dict):
     costo_xbk = 1000
     for name, var in variables['XBK'].items():
         periodo = int(name.split('_')[4])
-        # fobj.append((costo_xbk - periodo*10000)*var)
-        fobj.append(costo_xbk*var)
+        fobj.append((costo_xbk - periodo*10)*var)
+        #fobj.append(costo_xbk*var)
 
     return fobj
 
@@ -139,5 +139,5 @@ def generar_fob(fob:list, parametros: dict, conjuntos:dict, variables: dict):
     fob.append(_costo_bakorder(variables))
 
     # Costo por permitir guardar un ingrediente en una unidad de almacenamiento en una planta
-    fob.append(_costo_asignacion_ingrediente_unidad_almacenamiento(variables))
+    # fob.append(_costo_asignacion_ingrediente_unidad_almacenamiento(variables))
 
