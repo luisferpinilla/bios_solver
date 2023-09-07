@@ -21,7 +21,7 @@ class Problema():
 
         self.restricciones = dict()
 
-        self.funcion_objetivo = list()
+        self.target = list()
 
         self.solver = pu.LpProblem("Bios", sense=pu.const.LpMinimize)
 
@@ -53,27 +53,29 @@ class Problema():
 
         print('generando restricciones')
 
-        generar_restricciones(problema=self.restricciones)
+        generar_restricciones(
+            conjuntos=self.conjuntos, parametros=self.parametros, variables=self.variables)
 
     def generar_target(self):
 
         print('generar funcion objetivo')
 
-        generar_fob(problema=self.funcion_objetivo)
+        generar_fob(fob=self.target, parametros=self.parametros,
+                    conjuntos=self.conjuntos, variables=self.variables)
 
     def solve(self):
 
         print('restolviendo el problema')
 
         # Agregar función objetivosolver += fobjetivo
-        self.solver += self.funcion_objetivo
+        self.solver += pu.lpSum(self.target)
 
         # Agregar restricciones
         for name, rest_list in self.restricciones.items():
             print('agregando', name)
             for rest in rest_list:
                 # print('agregando restriccion', name, rest)
-                solver += rest
+                self.solver += rest
 
         try:
 
@@ -85,20 +87,20 @@ class Problema():
 
         except:
             engine = pu.PULP_CBC_CMD(
-                apAbs=0.00000000001,
+                gapAbs=0.0001,
                 timeLimit=3600,
                 cuts=False,
                 strong=True)
 
             self.solver.solve(solver=engine)
 
-        self.estatus = pu.LpStatus[solver.status]
+        self.estatus = pu.LpStatus[self.solver.status]
 
     def generar_reporte(self):
 
         print('generando reporte')
 
-        generar_reporte(self)
+        generar_reporte(variables=self.variables)
 
     def imprimir_modelo_lp(self, file_output: str):
 

@@ -95,7 +95,7 @@ def _generar_cargas_en_puerto(file=str):
     transitos_a_puerto_df = pd.read_excel(file, sheet_name='tto_puerto')
     inventarios_puerto_df = pd.read_excel(file, sheet_name='inventario_puerto')
 
-    campos = ['empresa', 'ingrediente', 'operador',  'imp-motonave']
+    campos = ['empresa', 'operador',  'imp-motonave', 'ingrediente',]
 
     for campo in campos:
         inventarios_puerto_df[campo] = inventarios_puerto_df[campo].apply(

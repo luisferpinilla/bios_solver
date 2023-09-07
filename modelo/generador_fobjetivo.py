@@ -8,7 +8,7 @@ def _costos_almacenamiento_puerto(variables: dict, costos_almacenamiento: dict, 
 
     fobj = list()
     for carga in cargas:
-        for periodo in range(periodos):
+        for periodo in periodos:
             var_name = f'XIP_{carga}_{periodo}'
             var = variables['XIP'][var_name]
 
@@ -22,50 +22,52 @@ def _costos_almacenamiento_puerto(variables: dict, costos_almacenamiento: dict, 
     return fobj
 
 
-def _costo_transporte(variables: dict, costos_transporte_variables: dict, costos_transporte_fijos: dict, costos_intercompany: dict, cargas: list, unidades: list):
+def _costo_transporte(variables: dict, costos_transporte_variables: dict, costos_transporte_fijos: dict, costos_intercompany: dict, cargas: list, plantas: list, periodos:list):
     # $CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
     # $XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
 
     fobj = list()
 
-    print(cargas)
+    for periodo in periodos:
+        for carga in cargas:
+            campos = carga.split('_')
+            empresa_origen = campos[0]
+            operador = campos[1]
+            importacion= campos[2]
+            ingrediente = campos[3]
 
-    for carga in cargas:
+            puerto = carga.split('_')[2]
+            for planta in plantas:
 
-        empresa_origen = carga.split('_')[0]
-        puerto = carga.split('_')[2]
-        for unidad in unidades:
-            empresa_destino = f"{unidad.split('_')[0]}_{unidad.split('_')[1]}"
+                xtr_name = f'XTR_{carga}_{planta}_{periodo}'
+                xtr_var = variables['XTR'][xtr_name]
 
-            xtr_name = f'XTR_{carga}_{unidad}'
-            xtr_var = variables['XTR'][xtr_name]
+                xtd_name = f'XTD_{carga}_{planta}_{periodo}'
+                xtd_var = variables['XTD'][xtd_name]
 
-            xtd_name = f'XTD_{carga}_{unidad}'
-            xtd_var = variables['XTD'][xtd_name]
+                ct_coef_name = f'CT_{operador}_{puerto}_{planta}_{ingrediente}'
+                cw_iter_name = f"CW_{operador}_{puerto}_{planta}_{ingrediente}"
 
-            ct_coef_name = f'CT_{puerto}_{empresa_destino}'
-            cw_iter_name = f"CW_{empresa_origen}_{empresa_destino.split('_')[0]}"
+                if ct_coef_name in costos_transporte_variables.keys():
 
-            if ct_coef_name in costos_transporte_variables.keys():
+                    ct_coef_value = costos_transporte_variables[ct_coef_name]
+                    ct_coef_value += costos_intercompany[cw_iter_name]
 
-                ct_coef_value = costos_transporte_variables[ct_coef_name]
-                ct_coef_value += costos_intercompany[cw_iter_name]
+                    fobj.append(ct_coef_value*xtr_var)
+                    fobj.append(ct_coef_value*xtd_var)
 
-                fobj.append(ct_coef_value*xtr_var)
-                fobj.append(ct_coef_value*xtd_var)
+                itr_name = f'ITR_{carga}_{planta}_{periodo}'
+                itr_var = variables['ITR'][itr_name]
 
-            itr_name = f'ITR_{carga}_{unidad}'
-            itr_var = variables['ITR'][itr_name]
+                itd_name = f'ITD_{carga}_{planta}_{periodo}'
+                itd_var = variables['ITD'][itd_name]
 
-            itd_name = f'ITD_{carga}_{unidad}'
-            itd_var = variables['ITD'][itd_name]
+                cf_coef_name = f'CF_{operador}_{puerto}_{planta}_{ingrediente}'
 
-            cf_coef_name = f'CF_{puerto}_{empresa_destino}'
-
-            if cf_coef_name in costos_transporte_fijos.keys():
-                cf_coef_value = costos_transporte_fijos[cf_coef_name]
-                fobj.append(cf_coef_value*itr_var)
-                fobj.append(cf_coef_value*itd_var)
+                if cf_coef_name in costos_transporte_fijos.keys():
+                    cf_coef_value = costos_transporte_fijos[cf_coef_name]
+                    fobj.append(cf_coef_value*itr_var)
+                    fobj.append(cf_coef_value*itd_var)
 
     return fobj
 
@@ -73,7 +75,7 @@ def _costo_transporte(variables: dict, costos_transporte_variables: dict, costos
 def _costo_safety_stock(variables: dict):
 
     fobj = list()
-    costo_bss = 1000000
+    costo_bss = 10000000
     for name, var in variables['BSS'].items():
         periodo = int(name.split('_')[4])
         # fobj.append((costo_bss-periodo*1000)*var)
@@ -85,7 +87,7 @@ def _costo_safety_stock(variables: dict):
 def _costo_bakorder(variables: dict):
 
     fobj = list()
-    costo_xbk = 1000000000
+    costo_xbk = 1000
     for name, var in variables['XBK'].items():
         periodo = int(name.split('_')[4])
         # fobj.append((costo_xbk - periodo*10000)*var)
@@ -104,7 +106,7 @@ def _costo_asignacion_ingrediente_unidad_almacenamiento(variables: dict):
     return fobj
 
 
-def generar_fob(parametros: dict, conjuntos:dict, variables: dict):
+def generar_fob(fob:list, parametros: dict, conjuntos:dict, variables: dict):
 
     costos_almacenamiento = parametros['costos_almacenamiento']
     costos_intercompany = parametros['costo_venta_intercompany']
@@ -112,17 +114,20 @@ def generar_fob(parametros: dict, conjuntos:dict, variables: dict):
     costos_transporte_fijos = parametros['fletes_fijos']
     periodos = conjuntos['periodos']
     cargas = conjuntos['cargas']
-    unidades = conjuntos['unidades_almacenamiento']
-
-    fob = list()
+    plantas = conjuntos['plantas']
 
     # Almacenamiento en puerto por corte de Facturación:
     fob.append(_costos_almacenamiento_puerto(
         variables, costos_almacenamiento, cargas, periodos))
 
     # Costos por transporte
-    fob.append(_costo_transporte(
-        variables, costos_transporte_variable, costos_transporte_fijos, costos_intercompany, cargas, unidades))
+    fob.append(_costo_transporte(variables=variables, 
+                                 costos_transporte_variables=costos_transporte_variable,
+                                 costos_transporte_fijos=costos_transporte_fijos,
+                                 costos_intercompany=costos_intercompany,
+                                 cargas=cargas,
+                                 plantas=plantas,
+                                 periodos=periodos))
 
     # Costo de no respetar un inventario de seguridad de un ingrediente en una planta
     fob.append(_costo_safety_stock(variables))
@@ -136,4 +141,3 @@ def generar_fob(parametros: dict, conjuntos:dict, variables: dict):
     # Costo por permitir guardar un ingrediente en una unidad de almacenamiento en una planta
     fob.append(_costo_asignacion_ingrediente_unidad_almacenamiento(variables))
 
-    return pu.lpSum(fob)

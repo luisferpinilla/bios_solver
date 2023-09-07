@@ -31,6 +31,8 @@ else:
             else:
                 st.error(f'{k}: {v}', icon="🚨")
 
+    st.button(label='callback')
+
     if validador.cantidad_errores == 0:
 
         problema = Problema(excel_file_path=file)
@@ -71,6 +73,8 @@ else:
         progress_bar.progress(value=90, text='Generando reporte de resultados')
 
         solucion = problema.generar_reporte()
+
+        problema.imprimir_modelo_lp('model.lp')
 
         progress_bar.progress(value=95, text='Generando reporte de resultados')
 

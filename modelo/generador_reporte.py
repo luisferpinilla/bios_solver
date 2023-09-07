@@ -40,15 +40,17 @@ def _procesar_variables_transporte(df_dict: dict, variables: dict):
 
     campos = ['tipo',
               'empresa_origen',
-              'ingrediente',
               'operador',
               'importacion',
+              'ingrediente',
               'empresa_destino',
               'planta',
-              'unidad',
               'periodo']
 
     # Cargar data
+
+    print(variables['XTD'])
+
     xdt_df = __procesar_listado_variables(variables['XTD'], campos)
     xdt_df.drop(columns=['tipo'], inplace=True)
     xdt_df.rename(columns={'value': 'kilos_despachados'}, inplace=True)
@@ -105,7 +107,7 @@ def _procesar_variables_alacenamiento_puerto(df_dict: dict, variables: dict):
 
 def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict):
 
-    campos = ['tipo', 'ingrediente', 'empresa', 'planta', 'unidad', 'periodo']
+    campos = ['tipo', 'empresa', 'planta', 'ingrediente', 'periodo']
 
     variable_dict = variables['XIU']
 
