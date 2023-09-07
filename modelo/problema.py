@@ -79,8 +79,7 @@ class Problema():
 
         try:
             engine = pu.GLPK_CMD(timeLimit=1200, options=[
-                "--mipgap", "0.05",
-                "--tmlim", "1200"])
+                "--mipgap", "0.05"])
             self.solver.solve(solver=engine)
 
         except:
