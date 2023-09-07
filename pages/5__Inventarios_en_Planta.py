@@ -29,19 +29,18 @@ else:
 
         ingredientes_list = list(df['ingrediente'].unique())
 
-        ingredientes = st.multiselect(
-            label='Ingredientes', options=ingredientes_list, default=ingredientes_list)
+        ingredientes = st.selectbox(
+            label='Ingredientes', options=ingredientes_list)
 
     with col2:
 
         plantas_list = list(df['planta'].unique())
 
-        plantas = st.multiselect(
-            label='Plantas', options=plantas_list, default=plantas_list)
+        plantas = st.selectbox(label='Plantas', options=plantas_list)
 
     st.write('### Inventarios al final del día')
-    st.write(df[(df['ingrediente'].isin(ingredientes))
-             & (df['planta'].isin(plantas))])
+    st.write(df[(df['ingrediente'] == ingredientes)
+             & (df['planta'] == plantas)])
 
     st.write('## Backorder')
 
@@ -52,4 +51,5 @@ else:
     df = df.pivot_table(index=['ingrediente', 'planta'],
                         columns='periodo', values='Backorder', aggfunc=sum).reset_index()
 
-    st.write(df)
+    st.write(df[(df['ingrediente'] == ingredientes)
+             & (df['planta'] == plantas)])

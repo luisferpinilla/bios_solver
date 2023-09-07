@@ -6,11 +6,19 @@ st.set_page_config(layout="wide")
 
 st.title('Visualizador BIOS')
 
-motor_solucion = st.radio(
-    label='Seleccione un motor de solución', options=['GLPK', 'COIN'])
+col1, col2, col3 = st.columns(3)
 
-st.slider(label='Tiempo máximo de trabajo en minutos',
-          min_value=5, max_value=20, value=15)
+with col1:
+    motor_solucion = st.radio(
+        label='Seleccione un motor de solución', options=['glpk', 'coin'])
+
+with col2:
+    tmax = st.slider(label='Tiempo máximo de trabajo en minutos',
+                     min_value=1, max_value=20, value=15)
+
+with col3:
+    gap_solver = st.slider(label='Porcentaje GAP',
+                           min_value=5, max_value=20, value=10)
 
 uploaded_file = st.file_uploader("Choose a file")
 
@@ -69,7 +77,8 @@ else:
         progress_bar.progress(
             value=70, text='Ejecutando el soluccionador del modelo')
 
-        problema.solve()
+        problema.solve(engine=motor_solucion, tlimit=60 *
+                       tmax, gap=gap_solver/100)
 
         estatus = problema.status
 

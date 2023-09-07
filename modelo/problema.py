@@ -63,7 +63,7 @@ class Problema():
         generar_fob(fob=self.target, parametros=self.parametros,
                     conjuntos=self.conjuntos, variables=self.variables)
 
-    def solve(self):
+    def solve(self, engine='glpk', gap=0.05, tlimit=60):
 
         print('restolviendo el problema')
 
@@ -77,15 +77,14 @@ class Problema():
                 # print('agregando restriccion', name, rest)
                 self.solver += rest
 
-        try:
-            engine = pu.GLPK_CMD(timeLimit=1200, options=[
-                "--mipgap", "0.05"])
+        if engine == 'glpk':
+            engine = pu.GLPK_CMD(timeLimit=tlimit, options=[
+                '--mipgap', str(gap)])
             self.solver.solve(solver=engine)
-
-        except:
+        else:
             engine = pu.PULP_CBC_CMD(
-                gapAbs=0.5,
-                timeLimit=1200,
+                gapRel=gap,
+                timeLimit=tlimit,
                 cuts=False,
                 strong=True)
             self.solver.solve(solver=engine)
@@ -96,7 +95,7 @@ class Problema():
 
         print('generando reporte')
 
-        return generar_reporte(variables=self.variables)
+        return generar_reporte(variables=self.variables, parametros=self.parametros, conjuntos=self.conjuntos)
 
     def imprimir_modelo_lp(self, file_output: str):
 

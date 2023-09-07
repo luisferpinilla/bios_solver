@@ -16,7 +16,7 @@ else:
 
     df = solucion['Despacho directo']
 
-    df = df[df['kilos_despachados'] > 0]
+    # df = df[df['kilos_despachados'] > 0]
 
     st.write('## Despachos directos')
 
@@ -24,7 +24,7 @@ else:
 
     df = solucion['Despacho desde Bodega']
 
-    df = df[df['kilos_despachados'] > 0]
+    # df = df[df['kilos_despachados'] > 0]
 
     st.write('## Despachos desde bodega en puerto')
 

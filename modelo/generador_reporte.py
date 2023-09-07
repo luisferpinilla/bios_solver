@@ -36,7 +36,7 @@ def __procesar_listado_variables(variable_dict: dict, campos: list):
     return df
 
 
-def _procesar_variables_transporte(df_dict: dict, variables: dict):
+def _procesar_variables_transporte(df_dict: dict, variables: dict, conjuntos: dict):
 
     campos = ['tipo',
               'empresa_origen',
@@ -49,7 +49,11 @@ def _procesar_variables_transporte(df_dict: dict, variables: dict):
 
     # Cargar data
 
+    fechas = {x: conjuntos['fechas'][x]
+              for x in range(len(conjuntos['fechas']))}
+
     xdt_df = __procesar_listado_variables(variables['XTD'], campos)
+    xdt_df['fecha'] = xdt_df['periodo'].map(fechas)
     xdt_df.drop(columns=['tipo'], inplace=True)
     xdt_df.rename(columns={'value': 'kilos_despachados'}, inplace=True)
 
@@ -58,6 +62,7 @@ def _procesar_variables_transporte(df_dict: dict, variables: dict):
     itd_df.rename(columns={'value': 'camiones_despachados'}, inplace=True)
 
     xtr_df = __procesar_listado_variables(variables['XTR'], campos)
+    xtr_df['fecha'] = xtr_df['periodo'].map(fechas)
     xtr_df.drop(columns=['tipo'], inplace=True)
     xtr_df.rename(columns={'value': 'kilos_despachados'}, inplace=True)
 
@@ -67,22 +72,39 @@ def _procesar_variables_transporte(df_dict: dict, variables: dict):
 
     campos.remove('tipo')
 
-    dt_df = pd.merge(left=xdt_df, right=itd_df,
-                     left_on=campos,
-                     right_on=campos,
-                     how='inner')
+    # dt_df = pd.merge(left=xdt_df, right=itd_df,
+    #                 left_on=campos,
+    #                 right_on=campos,
+    #                 how='inner')
 
-    dt_df['Variable'] = 'Despacho Directo'
+    xdt_df['Variable'] = 'Despacho Directo'
 
-    tr_df = pd.merge(left=xtr_df, right=itr_df,
-                     left_on=campos,
-                     right_on=campos,
-                     how='inner')
+    xdt_df = xdt_df[xdt_df['kilos_despachados'] > 0]
 
-    tr_df['Variable'] = "Despacho desde bodega en puerto"
+    xdt_df = xdt_df.pivot_table(index=['Variable',
+                                       'empresa_origen',
+                                       'ingrediente',
+                                       'importacion',
+                                       'fecha'], columns='planta', values='kilos_despachados',
+                                aggfunc=sum)
 
-    df_dict['Despacho directo'] = dt_df
-    df_dict['Despacho desde Bodega'] = tr_df
+    # tr_df = pd.merge(left=xtr_df, right=itr_df,
+    #                 left_on=campos,
+    #                 right_on=campos,
+    #                 how='inner')
+
+    xtr_df['Variable'] = "Despacho bodega"
+
+    xtr_df = xtr_df[xtr_df['kilos_despachados'] > 0]
+
+    xtr_df = xtr_df.pivot_table(index=['Variable',
+                                       'empresa_origen',
+                                       'ingrediente',
+                                       'importacion',
+                                       'fecha'], columns='planta', values='kilos_despachados', aggfunc=sum)
+
+    df_dict['Despacho directo'] = xdt_df
+    df_dict['Despacho desde Bodega'] = xtr_df
 
 
 def _procesar_variables_alacenamiento_puerto(df_dict: dict, variables: dict):
@@ -148,11 +170,12 @@ def _procesar_variables_safety_stock(df_dict: dict, variables: dict):
     df_dict['Backorder'] = df
 
 
-def generar_reporte(variables: dict):
+def generar_reporte(variables: dict, parametros: dict, conjuntos: dict):
 
     df_dict = dict()
 
-    _procesar_variables_transporte(df_dict, variables)
+    _procesar_variables_transporte(
+        df_dict=df_dict, variables=variables, conjuntos=conjuntos)
 
     _procesar_variables_alacenamiento_puerto(df_dict, variables)
 
@@ -163,5 +186,3 @@ def generar_reporte(variables: dict):
     _procesar_variables_safety_stock(df_dict, variables)
 
     return df_dict
-
-    ['BIU', 'XDM', 'BSS', 'XBK']
