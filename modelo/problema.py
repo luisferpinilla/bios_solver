@@ -53,8 +53,8 @@ class Problema():
 
         print('generando restricciones')
 
-        generar_restricciones(
-            conjuntos=self.conjuntos, parametros=self.parametros, variables=self.variables)
+        generar_restricciones(restricciones=self.restricciones,
+                              conjuntos=self.conjuntos, parametros=self.parametros, variables=self.variables)
 
     def generar_target(self):
 
@@ -80,14 +80,14 @@ class Problema():
         try:
 
             engine = pu.GLPK_CMD(timeLimit=3600, options=[
-                "--mipgap", "0.0001",
+                "--mipgap", "0.001",
                 "--tmlim", "3600"])
 
             self.solver.solve(solver=engine)
 
         except:
             engine = pu.PULP_CBC_CMD(
-                gapAbs=0.0001,
+                gapAbs=0.001,
                 timeLimit=3600,
                 cuts=False,
                 strong=True)
@@ -100,8 +100,8 @@ class Problema():
 
         print('generando reporte')
 
-        generar_reporte(variables=self.variables)
+        return generar_reporte(variables=self.variables)
 
     def imprimir_modelo_lp(self, file_output: str):
 
-        self.solver.writeLP(filename='model.lp')
+        self.solver.writeLP(filename=file_output)

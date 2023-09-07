@@ -90,11 +90,11 @@ def _balance_masa_bodega_puerto(restricciones: list, variables: list, cargas: li
     restricciones['Balance_masa_bodega_puerto'] = rest_list
 
 
-def _balance_masa_planta(restricciones: list, variables: list, cargas: list, plantas: list, inventario_inicial: dict, ingredientes: list, periodos=list):
+def _balance_masa_planta(restricciones: list, variables: list, cargas: list, plantas: list, inventario_inicial: dict, ingredientes: list, periodos: list, consumo: list):
 
     print('generando restricciones de balance de masa en planta')
-    # XIU = XIUt-1 + SUM(XTR) + SUM(XTD) - XBK
-    # XIU + XDM = XIUt-1 + SUM(XTR) + SUM(XTD)
+    # XIU = XIUt-1 + SUM(XTR) + SUM(XTD) + XBK - DM
+    # XIU + DM = XIUt-1 + SUM(XTR) + SUM(XTD) + XBK
 
     rest_list = list()
 
@@ -110,10 +110,10 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
                 xiu_var = variables['XIU'][xiu_name]
                 left_expesion.append(xiu_var)
 
-                # XBK
-                xdm_name = f'XBK_{planta}_{ingrediente}_{periodo}'
-                xdm_var = variables['XBK'][xdm_name]
-                left_expesion.append(xdm_var)
+                # DM
+                dm_name = f'DM_{planta}_{ingrediente}_{periodo}'
+                dm_value = consumo[dm_name]
+                left_expesion.append(dm_value)
 
                 # XIUt-1 / inventario inicial
                 if periodo > 0:
@@ -128,11 +128,9 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
                         ii_value = 0.0
                     rigth_expresion.append(ii_value)
 
+                # SUM(XTD)
+                # SUM(XTR)
                 for carga in cargas:
-
-                    # SUM(XTD)
-                    # SUM(XTR)
-
                     xtd_name = f'XTD_{carga}_{planta}_{periodo}'
                     xtd_var = variables['XTD'][xtd_name]
                     rigth_expresion.append(xtd_var)
@@ -140,6 +138,11 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
                     xtr_name = f'XTR_{carga}_{planta}_{periodo}'
                     xtr_var = variables['XTR'][xtr_name]
                     rigth_expresion.append(xtr_var)
+
+                # XBK
+                xdm_name = f'XBK_{planta}_{ingrediente}_{periodo}'
+                xdm_var = variables['XBK'][xdm_name]
+                rigth_expresion.append(xdm_var)
 
                 rest = (pu.lpSum(left_expesion) == pu.lpSum(
                     rigth_expresion), f'Balance masa de {ingrediente} en {planta} durante el periodo {periodo}')
@@ -356,9 +359,7 @@ def _asignacion_unidades_almacenamiento(restricciones: list, variables: list, un
     restricciones['Asignacion unica de ingredientes a unidades'] = rest_list
 
 
-def generar_restricciones(conjuntos: dict, parametros: dict, variables: dict):
-
-    restricciones = dict()
+def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict, variables: dict):
 
     periodos = conjuntos['periodos']
     plantas = conjuntos['plantas']
@@ -391,9 +392,7 @@ def generar_restricciones(conjuntos: dict, parametros: dict, variables: dict):
     #    restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes)
 
     _balance_masa_planta(restricciones=restricciones, variables=variables, cargas=cargas, plantas=plantas,
-                         inventario_inicial=inventario_inicial_ua, ingredientes=ingredientes, periodos=periodos)
+                         inventario_inicial=inventario_inicial_ua, ingredientes=ingredientes, periodos=periodos, consumo=consumo_proyectado)
 
     # _satisfaccion_demanda_plantas(restricciones=restricciones, variables=variables, plantas=plantas,
     #                              ingredientes=ingredientes, unidades=unidades, consumo_proyectado=consumo_proyectado, periodos=periodos)
-
-    return restricciones

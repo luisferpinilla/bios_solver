@@ -174,11 +174,9 @@ def __inventario_planta(parametros: dict, file: str):
         f"II_{inventario_planta_df.iloc[x]['key']}_{inventario_planta_df.iloc[x]['ingrediente_actual']}": inventario_planta_df.iloc[x]['cantidad_actual'] for x in range(inventario_planta_df.shape[0])}
 
 
-def __consumo_proyectado(parametros: dict, conjuntos: dict, file: str, usecols='B:AH'):
+def __consumo_proyectado(parametros: dict, conjuntos: dict, file: str, usecols: str):
 
     # $DM_{ki}^{t}$: Demanda del ingrediente $i$ en la planta $k$ durante el día $t$.
-
-    usecols = 'B:R'
 
     demanda_df = pd.read_excel(
         file, sheet_name='consumo_proyectado', usecols=usecols)

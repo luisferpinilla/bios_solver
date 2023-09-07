@@ -32,13 +32,13 @@ problema = st.session_state['problema']
 
 st.button(label='Callback')
 
-fechas_list = problema['conjuntos']['fechas']
+fechas_list = problema.conjuntos['fechas']
 
 fechas_map = {str(i): fechas_list[i] for i in range(len(fechas_list))}
 
 with st.expander(label='Costos de almacenamiento'):
 
-    parametros = problema['parametros']['costos_almacenamiento']
+    parametros = problema.parametros['costos_almacenamiento']
 
     campos = ['tipo', 'empresa', 'ingrediente',
               'operador', 'importacion', 'periodo']
@@ -56,7 +56,7 @@ with st.expander(label='Costos de almacenamiento'):
 
 with st.expander(label='Costos de Transporte'):
 
-    parametros = problema['parametros']['fletes_variables']
+    parametros = problema.parametros['fletes_variables']
 
     campos = ['operador', 'empresa', 'planta', 'ingrediente']
 
@@ -70,7 +70,7 @@ with st.expander(label='Costos de Transporte'):
 
 with st.expander(label='Inventario inicial de cargas'):
 
-    parametros = problema['parametros']['inventario_inicial_cargas']
+    parametros = problema.parametros['inventario_inicial_cargas']
 
     campos = ['tipo', 'empresa', 'operador', 'importacion', 'ingrediente']
 
@@ -82,7 +82,7 @@ with st.expander(label='Inventario inicial de cargas'):
 
 with st.expander(label='Llegada de cargas a puerto'):
 
-    parametros = problema['parametros']['llegadas_cargas']
+    parametros = problema.parametros['llegadas_cargas']
 
     campos = ['tipo', 'empresa', 'operador',
               'importacion', 'ingrediente', 'periodo']
@@ -96,7 +96,7 @@ with st.expander(label='Llegada de cargas a puerto'):
 
 with st.expander(label='Consumo Proyectado'):
 
-    parametros = problema['parametros']['consumo_proyectado']
+    parametros = problema.parametros['consumo_proyectado']
 
     campos = ['tipo', 'empresa', 'planta',
               'ingrediente', 'periodo']

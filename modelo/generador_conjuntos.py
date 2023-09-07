@@ -12,7 +12,7 @@ def __remover_underscores(x: str) -> str:
     return x
 
 
-def _generar_periodos(problema: dict, file: str, usecols='B:AH'):
+def _generar_periodos(problema: dict, file: str, usecols: str):
 
     # extraer los periodos de los títulos del archivo
 

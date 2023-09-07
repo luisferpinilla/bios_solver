@@ -11,23 +11,21 @@ if not 'solucion' in st.session_state.keys():
 else:
 
     st.button(label='callback')
-    
+
     solucion = st.session_state['solucion']
-    
+
     df = solucion['Despacho directo']
-    
-    df = df[df['kilos_despachados']>0]
+
+    df = df[df['kilos_despachados'] > 0]
 
     st.write('## Despachos directos')
 
     st.write(df)
-    
+
     df = solucion['Despacho desde Bodega']
-         
-    df = df[df['kilos_despachados']>0]
+
+    df = df[df['kilos_despachados'] > 0]
 
     st.write('## Despachos desde bodega en puerto')
 
     st.write(df)
-    
-    

@@ -18,7 +18,7 @@ else:
 
     df = df[df['value'] > 0]
 
-    df = df.pivot_table(index=['planta', 'ingrediente', 'unidad'],
+    df = df.pivot_table(index=['planta', 'ingrediente'],
                         columns='periodo', values='value', aggfunc=sum).reset_index()
 
     st.write('## Inventarios en Planta')
