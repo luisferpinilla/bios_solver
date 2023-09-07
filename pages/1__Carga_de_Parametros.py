@@ -6,6 +6,12 @@ st.set_page_config(layout="wide")
 
 st.title('Visualizador BIOS')
 
+motor_solucion = st.radio(
+    label='Seleccione un motor de solución', options=['GLPK', 'COIN'])
+
+st.slider(label='Tiempo máximo de trabajo en minutos',
+          min_value=5, max_value=20, value=15)
+
 uploaded_file = st.file_uploader("Choose a file")
 
 st.session_state['upload_file'] = uploaded_file
