@@ -304,8 +304,37 @@ def _capacidad_camiones(restricciones: list, variables: list, cargas: list, unid
     restricciones['Capacidad carga de camiones'] = rest_list
 
 
+def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coeficientes_capacidad: dict, plantas: list, ingredientes: list, periodos: list):
+
+    rest = list()
+
+    # SUM(XPI)<=1.0
+
+    for planta in plantas:
+        for periodo in periodos:
+
+            left_expresion = list()
+            for ingrediente in ingredientes:
+
+                xiu_name = f'XIU_{planta}_{ingrediente}_{periodo}'
+                xiu_var = variables['XIU'][xiu_name]
+
+                ci_name = f'CI_{planta}_{ingrediente}'
+
+                if ci_name in coeficientes_capacidad:
+                    # Traer el inverso de la capacidad de este ingrediente en esta planta
+                    ci_value = coeficientes_capacidad[ci_name]
+                    if ci_value > 0:
+                        # evitar que el valor sea cero y convertirlo
+                        ci_value = 1/(ci_value*0.8)
+                        left_expresion.append(ci_value*xiu_var)
+
+                        rest.append((pu.lpSum(left_expresion) <= 1.0,
+                                     f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
+
+
 @DeprecationWarning
-def _capacidad_almacenamiento_planta(restricciones: list, variables: list, plantas: list, ingredientes: list, capacidad_unidades: dict, periodos=30):
+def _capacidad_almacenamiento_unidad_almacenamiento(restricciones: list, variables: dict, plantas: list, ingredientes: list, capacidad_unidades: dict, periodos=30):
 
     # Se requiere usar la siguiente restriccion de capacidad máxima:
 
@@ -377,23 +406,38 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
     ingredientes = conjuntos['ingredientes']
     inventario_inicial_cargas = parametros['inventario_inicial_cargas']
     llegadas = parametros['llegadas_cargas']
-    unidades = conjuntos['unidades_almacenamiento']
+    capacidad_plantas = parametros['capacidad_almacenamiento_planta']
     cargas = conjuntos['cargas']
-    capacidad_unidades = parametros['capacidad_almacenamiento_ua']
     inventario_inicial_ua = parametros['inventario_inicial_ua']
     safety_stock = parametros['safety_stock']
 
-    _balance_masa_bif(restricciones=restricciones, variables=variables,
-                      cargas=cargas, llegadas=llegadas, plantas=plantas, periodos=periodos)
+    _balance_masa_bif(restricciones=restricciones,
+                      variables=variables,
+                      cargas=cargas,
+                      llegadas=llegadas,
+                      plantas=plantas,
+                      periodos=periodos)
 
-    _balance_masa_bodega_puerto(restricciones=restricciones, variables=variables, plantas=plantas,
-                                cargas=cargas, inventario_inicial=inventario_inicial_cargas, periodos=periodos)
+    _balance_masa_bodega_puerto(restricciones=restricciones,
+                                variables=variables,
+                                plantas=plantas,
+                                cargas=cargas,
+                                inventario_inicial=inventario_inicial_cargas,
+                                periodos=periodos)
 
-    # _capacidad_almacenamiento_planta(restricciones=restricciones, variables=variables,
-    #                                 unidades=unidades, ingredientes=ingredientes, capacidad_unidades=capacidad_unidades)
+    _capacidad_almacenamiento_planta(restricciones=restricciones,
+                                     variables=variables,
+                                     coeficientes_capacidad=capacidad_plantas,
+                                     plantas=plantas,
+                                     ingredientes=ingredientes,
+                                     periodos=periodos)
 
-    _mantenimiento_ss_plantas(restricciones=restricciones, variables=variables,
-                              ingredientes=ingredientes, periodos=periodos, plantas=plantas, safety_stock=safety_stock)
+    _mantenimiento_ss_plantas(restricciones=restricciones,
+                              variables=variables,
+                              ingredientes=ingredientes,
+                              periodos=periodos,
+                              plantas=plantas,
+                              safety_stock=safety_stock)
 
     # _capacidad_camiones(restricciones=restricciones,
     #                    variables=variables, cargas=cargas, unidades=unidades)

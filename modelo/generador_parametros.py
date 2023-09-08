@@ -182,14 +182,24 @@ def __capacidad_almacenamiento_planta(parametros: dict, conjuntos: dict, file: s
 
     inventario_planta_df = pd.read_excel(
         file, sheet_name='unidades_almacenamiento')
+    
 
-    capacidad_ua_df = inventario_planta_df.melt(id_vars=['key'], value_vars=conjuntos['ingredientes'],
-                                                var_name='ingrediente', value_name='capacidad').rename(columns={'key': 'unidad_almacenamiento'})
+    # Eliminar nulos en las columnas de ingredientes
+    for ingrediente in conjuntos['ingredientes']:
+        inventario_planta_df[ingrediente] = inventario_planta_df[ingrediente].fillna(0.0)
+   
+    capacidad_df = inventario_planta_df.melt(id_vars=['empresa', 'planta'], 
+                                             value_vars=conjuntos['ingredientes'],
+                                             var_name='ingrediente', 
+                                             value_name='capacidad').rename(columns={'key': 'unidad_almacenamiento'})
 
-    capacidad_ua_df.fillna(0.0, inplace=True)
+    capacidad_df = capacidad_df.groupby(['empresa', 'planta', 'ingrediente'])[['capacidad']].sum().reset_index()
 
-    parametros['capacidad_almacenamiento_ua'] = {
-        f"CA_{capacidad_ua_df.iloc[x]['ingrediente']}_{capacidad_ua_df.iloc[x]['unidad_almacenamiento']}": capacidad_ua_df.iloc[x]['capacidad'] for x in range(capacidad_ua_df.shape[0])}
+    capacidad_df['key'] = capacidad_df['empresa'] + "_" + capacidad_df['planta'] + "_" + capacidad_df['ingrediente']
+
+    capacidad_dict = {f"CI_{capacidad_df.iloc[x]['key']}": capacidad_df.iloc[x]['capacidad'] for x in range(capacidad_df.shape[0])}
+
+    parametros['capacidad_almacenamiento_planta'] = capacidad_dict
 
 
 def __inventario_planta(parametros: dict, file: str):

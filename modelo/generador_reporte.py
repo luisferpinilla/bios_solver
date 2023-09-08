@@ -136,6 +136,7 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict):
     df_dict['Almacenamiento en Planta'] = df
 
 
+@DeprecationWarning
 def _procesar_variables_demanda(df_dict: dict, variables: dict):
 
     campos = ['tipo', 'ingrediente', 'empresa', 'planta', 'unidad', 'periodo']
@@ -181,7 +182,7 @@ def generar_reporte(variables: dict, parametros: dict, conjuntos: dict):
 
     _procesar_variables_almacenamiento_planta(df_dict, variables)
 
-    _procesar_variables_demanda(df_dict, variables)
+    # _procesar_variables_demanda(df_dict, variables)
 
     _procesar_variables_safety_stock(df_dict, variables)
 
