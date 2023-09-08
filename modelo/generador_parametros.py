@@ -91,6 +91,35 @@ def __costo_almacenamiento_puerto(parametros: dict, conjuntos: dict, file: str):
         f"CC_{cc_df.iloc[i]['key']}_{cc_df.iloc[i]['periodo']}": cc_df.iloc[i]['valor_kg'] for i in range(cc_df.shape[0])}
 
 
+def __costo_operacion_puerto(parametros:dict, conjuntos:dict, file:str):
+    
+    df = pd.read_excel(file, sheet_name='costos_operacion_portuaria')
+    
+    df['operador'] = df['operador-puerto-ing'].apply(lambda x: str(x).split('_')[0])
+    
+    df['operador'] = df['operador'].apply(__remover_underscores)
+    
+    df['ingrediente'] = df['operador-puerto-ing'].apply(lambda x: str(x).split('_')[1])
+    
+    df['key'] = df['operador'] + "_" + df['ingrediente']
+    
+    xtd_df = df[df['tipo_operacion']=='directo']
+    
+    xpl_df = df[df['tipo_operacion']=='bodega']
+
+    # CD costo operativo para despacho directo
+    # CB costo operativo para alacenamiento a bodega
+    
+    cd_dict = {f"CD_{xtd_df.iloc[x]['key']}":xtd_df.iloc[x]['valor_kg'] for x in range(xtd_df.shape[0])}
+
+    cb_dict = {f"CB_{xpl_df.iloc[x]['key']}":xpl_df.iloc[x]['valor_kg'] for x in range(xpl_df.shape[0])}
+
+    parametros['costos_operacion_directo'] = cd_dict
+
+    parametros['costos_operacion_bodega'] =  cb_dict
+
+
+
 def __costos_transporte(parametros: dict, file: str):
     # $CF_{lm}$ : Costo fijo de transporte por camión despachado llevando la carga $l$ hasta la unidad de almacenamiento $m$.
     # $ CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
@@ -293,3 +322,5 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
     __costo_backorder_planta(parametros=parametros, file=file)
 
     __transitos_programados_hacia_planta(parametros=parametros, file=file)
+    
+    __costo_operacion_puerto(parametros=parametros, conjuntos=conjuntos, file=file)

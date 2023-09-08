@@ -22,6 +22,37 @@ def _costos_almacenamiento_puerto(variables: dict, costos_almacenamiento: dict, 
     return fobj
 
 
+def _costo_operacion_portuaria(variables:dict, costos_despacho_directo:dict, costo_envio_bodega:dict):
+    
+    # XTD * CD
+    # XPL * CB
+    
+    fobj = list()
+    
+    'CB_{operador}_{ingrediente}'
+    'XPL_{empresa}_{operador}_{importacion}_{ingrediente}_{periodo}'
+    
+    for name, var in variables['XPL'].items():
+        
+        operador = name.split('_')[2]
+        ingrediente = name.split('_')[4]
+        
+        cb_name = f'CB_{operador}_{ingrediente}'
+        cb_value = costo_envio_bodega[cb_name]
+        
+        fobj.append(cb_value*var)
+        
+    for name, var in variables['XTD'].items():
+            
+        operador = name.split('_')[2]
+        ingrediente = name.split('_')[4]
+            
+        cd_name = f'CD_{operador}_{ingrediente}'
+        cd_value = costos_despacho_directo[cd_name]
+            
+        fobj.append(cd_value*var)
+
+
 def _costo_transporte(variables: dict, costos_transporte_variables: dict, costos_transporte_fijos: dict, costos_intercompany: dict, cargas: list, plantas: list, periodos:list):
     # $CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
     # $XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
@@ -109,6 +140,8 @@ def _costo_asignacion_ingrediente_unidad_almacenamiento(variables: dict):
 def generar_fob(fob:list, parametros: dict, conjuntos:dict, variables: dict):
 
     costos_almacenamiento = parametros['costos_almacenamiento']
+    costos_despacho_directo = parametros['costos_operacion_directo']
+    costo_envio_bodega = parametros['costos_operacion_bodega']
     costos_intercompany = parametros['costo_venta_intercompany']
     costos_transporte_variable = parametros['fletes_variables']
     costos_transporte_fijos = parametros['fletes_fijos']
@@ -119,6 +152,11 @@ def generar_fob(fob:list, parametros: dict, conjuntos:dict, variables: dict):
     # Almacenamiento en puerto por corte de Facturación:
     fob.append(_costos_almacenamiento_puerto(
         variables, costos_almacenamiento, cargas, periodos))
+    
+    # Costo de operacion portuaria
+    fob.append(_costo_operacion_portuaria(variables=variables,
+                                          costos_despacho_directo=costos_despacho_directo,
+                                          costo_envio_bodega=costo_envio_bodega))
 
     # Costos por transporte
     fob.append(_costo_transporte(variables=variables, 
