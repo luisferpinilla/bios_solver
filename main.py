@@ -16,6 +16,6 @@ if __name__ == '__main__':
 
     problema.generar_target()
 
-    problema.solve()
+    problema.solve(gen_lp_file=True)
 
     solucion = problema.generar_reporte()

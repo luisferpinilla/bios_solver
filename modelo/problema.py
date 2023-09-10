@@ -63,7 +63,7 @@ class Problema():
         generar_fob(fob=self.target, parametros=self.parametros,
                     conjuntos=self.conjuntos, variables=self.variables)
 
-    def solve(self, engine='glpk', gap=0.05, tlimit=60):
+    def solve(self, engine='glpk', gap=0.05, tlimit=60, gen_lp_file=False):
 
         print('restolviendo el problema')
 
@@ -88,6 +88,9 @@ class Problema():
                 cuts=False,
                 strong=True)
             self.solver.solve(solver=engine)
+
+        if gen_lp_file:
+            self.solver.writeLP(filename='model.lp')
 
         self.estatus = pu.LpStatus[self.solver.status]
 
