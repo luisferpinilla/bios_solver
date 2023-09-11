@@ -10,7 +10,7 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     motor_solucion = st.radio(
-        label='Seleccione un motor de solución', options=['glpk', 'coin'])
+        label='Seleccione un motor de solución', options=['coin', 'glpk'])
 
 with col2:
     tmax = st.slider(label='Tiempo máximo de trabajo en minutos',
