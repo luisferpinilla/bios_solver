@@ -94,7 +94,6 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
 
     print('generando restricciones de balance de masa en planta')
     # XIU = XIUt-1 + SUM(XTR) + SUM(XTD) + XBK - DM
-    # XIU + DM = XIUt-1 + SUM(XTR) + SUM(XTD) + XBK
 
     rest_list = list()
 
@@ -110,11 +109,6 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
                 xiu_var = variables['XIU'][xiu_name]
                 left_expesion.append(xiu_var)
 
-                # DM
-                dm_name = f'DM_{planta}_{ingrediente}_{periodo}'
-                dm_value = consumo[dm_name]
-                left_expesion.append(dm_value)
-
                 # XIUt-1 / inventario inicial
                 if periodo > 0:
                     xiu_ant_name = f'XIU_{planta}_{ingrediente}_{periodo-1}'
@@ -122,10 +116,7 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
                     rigth_expresion.append(xiu_ant_var)
                 else:
                     ii_name = f'II_{planta}_{ingrediente}'
-                    if ii_name in inventario_inicial.keys():
-                        ii_value = inventario_inicial[ii_name]
-                    else:
-                        ii_value = 0.0
+                    ii_value = inventario_inicial[ii_name]
                     rigth_expresion.append(ii_value)
 
                 # SUM(XTD)
@@ -154,14 +145,17 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
                 xdm_var = variables['XBK'][xdm_name]
                 rigth_expresion.append(xdm_var)
 
+                # DM
+                dm_name = f'DM_{planta}_{ingrediente}_{periodo}'
+                dm_value = consumo[dm_name]
+                rigth_expresion.append(-1*dm_value)
+
                 rest = (pu.lpSum(left_expesion) == pu.lpSum(
                     rigth_expresion), f'Balance masa de {ingrediente} en {planta} durante el periodo {periodo}')
 
                 rest_list.append(rest)
 
     restricciones['Balance_masa_unidades'] = rest_list
-
-    pass
 
 
 def select_ua_by_period_planta(planta: str, period: int, unidades: list):
@@ -271,11 +265,10 @@ def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coefi
                         ci_facc = 1/(ci_value)
                         left_expresion.append(ci_facc*xiu_var)
 
-                        rest.append(
-                            (xiu_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
+                        rest.append((xiu_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
 
-            rest.append((pu.lpSum(left_expresion) <= 1.0,
-                         f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
+            #rest.append((pu.lpSum(left_expresion) <= 1.0,
+            #              f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
 
     restricciones['Capacidad plantas'] = rest
 

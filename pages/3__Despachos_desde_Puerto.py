@@ -16,14 +16,64 @@ else:
 
     solucion = problema.generar_reporte()
 
-    df = solucion['Despacho directo']
-
     st.write('## Despachos directos')
+
+    col1, col2 = st.columns(2)
+
+    df = solucion['Despacho directo'].reset_index()
+
+    with col1:
+
+        operadores_list = ['Todos'] + list(df['operador'].unique())
+
+        operador = st.selectbox(label='operador', options=operadores_list)
+
+        if operador != 'Todos':
+            df = df[df['operador'] == operador]
+
+    with col2:
+
+        ingredientes_list = ['Todos'] + list(df['ingrediente'].unique())
+
+        ingrediente = st.selectbox(
+            label='Ingredientes', options=ingredientes_list)
+
+        if ingrediente != 'Todos':
+
+            df = df[df['ingrediente'] == ingrediente]
+
+    df.set_index(['empresa_origen', 'operador', 'ingrediente',
+                 'importacion', 'fecha despacho'], inplace=True)
 
     st.write(df)
 
-    df = solucion['Despacho desde Bodega']
-
     st.write('## Despachos desde bodega en puerto')
+
+    df = solucion['Despacho desde Bodega'].reset_index()
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        operadores_list = ['Todos'] + list(df['operador'].unique())
+
+        operador = st.selectbox(label='operador', options=operadores_list)
+
+        if operador != 'Todos':
+            df = df[df['operador'] == operador]
+
+    with col2:
+
+        ingredientes_list = ['Todos'] + list(df['ingrediente'].unique())
+
+        ingrediente = st.selectbox(
+            label='Ingredientes', options=ingredientes_list)
+
+        if ingrediente != 'Todos':
+
+            df = df[df['ingrediente'] == ingrediente]
+
+    df.set_index(['empresa_origen', 'operador', 'ingrediente',
+                 'importacion', 'fecha despacho'], inplace=True)
 
     st.write(df)

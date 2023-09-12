@@ -20,34 +20,26 @@ else:
 
     st.write('## Inventarios en Planta')
 
-    # col1, col2 = st.columns(2)
+    col1, col2 = st.columns(2)
 
-    # with col1:
+    with col1:
 
-    # ingredientes_list = list(df['ingrediente'].unique())
+        ingredientes_list = ['Todos'] + list(df['ingrediente'].unique())
 
-    # ingredientes = st.selectbox(
-    #    label='Ingredientes', options=ingredientes_list)
+        ingrediente = st.selectbox(
+            label='Ingredientes', options=ingredientes_list)
 
-    # with col2:
+        if ingrediente != 'Todos':
+            df = df[df['ingrediente'] == ingrediente]
 
-    #    plantas_list = list(df['planta'].unique())
+    with col2:
 
-    #   plantas = st.selectbox(label='Plantas', options=plantas_list)
+        plantas_list = ['Todos'] + list(df['planta'].unique())
 
-    st.write('### Inventarios al final del día')
-    # st.write(df[(df['ingrediente'] == ingredientes)
-    #         & (df['planta'] == plantas)])
+        planta = st.selectbox(label='Plantas', options=plantas_list)
+
+        if planta != 'Todos':
+
+            df = df[df['planta'] == planta]
 
     st.write(df)
-    st.write('## Backorder')
-
-    df = solucion['Backorder']
-
-    # df = df[df['value'] > 0]
-
-    # df = df.pivot_table(index=['ingrediente', 'planta'],
-    #                    columns='periodo', values='Backorder', aggfunc=sum).reset_index()
-
-    # st.write(df[(df['ingrediente'] == ingredientes)
-    #         & (df['planta'] == plantas)])

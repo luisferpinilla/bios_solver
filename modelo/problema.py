@@ -63,7 +63,7 @@ class Problema():
         generar_fob(fob=self.target, parametros=self.parametros,
                     conjuntos=self.conjuntos, variables=self.variables)
 
-    def solve(self, engine='glpk', gap=0.05, tlimit=60, gen_lp_file=False):
+    def solve(self, engine='coin', gap=0.05, tlimit=60, gen_lp_file=False):
 
         print('restolviendo el problema')
 

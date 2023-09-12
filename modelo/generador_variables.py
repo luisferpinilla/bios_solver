@@ -69,12 +69,10 @@ def _almacenamiento_puerto(variables: list, cargas: list, periodos: list):
 
 def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, periodos: list):
 
-    
     variables['XIU'] = dict()
     variables['BSS'] = dict()
-    variables['XPI'] = dict() # capacidad de almacenamiento en la planta del ingrediente i
+    variables['XBK'] = dict()
 
-    
     for planta in plantas:
         for ingrediente in ingredientes:
             for periodo in periodos:
@@ -90,19 +88,6 @@ def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, p
                 xbs_var = pu.LpVariable(name=xbs_name, cat=pu.LpBinary)
                 variables['BSS'][xbs_name] = xbs_var
 
-                # $XPI_{mi}^{t}: Capacidad de almacenamiento asignada de ingrediente $i$ en la planta $ durante el final del periodo $t$
-                xpi_name = f'XPI_{planta}_{ingrediente}_{periodo}'
-                xpi_var = pu.LpVariable(name=xpi_name, lowBound=0.0, upBound=1.0, cat=pu.LpContinuous)
-                variables['XPI'][xpi_name] = xpi_var
-
-def _satisfaccion_demanda(variables: list, plantas: list, periodos: list, ingredientes: list):
-
-    variables['XBK'] = dict()
-
-    for periodo in periodos:
-        for ingrediente in ingredientes:
-            for planta in plantas:
-                # $XBK_{ik}^{t}$: Cantidad de backorder del ingrediente $i$ en planta $k$ luego de no cumplir la demanda  del día $t$.
                 xbk_name = f'XBK_{planta}_{ingrediente}_{periodo}'
                 xbk_var = pu.LpVariable(
                     name=xbk_name, lowBound=0.0, cat=pu.LpContinuous)
@@ -130,6 +115,3 @@ def generar_variables(conjuntos: dict, variables: dict) -> dict:
 
     _almacenamiento_puerto(variables=variables,
                            cargas=cargas, periodos=periodos)
-
-    _satisfaccion_demanda(variables=variables, plantas=plantas,
-                          periodos=periodos, ingredientes=ingredientes)

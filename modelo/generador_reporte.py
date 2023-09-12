@@ -115,16 +115,12 @@ def _procesar_variables_transporte(df_dict: dict, variables: dict, conjuntos: di
 
     campos.remove('tipo')
 
-    xdt_df = xdt_df[xdt_df['kilos_despachados'] > 0]
-
     xdt_df = xdt_df.pivot_table(index=['empresa_origen',
                                        'operador',
                                        'ingrediente',
                                        'importacion',
                                        'fecha despacho'], columns='planta', values='kilos_despachados',
                                 aggfunc=sum)
-
-    xtr_df = xtr_df[xtr_df['kilos_despachados'] > 0]
 
     xtr_df = xtr_df.pivot_table(index=['empresa_origen', 'operador',
                                        'ingrediente',
@@ -196,7 +192,7 @@ def _procesar_variables_alacenamiento_puerto(df_dict: dict, variables: dict, con
     df_dict['Inventario en Puerto'] = df
 
 
-def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, conjuntos: dict, parametros: dict):
+def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, conjuntos: dict, parametros: dict, generar_excel=False):
 
     # Leer y procesar inventario final
     campos = ['tipo', 'empresa', 'planta', 'ingrediente', 'periodo']
@@ -258,6 +254,7 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, co
 
     despacho_directo_df.rename(columns={'empresa_destino': 'empresa',
                                         'value': 'despacho directo'}, inplace=True)
+
     despacho_directo_df = despacho_directo_df.groupby(['empresa',
                                                        'planta',
                                                        'ingrediente',
@@ -276,6 +273,7 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, co
 
     despacho_bodega_df.rename(columns={'empresa_destino': 'empresa',
                                        'value': 'despacho bodega puerto'}, inplace=True)
+
     despacho_bodega_df = despacho_bodega_df.groupby(['empresa',
                                                      'planta',
                                                      'ingrediente',
@@ -373,6 +371,18 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, co
                                               'safety_stock',
                                               'alarma safety stock',
                                               'capacidad']]
+
+    if generar_excel:
+        with pd.ExcelWriter('solucion.xlsx') as writer:
+            df.to_excel(writer, sheet_name='consolidado')
+            backorder_df.to_excel(writer, sheet_name='XBK')
+            despacho_bodega_df.to_excel(writer, sheet_name='XTR')
+            safety_df.to_excel(writer, sheet_name='safety_stock')
+            cumple_SS_df.to_excel(writer, sheet_name='BSS')
+            capacidad_df.to_excel(writer, sheet_name='cap almacenamiento')
+            demanda_df.to_excel(writer, sheet_name='consumo proyectado')
+            despacho_directo_df.to_excel(writer, sheet_name='XTD')
+            inventario_df.to_excel(writer, sheet_name='XIU')
 
 
 def _procesar_variables_safety_stock(df_dict: dict, variables: dict):

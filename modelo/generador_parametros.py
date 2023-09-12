@@ -91,33 +91,36 @@ def __costo_almacenamiento_puerto(parametros: dict, conjuntos: dict, file: str):
         f"CC_{cc_df.iloc[i]['key']}_{cc_df.iloc[i]['periodo']}": cc_df.iloc[i]['valor_kg'] for i in range(cc_df.shape[0])}
 
 
-def __costo_operacion_puerto(parametros:dict, conjuntos:dict, file:str):
-    
+def __costo_operacion_puerto(parametros: dict, conjuntos: dict, file: str):
+
     df = pd.read_excel(file, sheet_name='costos_operacion_portuaria')
-    
-    df['operador'] = df['operador-puerto-ing'].apply(lambda x: str(x).split('_')[0])
-    
+
+    df['operador'] = df['operador-puerto-ing'].apply(
+        lambda x: str(x).split('_')[0])
+
     df['operador'] = df['operador'].apply(__remover_underscores)
-    
-    df['ingrediente'] = df['operador-puerto-ing'].apply(lambda x: str(x).split('_')[1])
-    
+
+    df['ingrediente'] = df['operador-puerto-ing'].apply(
+        lambda x: str(x).split('_')[1])
+
     df['key'] = df['operador'] + "_" + df['ingrediente']
-    
-    xtd_df = df[df['tipo_operacion']=='directo']
-    
-    xpl_df = df[df['tipo_operacion']=='bodega']
+
+    xtd_df = df[df['tipo_operacion'] == 'directo']
+
+    xpl_df = df[df['tipo_operacion'] == 'bodega']
 
     # CD costo operativo para despacho directo
     # CB costo operativo para alacenamiento a bodega
-    
-    cd_dict = {f"CD_{xtd_df.iloc[x]['key']}":xtd_df.iloc[x]['valor_kg'] for x in range(xtd_df.shape[0])}
 
-    cb_dict = {f"CB_{xpl_df.iloc[x]['key']}":xpl_df.iloc[x]['valor_kg'] for x in range(xpl_df.shape[0])}
+    cd_dict = {f"CD_{xtd_df.iloc[x]['key']}": xtd_df.iloc[x]
+               ['valor_kg'] for x in range(xtd_df.shape[0])}
+
+    cb_dict = {f"CB_{xpl_df.iloc[x]['key']}": xpl_df.iloc[x]
+               ['valor_kg'] for x in range(xpl_df.shape[0])}
 
     parametros['costos_operacion_directo'] = cd_dict
 
-    parametros['costos_operacion_bodega'] =  cb_dict
-
+    parametros['costos_operacion_bodega'] = cb_dict
 
 
 def __costos_transporte(parametros: dict, file: str):
@@ -182,35 +185,58 @@ def __capacidad_almacenamiento_planta(parametros: dict, conjuntos: dict, file: s
 
     inventario_planta_df = pd.read_excel(
         file, sheet_name='unidades_almacenamiento')
-    
 
     # Eliminar nulos en las columnas de ingredientes
     for ingrediente in conjuntos['ingredientes']:
-        inventario_planta_df[ingrediente] = inventario_planta_df[ingrediente].fillna(0.0)
-   
-    capacidad_df = inventario_planta_df.melt(id_vars=['empresa', 'planta'], 
+        inventario_planta_df[ingrediente] = inventario_planta_df[ingrediente].fillna(
+            0.0)
+
+    capacidad_df = inventario_planta_df.melt(id_vars=['empresa', 'planta'],
                                              value_vars=conjuntos['ingredientes'],
-                                             var_name='ingrediente', 
+                                             var_name='ingrediente',
                                              value_name='capacidad').rename(columns={'key': 'unidad_almacenamiento'})
 
-    capacidad_df = capacidad_df.groupby(['empresa', 'planta', 'ingrediente'])[['capacidad']].sum().reset_index()
+    capacidad_df = capacidad_df.groupby(['empresa', 'planta', 'ingrediente'])[
+        ['capacidad']].sum().reset_index()
 
-    capacidad_df['key'] = capacidad_df['empresa'] + "_" + capacidad_df['planta'] + "_" + capacidad_df['ingrediente']
+    capacidad_df['key'] = capacidad_df['empresa'] + "_" + \
+        capacidad_df['planta'] + "_" + capacidad_df['ingrediente']
 
-    capacidad_dict = {f"CI_{capacidad_df.iloc[x]['key']}": capacidad_df.iloc[x]['capacidad'] for x in range(capacidad_df.shape[0])}
+    capacidad_dict = {f"CI_{capacidad_df.iloc[x]['key']}": capacidad_df.iloc[x]['capacidad'] for x in range(
+        capacidad_df.shape[0])}
 
     parametros['capacidad_almacenamiento_planta'] = capacidad_dict
 
 
-def __inventario_planta(parametros: dict, file: str):
+def __inventario_planta(parametros: dict, conjuntos:dict, file: str):
 
     # $II_{m}^{i}$ : Inventario inicial del ingrediente $i$ en la unidad $m$, teniendo en cuenta que $m \in K$
 
-    inventario_planta_df = pd.read_excel(
-        file, sheet_name='unidades_almacenamiento')
+    campos = ['empresa', 'planta', 'ingrediente_actual']
 
-    parametros['inventario_inicial_ua'] = {
-        f"II_{inventario_planta_df.iloc[x]['key']}_{inventario_planta_df.iloc[x]['ingrediente_actual']}": inventario_planta_df.iloc[x]['cantidad_actual'] for x in range(inventario_planta_df.shape[0])}
+    inventario_planta_df = pd.read_excel(
+        file, sheet_name='unidades_almacenamiento', usecols='B:F')
+    
+    
+    inventario_planta_df = inventario_planta_df[inventario_planta_df['ingrediente_actual'].isin(conjuntos['ingredientes'])]
+
+    inventario_planta_df = inventario_planta_df.groupby(campos)[['cantidad_actual']].sum().reset_index()
+
+    inventario_planta_df['key'] = inventario_planta_df.apply(lambda x: '_'.join([x[c] for c in campos]) ,axis=1)
+    
+    inventario_planta_df.set_index('key', inplace=True, drop=True)
+
+    ingredientes_dict = dict()
+
+    for planta in conjuntos['plantas']:
+        for ingrediente in conjuntos['ingredientes']:
+            key = f'{planta}_{ingrediente}'
+            if key in inventario_planta_df.index:
+                ingredientes_dict[f'II_{key}'] = inventario_planta_df.loc[key]['cantidad_actual']
+            else:
+                ingredientes_dict[f'II_{key}'] = 0
+         
+    parametros['inventario_inicial_ua'] = ingredientes_dict
 
 
 def __consumo_proyectado(parametros: dict, conjuntos: dict, file: str, usecols: str):
@@ -316,7 +342,7 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
     __capacidad_almacenamiento_planta(
         parametros=parametros, conjuntos=conjuntos, file=file)
 
-    __inventario_planta(parametros=parametros, file=file)
+    __inventario_planta(parametros=parametros, conjuntos=conjuntos, file=file)
 
     __consumo_proyectado(parametros=parametros,
                          conjuntos=conjuntos, file=file, usecols=usecols)
@@ -332,5 +358,6 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
     __costo_backorder_planta(parametros=parametros, file=file)
 
     __transitos_programados_hacia_planta(parametros=parametros, file=file)
-    
-    __costo_operacion_puerto(parametros=parametros, conjuntos=conjuntos, file=file)
+
+    __costo_operacion_puerto(parametros=parametros,
+                             conjuntos=conjuntos, file=file)
