@@ -110,5 +110,15 @@ with st.expander(label='Consumo Proyectado'):
 
     st.write(df)
 
+with st.expander(label='Capacidad de almacenamiento plantas'):
 
-# st.write(problema)
+    parametros = problema.parametros['capacidad_almacenamiento_planta']
+
+    campos = ['tipo', 'empresa', 'planta', 'ingrediente']
+
+    df = _procesar_parametros(parametros=parametros, campos=campos)
+
+    df = df.pivot_table(index=['empresa', 'planta'],
+                        columns='ingrediente', values='value').reset_index()
+
+    st.write(df)

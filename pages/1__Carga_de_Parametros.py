@@ -85,15 +85,9 @@ else:
         if estatus == 'Infeasible':
             st.error('El solucionador reporta infeasibilidad')
 
-        progress_bar.progress(value=90, text='Generando reporte de resultados')
-
-        solucion = problema.generar_reporte()
+        progress_bar.progress(value=90, text='Escribiendo modelo LP')
 
         problema.imprimir_modelo_lp('model.lp')
-
-        progress_bar.progress(value=95, text='Generando reporte de resultados')
-
-        st.session_state['solucion'] = solucion
 
         progress_bar.progress(
             value=96, text='Cargando parámetros del problema')

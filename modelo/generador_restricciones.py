@@ -164,64 +164,6 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
     pass
 
 
-@DeprecationWarning
-def _satisfaccion_demanda_plantas(restricciones: list, variables: list, plantas: list, ingredientes: list, consumo_proyectado: list, periodos=list):
-
-    print('generando restricciones de demanda en planta')
-
-    # (1) SUM(XDM) + XBK == DM
-
-    rest_list = list()
-
-    for periodo in periodos:
-        for ingrediente in ingredientes:
-            for planta in plantas:
-
-                campos = planta.split('_')
-                c_empresa = campos[0]
-                c_planta = campos[1]
-
-                left_expesion = list()
-
-                # DM
-                dm_name = f'DM_{planta}_{ingrediente}_{periodo}'
-                if dm_name in consumo_proyectado.keys():
-                    dm_value = consumo_proyectado[dm_name]
-                else:
-                    dm_value = 0.0
-
-                # $XBK_{ik}^{t}$: Cantidad de backorder del ingrediente $i$ en planta $k$ luego de no cumplir la demanda  del día $t$.
-                xbk_name = f'XBK_{planta}_{ingrediente}_{periodo}'
-                xbk_var = variables['XBK'][xbk_name]
-
-                # $BCD_{ik}^{t}$ : Binaria, si estará permitido que la demanda de un ingrediente $i$ no se satisfaga en la planta $k$ al final del día $t$
-                # bdc_name = f'BCD_{ingrediente}_{planta}_{periodo}'
-                # bdc_var = variables['BCD'][bdc_name]
-
-                # SUM(XDM)
-                for unidad in unidades:
-
-                    campos = unidad.split('_')
-                    u_empresa = campos[0]
-                    u_planta = campos[1]
-                    U_codigo = campos[2]
-                    u_periodo = int(campos[3])
-
-                    if c_empresa == u_empresa and c_planta == u_planta and u_periodo == periodo:
-                        xdm_name = f'XDM_{ingrediente}_{unidad}'
-                        xdm_var = variables['XDM'][xdm_name]
-                        left_expesion.append(xdm_var)
-
-                left_expesion.append(xbk_var)
-
-                rest = (pu.lpSum(left_expesion) == dm_value,
-                        f'Minimizar backorder en {planta} de {ingrediente} en {periodo}')
-
-                rest_list.append(rest)
-
-    restricciones['minimizar backorder'] = rest_list
-
-
 def select_ua_by_period_planta(planta: str, period: int, unidades: list):
     list_to_return = list()
 
@@ -326,78 +268,16 @@ def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coefi
                     ci_value = coeficientes_capacidad[ci_name]
                     if ci_value > 0:
                         # evitar que el valor sea cero y convertirlo
-                        ci_value = 1/(ci_value*0.8)
-                        left_expresion.append(ci_value*xiu_var)
+                        ci_facc = 1/(ci_value)
+                        left_expresion.append(ci_facc*xiu_var)
 
-                        rest.append((pu.lpSum(left_expresion) <= 1.0,
-                                     f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
+                        rest.append(
+                            (xiu_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
+
+            rest.append((pu.lpSum(left_expresion) <= 1.0,
+                         f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
 
     restricciones['Capacidad plantas'] = rest
-
-
-@DeprecationWarning
-def _capacidad_almacenamiento_unidad_almacenamiento(restricciones: list, variables: dict, plantas: list, ingredientes: list, capacidad_unidades: dict, periodos=30):
-
-    # Se requiere usar la siguiente restriccion de capacidad máxima:
-
-    # Parametro CapacidadTotal = suma de todas las capacidades
-    # Variables de decisión con restricciones X <= FraccionIngrediente * CapacidadTotal
-    # Suma de X sobre ingrediente <= 1 Para toda planta
-
-    print('Generando restriccion de no sobrepaso de capacidad de unidades de almacenamiento')
-    rest_list = list()
-
-    for periodo in periodos:
-        for ingrediente in ingredientes:
-            for planta in plantas:
-
-                xiu_name = f'XIU_{planta}_{ingrediente}_{periodo}'
-                xiu_var = variables['XIU'][xiu_name]
-
-                biu_name = f'BIU_{planta}_{ingrediente}_{periodo}'
-                biu_var = variables['BIU'][biu_name]
-
-                cap_name = f'CA_{ingrediente}_{planta}_{ingrediente}_{periodo}'
-
-                if cap_name in capacidad_unidades.keys():
-                    cap_val = capacidad_unidades[cap_name]
-                else:
-                    cap_val = 0.0
-
-                rest_list.append((xiu_var <= cap_val*biu_var,
-                                  f'capacidad de almacenamiento para {ingrediente} en {planta} durante {periodo}'))
-
-    restricciones['Capacidad_almacenamiento_UA'] = rest_list
-
-
-@DeprecationWarning
-def _asignacion_unidades_almacenamiento(restricciones: list, variables: list, unidades: list, ingredientes: list):
-
-    print('Generando restricciones sobre asignaciòn de unidades de almacenamiento')
-    # no se puede asignar más de un ingrediente a una unidad
-
-    # SUM(BIU, ingrediente,planta, periodo) <= 1
-
-    rest_list = list()
-
-    for unidad in unidades:
-
-        left_expesion = list()
-
-        for ingrediente in ingredientes:
-
-            biu_name = f'BIU_{ingrediente}_{unidad}'
-
-            biu_var = variables['BIU'][biu_name]
-
-            left_expesion.append(biu_var)
-
-        rest = (pu.lpSum(left_expesion) <= 1,
-                f'asignacion unica sobre unidad {unidad}')
-
-        rest_list.append(rest)
-
-    restricciones['Asignacion unica de ingredientes a unidades'] = rest_list
 
 
 def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict, variables: dict):
