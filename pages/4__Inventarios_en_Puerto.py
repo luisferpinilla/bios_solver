@@ -33,6 +33,6 @@ else:
         df = df[df['ingrediente'] == ingrediente]
 
     df = df.set_index(['empresa', 'ingrediente', 'operador',
-                      'importacion', 'variable'])
+                      'importacion', 'variable']).fillna(0.0)
 
     st.write(df)
