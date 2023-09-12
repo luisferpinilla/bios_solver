@@ -332,6 +332,8 @@ def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coefi
                         rest.append((pu.lpSum(left_expresion) <= 1.0,
                                      f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
 
+    restricciones['Capacidad plantas'] = rest
+
 
 @DeprecationWarning
 def _capacidad_almacenamiento_unidad_almacenamiento(restricciones: list, variables: dict, plantas: list, ingredientes: list, capacidad_unidades: dict, periodos=30):
