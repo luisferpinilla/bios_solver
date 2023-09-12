@@ -68,7 +68,7 @@ def _procesar_variables_transporte(df_dict: dict, variables: dict, conjuntos: di
     fechas = __obtener_map_fechas(conjuntos=conjuntos)
 
     xdt_df = __procesar_listado_variables(variables['XTD'], campos)
-    xdt_df['fecha'] = xdt_df['periodo'].map(fechas)
+    xdt_df['fecha despacho'] = xdt_df['periodo'].map(fechas)
     xdt_df.drop(columns=['tipo'], inplace=True)
     xdt_df['value'] = xdt_df['value'].apply(lambda x: round(x, 0))
     xdt_df = xdt_df[xdt_df['value'] > 0]
@@ -79,7 +79,7 @@ def _procesar_variables_transporte(df_dict: dict, variables: dict, conjuntos: di
     itd_df.rename(columns={'value': 'camiones_despachados'}, inplace=True)
 
     xtr_df = __procesar_listado_variables(variables['XTR'], campos)
-    xtr_df['fecha'] = xtr_df['periodo'].map(fechas)
+    xtr_df['fecha despacho'] = xtr_df['periodo'].map(fechas)
     xtr_df.drop(columns=['tipo'], inplace=True)
     xtr_df['value'] = xtr_df['value'].apply(lambda x: round(x, 0))
     xtr_df = xtr_df[xtr_df['value'] > 0]
@@ -94,17 +94,18 @@ def _procesar_variables_transporte(df_dict: dict, variables: dict, conjuntos: di
     xdt_df = xdt_df[xdt_df['kilos_despachados'] > 0]
 
     xdt_df = xdt_df.pivot_table(index=['empresa_origen',
+                                       'operador',
                                        'ingrediente',
                                        'importacion',
-                                       'fecha'], columns='planta', values='kilos_despachados',
+                                       'fecha despacho'], columns='planta', values='kilos_despachados',
                                 aggfunc=sum)
 
     xtr_df = xtr_df[xtr_df['kilos_despachados'] > 0]
 
-    xtr_df = xtr_df.pivot_table(index=['empresa_origen',
+    xtr_df = xtr_df.pivot_table(index=['empresa_origen', 'operador',
                                        'ingrediente',
                                        'importacion',
-                                       'fecha'], columns='planta', values='kilos_despachados', aggfunc=sum)
+                                       'fecha despacho'], columns='planta', values='kilos_despachados', aggfunc=sum)
 
     df_dict['Despacho directo'] = xdt_df
     df_dict['Despacho desde Bodega'] = xtr_df
