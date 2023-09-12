@@ -6,7 +6,7 @@ st.set_page_config(layout="wide")
 
 st.title('Visualizador BIOS')
 
-col2, col3 = st.columns(3)
+col2, col3 = st.columns(2)
 
 # with col1:
 #    motor_solucion = st.radio(
