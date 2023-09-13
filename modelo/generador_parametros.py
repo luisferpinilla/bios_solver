@@ -5,6 +5,7 @@ import numpy as np
 
 def __remover_underscores(x: str) -> str:
 
+    x = str(x)
     x = x.lower()
     x = x.replace('_', '')
     x = x.replace('-', '')
@@ -169,6 +170,7 @@ def __tiempo_transporte(parametros: dict, conjuntos: dict, file: str):
 
     # $TT_{jk}$ : tiempo en días para transportar la carga desde el puerto $j$ hacia la planta $k$.
 
+    return
     parametros['tiempo_transporte'] = dict()
 
     for puerto in conjuntos['puertos']:
@@ -208,7 +210,7 @@ def __capacidad_almacenamiento_planta(parametros: dict, conjuntos: dict, file: s
     parametros['capacidad_almacenamiento_planta'] = capacidad_dict
 
 
-def __inventario_planta(parametros: dict, conjuntos:dict, file: str):
+def __inventario_planta(parametros: dict, conjuntos: dict, file: str):
 
     # $II_{m}^{i}$ : Inventario inicial del ingrediente $i$ en la unidad $m$, teniendo en cuenta que $m \in K$
 
@@ -216,14 +218,16 @@ def __inventario_planta(parametros: dict, conjuntos:dict, file: str):
 
     inventario_planta_df = pd.read_excel(
         file, sheet_name='unidades_almacenamiento', usecols='B:F')
-    
-    
-    inventario_planta_df = inventario_planta_df[inventario_planta_df['ingrediente_actual'].isin(conjuntos['ingredientes'])]
 
-    inventario_planta_df = inventario_planta_df.groupby(campos)[['cantidad_actual']].sum().reset_index()
+    inventario_planta_df = inventario_planta_df[inventario_planta_df['ingrediente_actual'].isin(
+        conjuntos['ingredientes'])]
 
-    inventario_planta_df['key'] = inventario_planta_df.apply(lambda x: '_'.join([x[c] for c in campos]) ,axis=1)
-    
+    inventario_planta_df = inventario_planta_df.groupby(
+        campos)[['cantidad_actual']].sum().reset_index()
+
+    inventario_planta_df['key'] = inventario_planta_df.apply(
+        lambda x: '_'.join([x[c] for c in campos]), axis=1)
+
     inventario_planta_df.set_index('key', inplace=True, drop=True)
 
     ingredientes_dict = dict()
@@ -235,7 +239,7 @@ def __inventario_planta(parametros: dict, conjuntos:dict, file: str):
                 ingredientes_dict[f'II_{key}'] = inventario_planta_df.loc[key]['cantidad_actual']
             else:
                 ingredientes_dict[f'II_{key}'] = 0
-         
+
     parametros['inventario_inicial_ua'] = ingredientes_dict
 
 

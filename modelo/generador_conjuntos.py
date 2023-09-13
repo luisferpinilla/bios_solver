@@ -4,6 +4,7 @@ from datetime import datetime
 
 def __remover_underscores(x: str) -> str:
 
+    x = str(x)
     x = x.lower()
     x = x.replace('_', '')
     x = x.replace('-', '')
