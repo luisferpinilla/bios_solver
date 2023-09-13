@@ -1,0 +1,84 @@
+{
+    "ingredientes": [
+        "ingrediente"
+    ],
+    "empresas": [
+        "empresa"
+    ],
+    "plantas": [
+        "planta",
+        "empresa",
+        "key",
+        "UnidadesAlmacenamiento"
+    ],
+    "puertos": [
+        "operador-puerto",
+        "puerto",
+        "nombre_puerto"
+    ],
+    "fletes_fijos": [
+        "operador-puerto-ing"
+    ],
+    "fletes_variables": [
+        "operador-puerto-ing"
+    ],
+    "venta_entre_empresas": [
+        "origen"
+    ],
+    "consumo_proyectado": [
+        "ingrediente",
+        "empresa",
+        "planta"
+    ],
+    "Safety_stock": [
+        "ingrediente",
+        "planta",
+        "dias_ss"
+    ],
+    "costos_almacenamiento_cargas": [
+        "empresa",
+        "ingrediente",
+        "operador-puerto",
+        "imp-motonave",
+        "fecha_corte",
+        "valor_kg"
+    ],
+    "costos_operacion_portuaria": [
+        "tipo_operacion",
+        "operador-puerto-ing",
+        "valor_kg"
+    ],
+    "inventario_puerto": [
+        "empresa",
+        "ingrediente",
+        "operador",
+        "imp-motonave",
+        "fecha_llegada",
+        "cantidad_kg",
+        "valor_cif_kg"
+    ],
+    "tto_puerto": [
+        "empresa",
+        "operador",
+        "ingrediente",
+        "imp-motonave",
+        "cantidad_kg",
+        "fecha_llegada",
+        "valor_kg"
+    ],
+    "tto_plantas": [
+        "empresa",
+        "planta",
+        "ingrediente",
+        "cantidad",
+        "fecha_llegada",
+        "Ubicación"
+    ],
+    "unidades_almacenamiento": [
+        "empresa",
+        "planta",
+        "unidad_almacenamiento",
+        "ingrediente_actual",
+        "cantidad_actual"
+    ]
+}

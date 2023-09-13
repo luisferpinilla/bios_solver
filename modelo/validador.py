@@ -6,6 +6,7 @@ Created on Fri Sep  1 05:31:41 2023
 @author: luispinilla
 """
 import pandas as pd
+import json
 
 
 class Validador():
@@ -15,6 +16,29 @@ class Validador():
         self.file = file
         self.cantidad_errores = 0
         self.validaciones = dict()
+
+    def _validar_nombres_columnas(self):
+
+        with open("modelo/file_structure.json") as file:
+            paginas_dict = json.load(file)
+
+        print(paginas_dict)
+
+        errors_list = list()
+
+        for tab, columns in paginas_dict.items():
+            df = pd.read_excel(self.file, sheet_name=tab)
+            for column in columns:
+                if not column in df.columns:
+                    errors_list.append(
+                        f'la columna "{column}" de la página "{tab}" parece faltar o estar mál escrita')
+
+        if len(errors_list) > 0:
+            self.validaciones[
+                'Columnas en archivo'] = f"Error, las siguientes columnas no se encontraron: {', '.join(errors_list)}"
+            self.cantidad_errores += 1
+        else:
+            self.validaciones['Columnas en archivo'] = 'OK, el archivo parece tener las columnas y las pestañas completas'
 
     def _validar_ingredientes(self):
 
@@ -97,16 +121,16 @@ class Validador():
         campos_fletes = ['fletes_variables', 'fletes_fijos']
 
         for campo_flete in campos_fletes:
-            
-            #campo_flete = campos_fletes[0]
+
+            # campo_flete = campos_fletes[0]
 
             df = pd.read_excel(io=self.file, sheet_name=campo_flete)
 
             fletes = list(df['operador-puerto-ing'].unique())
 
             for flete in fletes:
-                
-                #flete = fletes[0]
+
+                # flete = fletes[0]
 
                 operador = flete.split('_')[0].split('-')[0]
                 puerto = flete.split('_')[0].split('-')[1]
@@ -123,7 +147,6 @@ class Validador():
                 if not ingrediente in self.ingredientes:
                     self.cantidad_errores += 1
                     self.validaciones[f'{campo_flete} e ingredientes'] = f"Error, el ingrediente {ingrediente} no se encuetra en la lista de ingredientes"
-
 
     def _validar_demanda(self):
 
@@ -182,6 +205,8 @@ class Validador():
             self.validaciones['Safety Stock por plantas'] = "OK, las plantas se encontraron en la lista de plantas"
 
     def ejecutar_validaciones(self):
+
+        self._validar_nombres_columnas()
 
         self._validar_ingredientes()
 
