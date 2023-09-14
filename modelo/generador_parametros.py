@@ -275,28 +275,26 @@ def __consumo_proyectado(parametros: dict, conjuntos: dict, file: str, usecols: 
     parametros['consumo_proyectado'] = demanda_dict
 
 
-def __safety_stock_planta(parametros: dict, file: str):
+def __safety_stock_planta(parametros: dict, conjuntos: dict, file: str):
 
-    # $SS_{ik}^{t}$ : Inventario de seguridad a tener del ingrediente $i$ en la planta $k$ al final del día $t$.
-    ss_df = pd.read_excel(file, sheet_name='consumo_proyectado')
+    param_dict = dict()
 
-    campos = ['empresa', 'planta', 'ingrediente']
+    ss_df = pd.read_excel(file, sheet_name='Safety_stock')
 
-    for campo in campos:
-        ss_df[campo] = ss_df[campo].apply(__remover_underscores)
+    ss_dict = {f"{ss_df.loc[r]['planta']}_{ss_df.loc[r]['ingrediente']}": ss_df.loc[r]
+               ['dias_ss'] for r in ss_df.index}
 
-    # regenerar key
-    ss_df['key'] = ss_df.apply(lambda field: '_'.join(
-        [str(field[x]) for x in campos]), axis=1)
+    for planta in conjuntos['plantas']:
+        p_empresa = planta.split('_')[0]
+        p_planta = planta.split('_')[1]
+        for ingrediente in conjuntos['ingredientes']:
+            name_ss = f'{p_planta}_{ingrediente}'
+            if name_ss in ss_dict.keys():
+                param_dict[f'SS_{planta}_{ingrediente}'] = ss_dict[name_ss]
+            else:
+                param_dict[f'SS_{planta}_{ingrediente}'] = 0.0
 
-    ss_df.drop(columns=campos, inplace=True)
-
-    ss_df.set_index(keys='key', drop=True, inplace=True)
-
-    ss_df['SS'] = ss_df.apply(np.mean, axis=1)*10
-
-    parametros['safety_stock'] = {
-        f'SS_{k}': ss_df.loc[k]['SS'] for k in ss_df.index}
+    parametros['safety_stock'] = param_dict
 
 
 def __costo_asignacion_ingrediantes_ua(parametros: dict, file: str):
@@ -351,7 +349,8 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
     __consumo_proyectado(parametros=parametros,
                          conjuntos=conjuntos, file=file, usecols=usecols)
 
-    __safety_stock_planta(parametros=parametros, file=file)
+    __safety_stock_planta(parametros=parametros,
+                          conjuntos=conjuntos, file=file)
 
     __costo_asignacion_ingrediantes_ua(parametros=parametros, file=file)
 

@@ -122,3 +122,18 @@ with st.expander(label='Capacidad de almacenamiento plantas'):
                         columns='ingrediente', values='value').reset_index()
 
     st.write(df)
+
+with st.expander(label='Safety stock'):
+
+    parametros = problema.parametros['safety_stock']
+
+    campos = ['tipo', 'empresa', 'planta', 'ingrediente']
+
+    df = _procesar_parametros(parametros=parametros, campos=campos)
+
+    df['value'] = df['value'].apply(lambda x: round(x, 0))
+
+    df = df.pivot_table(values='value',
+                        index=['ingrediente'], columns=['planta'])
+
+    st.write(df)
