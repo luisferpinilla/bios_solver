@@ -212,7 +212,7 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, plantas: lis
     restricciones['Safety stock en planta'] = rest_list
 
 
-def _capacidad_camiones(restricciones: list, variables: list, cargas: list, unidades: list, periodos=30):
+def _capacidad_camiones(restricciones: list, variables: list):
 
     print('Restricciones de capacidad de carga de camiones')
 
@@ -227,7 +227,7 @@ def _capacidad_camiones(restricciones: list, variables: list, cargas: list, unid
         itd_var = variables['ITD'][itd_name]
 
         rest_list.append(
-            (xtd_var <= 34000*itd_var, f'capacidad carga directa {xtd_name}'))
+            (xtd_var == 34000*itd_var, f'capacidad carga directa {xtd_name}'))
 
     for xtr_name, xtr_var in variables['XTR'].items():
 
@@ -235,7 +235,7 @@ def _capacidad_camiones(restricciones: list, variables: list, cargas: list, unid
         itr_var = variables['ITR'][itr_name]
 
         rest_list.append(
-            (xtr_var <= 34000*itr_var, f'capacidad carga desde almacenamiento en {xtr_name}'))
+            (xtr_var == 34000*itr_var, f'capacidad carga desde almacenamiento en {xtr_name}'))
 
     restricciones['Capacidad carga de camiones'] = rest_list
 
@@ -265,9 +265,10 @@ def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coefi
                         ci_facc = 1/(ci_value)
                         left_expresion.append(ci_facc*xiu_var)
 
-                        rest.append((xiu_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
+                        rest.append(
+                            (xiu_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
 
-            #rest.append((pu.lpSum(left_expresion) <= 1.0,
+            # rest.append((pu.lpSum(left_expresion) <= 1.0,
             #              f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
 
     restricciones['Capacidad plantas'] = rest
@@ -315,7 +316,7 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                               safety_stock=safety_stock)
 
     # _capacidad_camiones(restricciones=restricciones,
-    #                    variables=variables, cargas=cargas, unidades=unidades)
+    #                    variables=variables)
 
     # _asignacion_unidades_almacenamiento(
     #    restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes)
