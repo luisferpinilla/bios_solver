@@ -99,3 +99,5 @@ else:
         st.session_state['solucion_status'] = estatus
 
         progress_bar.progress(value=100, text='Modelo ejecutado completamente')
+
+        st.write(estatus)

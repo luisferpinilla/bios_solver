@@ -67,6 +67,8 @@ class Problema():
 
         print('restolviendo el problema')
 
+        self.estatus = 'Trabajando'
+
         # Agregar función objetivosolver += fobjetivo
         self.solver += pu.lpSum(self.target)
 
@@ -89,10 +91,10 @@ class Problema():
                 strong=True)
             self.solver.solve(solver=engine)
 
+        self.estatus = pu.LpStatus[self.solver.status]
+
         if gen_lp_file:
             self.solver.writeLP(filename='model.lp')
-
-        self.estatus = pu.LpStatus[self.solver.status]
 
     def generar_reporte(self):
 

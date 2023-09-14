@@ -315,8 +315,8 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                               plantas=plantas,
                               safety_stock=safety_stock)
 
-    # _capacidad_camiones(restricciones=restricciones,
-    #                    variables=variables)
+    _capacidad_camiones(restricciones=restricciones,
+                        variables=variables)
 
     # _asignacion_unidades_almacenamiento(
     #    restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes)
