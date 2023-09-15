@@ -212,7 +212,7 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, plantas: lis
     restricciones['Safety stock en planta'] = rest_list
 
 
-def _capacidad_camiones(restricciones: list, variables: list):
+def _capacidad_camiones(restricciones: list, variables: list, periodos_en_firme=21):
 
     print('Restricciones de capacidad de carga de camiones')
 
@@ -226,16 +226,22 @@ def _capacidad_camiones(restricciones: list, variables: list):
         itd_name = xtd_name.replace('XTD', 'ITD')
         itd_var = variables['ITD'][itd_name]
 
-        rest_list.append(
-            (xtd_var == 34000*itd_var, f'capacidad carga directa {xtd_name}'))
+        periodo = int(itd_name.split('_')[7])
+
+        if periodo < periodos_en_firme:
+            rest_list.append(
+                (xtd_var == 34000*itd_var, f'capacidad carga directa {xtd_name}'))
 
     for xtr_name, xtr_var in variables['XTR'].items():
 
         itr_name = xtr_name.replace('XTR', 'ITR')
         itr_var = variables['ITR'][itr_name]
 
-        rest_list.append(
-            (xtr_var == 34000*itr_var, f'capacidad carga desde almacenamiento en {xtr_name}'))
+        periodo = int(itd_name.split('_')[7])
+
+        if periodo < periodos_en_firme:
+            rest_list.append(
+                (xtr_var == 34000*itr_var, f'capacidad carga desde almacenamiento en {xtr_name}'))
 
     restricciones['Capacidad carga de camiones'] = rest_list
 
