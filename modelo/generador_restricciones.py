@@ -237,7 +237,7 @@ def _capacidad_camiones(restricciones: list, variables: list, periodos_en_firme=
         itr_name = xtr_name.replace('XTR', 'ITR')
         itr_var = variables['ITR'][itr_name]
 
-        periodo = int(itd_name.split('_')[7])
+        periodo = int(itr_name.split('_')[7])
 
         if periodo < periodos_en_firme:
             rest_list.append(
