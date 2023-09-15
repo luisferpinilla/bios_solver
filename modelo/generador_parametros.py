@@ -188,10 +188,29 @@ def __capacidad_almacenamiento_planta(parametros: dict, conjuntos: dict, file: s
     inventario_planta_df = pd.read_excel(
         file, sheet_name='unidades_almacenamiento')
 
+    # Eliminar unidades con materiales que no están en la lista
+
+    inventario_planta_df = inventario_planta_df[inventario_planta_df['ingrediente_actual'].isin(
+        conjuntos['ingredientes'])].copy()
+
+    inventario_planta_df['Suma'] = inventario_planta_df[conjuntos['ingredientes']].apply(
+        sum, axis=1)
+
+    # Eliminar unidades de almacenamiento que no reportan capacidad para ningun ingrediente
+    inventario_planta_df = inventario_planta_df[inventario_planta_df['Suma'] > 0].copy(
+    )
+
+    # Eliminar columna de suma recién creada
+    inventario_planta_df.drop(columns=['Suma'], inplace=True)
+
     # Eliminar nulos en las columnas de ingredientes
+
     for ingrediente in conjuntos['ingredientes']:
         inventario_planta_df[ingrediente] = inventario_planta_df[ingrediente].fillna(
             0.0)
+
+        inventario_planta_df[ingrediente] = inventario_planta_df.apply(
+            lambda x: x['cantidad_actual'] if x['cantidad_actual'] > x[ingrediente] else x[ingrediente], axis=1)
 
     capacidad_df = inventario_planta_df.melt(id_vars=['empresa', 'planta'],
                                              value_vars=conjuntos['ingredientes'],
@@ -252,6 +271,20 @@ def __consumo_proyectado(parametros: dict, conjuntos: dict, file: str, usecols: 
 
     demanda_df.fillna(0.0, inplace=True)
 
+    mean_df = demanda_df.copy()
+
+    mean_df.set_index(['empresa', 'ingrediente', 'planta'],
+                      drop=True, inplace=True)
+
+    print(mean_df.columns)
+
+    mean_df['mean'] = mean_df.apply(np.mean, axis=1)
+
+    mean_df = mean_df.reset_index()
+
+    mean_dict = {
+        f"{mean_df.loc[r]['planta']}_{mean_df.loc[r]['ingrediente']}": mean_df.loc[r]['mean'] for r in mean_df.index}
+
     demanda_df = demanda_df.melt(
         id_vars=['empresa', 'ingrediente', 'planta'], var_name='fecha', value_name='consumo')
 
@@ -274,6 +307,8 @@ def __consumo_proyectado(parametros: dict, conjuntos: dict, file: str, usecols: 
 
     parametros['consumo_proyectado'] = demanda_dict
 
+    parametros['Consumo_promedio'] = mean_dict
+
 
 def __safety_stock_planta(parametros: dict, conjuntos: dict, file: str):
 
@@ -284,13 +319,17 @@ def __safety_stock_planta(parametros: dict, conjuntos: dict, file: str):
     ss_dict = {f"{ss_df.loc[r]['planta']}_{ss_df.loc[r]['ingrediente']}": ss_df.loc[r]
                ['dias_ss'] for r in ss_df.index}
 
+    mean_dict = parametros['Consumo_promedio']
+
     for planta in conjuntos['plantas']:
         p_empresa = planta.split('_')[0]
         p_planta = planta.split('_')[1]
         for ingrediente in conjuntos['ingredientes']:
             name_ss = f'{p_planta}_{ingrediente}'
-            if name_ss in ss_dict.keys():
-                param_dict[f'SS_{planta}_{ingrediente}'] = ss_dict[name_ss]
+            name_consumo = f'{p_planta}_{ingrediente}'
+            if name_ss in ss_dict.keys() and name_consumo in mean_dict.keys():
+                param_dict[f'SS_{planta}_{ingrediente}'] = ss_dict[name_ss] * \
+                    mean_dict[name_consumo]
             else:
                 param_dict[f'SS_{planta}_{ingrediente}'] = 0.0
 
