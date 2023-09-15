@@ -77,8 +77,7 @@ else:
         progress_bar.progress(
             value=70, text='Ejecutando el soluccionador del modelo')
 
-        problema.solve(engine='coin', tlimit=60 *
-                       tmax, gap=gap_solver/100)
+        problema.solve(tlimit=60 * tmax, gap=gap_solver/100)
 
         estatus = problema.status
 
