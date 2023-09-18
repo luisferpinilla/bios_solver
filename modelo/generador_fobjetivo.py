@@ -109,7 +109,7 @@ def _costo_safety_stock(variables: dict):
     costo_bss = 1000
     for name, var in variables['BSS'].items():
         periodo = int(name.split('_')[4])
-        fobj.append((costo_bss-periodo*100)*var)
+        fobj.append((costo_bss-periodo*10)*var)
         # fobj.append(costo_bss*var)
 
     return fobj
