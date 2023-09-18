@@ -37,6 +37,8 @@ def __llegadas_a_puerto(parametros: dict, conjuntos: dict, file: str):
 
     # $AR_{l}^{t}$ : Cantidad de material que va a llegar a la carga $l$ durante el día $t$, sabiendo que: $material \in I$ y $carga \in J$.
 
+    cap_descarge_per_dia = 5000000
+
     inventarios_puerto_df = pd.read_excel(
         file, sheet_name='tto_puerto', usecols='B:H')
 
@@ -55,13 +57,42 @@ def __llegadas_a_puerto(parametros: dict, conjuntos: dict, file: str):
 
     inventarios_puerto_df['periodo'] = inventarios_puerto_df['fecha_llegada'].map(
         fechas_dict)
+    
+    df_dict = {column:list() for column in inventarios_puerto_df.columns}
+    
+    for i in inventarios_puerto_df.index:
+        empresa = inventarios_puerto_df.loc[i]['empresa']
+        operador =inventarios_puerto_df.loc[i]['operador']
+        ingrediente = inventarios_puerto_df.loc[i]['ingrediente']
+        impmotonave = inventarios_puerto_df.loc[i]['imp-motonave']
+        cantidad_kg = inventarios_puerto_df.loc[i]['cantidad_kg']
+        fecha_llegada = inventarios_puerto_df.loc[i]['fecha_llegada']
+        valor_kg = inventarios_puerto_df.loc[i]['valor_kg']
+        key = inventarios_puerto_df.loc[i]['key']
+        periodo = int(inventarios_puerto_df.loc[i]['periodo'])
+        
+        while cantidad_kg > 0:
+            df_dict['empresa'].append(empresa)
+            df_dict['operador'].append(operador)
+            df_dict['ingrediente'].append(ingrediente)
+            df_dict['imp-motonave'].append(impmotonave)
+            cantidad_descarga = min(cap_descarge_per_dia, cantidad_kg)
+            df_dict['cantidad_kg'].append(cantidad_descarga)
+            cantidad_kg -= cantidad_descarga
+            df_dict['fecha_llegada'].append(fecha_llegada)
+            df_dict['valor_kg'].append(valor_kg) 
+            df_dict['key'].append(key)            
+            df_dict['periodo'].append(str(periodo))  
+            periodo = periodo+1
+            
+    df = pd.DataFrame(df_dict)
+    
 
     # Extraer los que caen fuera del horizonte de planeación
-    inventarios_puerto_df = inventarios_puerto_df[~inventarios_puerto_df['periodo'].isna(
-    )]
-
+    # df = df[~inventarios_puerto_df['periodo'].isna()]
+    
     parametros['llegadas_cargas'] = {
-        f"AR_{inventarios_puerto_df.iloc[i]['key']}_{inventarios_puerto_df.iloc[i]['periodo']}": inventarios_puerto_df.iloc[i]['cantidad_kg'] for i in range(inventarios_puerto_df.shape[0])}
+        f"AR_{df.iloc[i]['key']}_{df.iloc[i]['periodo']}": df.iloc[i]['cantidad_kg'] for i in range(df.shape[0])}
 
 
 def __costo_almacenamiento_puerto(parametros: dict, conjuntos: dict, file: str):
@@ -276,7 +307,6 @@ def __consumo_proyectado(parametros: dict, conjuntos: dict, file: str, usecols: 
     mean_df.set_index(['empresa', 'ingrediente', 'planta'],
                       drop=True, inplace=True)
 
-    print(mean_df.columns)
 
     mean_df['mean'] = mean_df.apply(np.mean, axis=1)
 
