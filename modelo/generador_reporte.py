@@ -68,7 +68,9 @@ def __procesar_listado_parametros(par_dict: dict, campos: list):
     return df
 
 
-def __obtener_map_fechas(conjuntos: dict, formato='%b-%d'):
+def __obtener_map_fechas(conjuntos: dict, formato='%Y-%m-%d'):
+    
+    # Formato mes dia '%b-%f'
 
     fechas = {x: conjuntos['fechas'][x].strftime(formato)
               for x in range(len(conjuntos['fechas']))}
