@@ -4,6 +4,13 @@ import numpy as np
 
 st.set_page_config(layout="wide")
 
+
+@st.cache_data
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv(sep=';', decimal=',').encode('utf-8')
+
+
 st.write('# Inventarios en Planta')
 
 st.button(label='callback')
@@ -43,3 +50,8 @@ else:
             df = df[df['planta'] == planta]
 
     st.write(df)
+
+    csv = convert_df(df)
+
+    st.download_button(label='descargar reporte',
+                       data=csv,    file_name='inventario_planta.csv',    mime='text/csv')

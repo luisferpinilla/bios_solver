@@ -4,14 +4,16 @@ import pulp as pu
 def _balance_masa_bif(restricciones: dict, variables: dict, cargas: list, llegadas: dict, plantas: list, periodos: list):
 
     print('generando restricciones de balance de masa en bifurcación')
-    # AR = XPL + XTD
+    # XPL + XTD = AR
 
     rest_list = list()
 
     for periodo in periodos:
         for carga in cargas:
 
-            # AR = XPL + sum(XTD)
+            left_expesion = list()
+
+            # XPL + sum(XTD) = AR
             ar_name = f'AR_{carga}_{periodo}'
 
             if ar_name in llegadas.keys():
@@ -21,8 +23,6 @@ def _balance_masa_bif(restricciones: dict, variables: dict, cargas: list, llegad
 
             xpl_name = f'XPL_{carga}_{periodo}'
             xpl_var = variables['XPL'][xpl_name]
-
-            left_expesion = list()
 
             left_expesion.append(xpl_var)
 

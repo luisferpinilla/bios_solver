@@ -3,7 +3,7 @@ from modelo.generador_parametros import generar_parametros
 from modelo.generador_variables import generar_variables
 from modelo.generador_restricciones import generar_restricciones
 from modelo.generador_fobjetivo import generar_fob
-from modelo.generador_reporte import generar_reporte
+from modelo.generador_reporte import generar_reporte, guardar_reporte
 import pulp as pu
 
 
@@ -101,6 +101,14 @@ class Problema():
         print('generando reporte')
 
         return generar_reporte(variables=self.variables, parametros=self.parametros, conjuntos=self.conjuntos)
+
+    def guardar_reporte(self):
+
+        print('guardando reporte')
+
+        reporte = self.generar_reporte()
+
+        guardar_reporte(df_dict=reporte)
 
     def imprimir_modelo_lp(self, file_output: str):
 

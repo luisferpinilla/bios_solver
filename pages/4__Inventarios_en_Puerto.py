@@ -6,6 +6,13 @@ st.set_page_config(layout="wide")
 
 st.write('# Inventarios en Puerto')
 
+
+@st.cache_data
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv(sep=';', decimal=',').encode('utf-8')
+
+
 if not 'problema' in st.session_state.keys():
     st.write('Go to Main page and load a file')
 else:
@@ -36,3 +43,8 @@ else:
                       'importacion', 'variable']).fillna(0.0)
 
     st.write(df)
+
+    csv = convert_df(df)
+
+    st.download_button(label='descargar reporte',
+                       data=csv,    file_name='inventario_puerto.csv',    mime='text/csv')

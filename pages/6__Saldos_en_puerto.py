@@ -1,6 +1,11 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
+
+
+@st.cache_data
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv(sep=';', decimal=',').encode('utf-8')
+
 
 st.set_page_config(layout="wide")
 
@@ -35,3 +40,8 @@ else:
         'Las siguientes cargas en puerto se espera que terminen con menos de 34 toneladas:')
 
     st.write(df)
+
+    csv2 = convert_df(df)
+
+    st.download_button(label='descargar reporte',
+                       data=csv2,    file_name='saldos_planta.csv',    mime='text/csv')
