@@ -1,6 +1,3 @@
-import pulp as pu
-
-
 def _costos_almacenamiento_puerto(variables: dict, costos_almacenamiento: dict, cargas: list, periodos: int):
 
     # $CC_{l}^{t}$ : Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $J$.
@@ -51,6 +48,8 @@ def _costo_operacion_portuaria(variables: dict, costos_despacho_directo: dict, c
         cd_value = costos_despacho_directo[cd_name]
 
         fobj.append(cd_value*var)
+
+    return fobj
 
 
 def _costo_transporte(variables: dict, costos_transporte_variables: dict, costos_transporte_fijos: dict, costos_intercompany: dict, cargas: list, plantas: list, periodos: list):
