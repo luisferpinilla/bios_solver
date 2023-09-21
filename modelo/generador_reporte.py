@@ -235,6 +235,20 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, co
 
     cumple_SS_df.rename(columns={'value': 'alarma safety stock'}, inplace=True)
 
+    # Leer y procesar transitos hacia plantas
+    
+    campos = ['tipo', 'empresa', 'planta', 'ingrediente', 'periodo']
+
+    par_dict = parametros['transitos_a_plantas']
+    
+    transitos_df = __procesar_listado_parametros(par_dict, campos)
+
+    transitos_df.drop(columns=['tipo'], inplace=True)
+    
+    transitos_df.rename(columns={'value': 'transitos'}, inplace=True)
+
+    transitos_df['periodo'] = transitos_df['periodo'].apply(lambda x: int(x))
+
     # Leer y procesar Despachos directos
     campos = ['tipo',
               'empresa_origen',
@@ -330,6 +344,11 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, co
                   right_on=['empresa', 'planta', 'ingrediente', 'periodo'],
                   how='left')
 
+    df = pd.merge(left=df, right=transitos_df,
+                  left_on=['empresa', 'planta', 'ingrediente', 'periodo'],
+                  right_on=['empresa', 'planta', 'ingrediente', 'periodo'],
+                  how='left')
+    
     df = pd.merge(left=df, right=despacho_directo_df,
                   left_on=['empresa', 'planta', 'ingrediente', 'periodo'],
                   right_on=['empresa', 'planta', 'ingrediente', 'periodo'],
@@ -365,6 +384,7 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, co
     df_dict['Almacenamiento en Planta'] = df[['planta',
                                               'ingrediente',
                                               'fecha',
+                                              'transitos',
                                               'despacho directo',
                                               'despacho bodega puerto',
                                               'demanda',

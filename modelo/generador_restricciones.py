@@ -90,10 +90,10 @@ def _balance_masa_bodega_puerto(restricciones: list, variables: list, cargas: li
     restricciones['Balance_masa_bodega_puerto'] = rest_list
 
 
-def _balance_masa_planta(restricciones: list, variables: list, cargas: list, plantas: list, inventario_inicial: dict, ingredientes: list, periodos: list, consumo: list):
+def _balance_masa_planta(restricciones: list, variables: list, cargas: list, plantas: list, inventario_inicial: dict, transitos_a_planta:dict, ingredientes: list, periodos: list, consumo: list):
 
     print('generando restricciones de balance de masa en planta')
-    # XIU = XIUt-1 + SUM(XTR) + SUM(XTD) + XBK - DM
+    # XIU = XIUt-1 + TT + SUM(XTR) + SUM(XTD) + XBK - DM
 
     rest_list = list()
 
@@ -118,6 +118,11 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
                     ii_name = f'II_{planta}_{ingrediente}'
                     ii_value = inventario_inicial[ii_name]
                     rigth_expresion.append(ii_value)
+                    
+                # TT: transitos a plantas
+                tt_name = f'TT_{planta}_{ingrediente}_{periodo}'
+                tt_value = transitos_a_planta[tt_name]                
+                rigth_expresion.append(tt_value)                
 
                 # SUM(XTD)
                 # SUM(XTR)
@@ -288,6 +293,7 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
     ingredientes = conjuntos['ingredientes']
     inventario_inicial_cargas = parametros['inventario_inicial_cargas']
     llegadas = parametros['llegadas_cargas']
+    transitos = parametros['transitos_a_plantas']
     capacidad_plantas = parametros['capacidad_almacenamiento_planta']
     cargas = conjuntos['cargas']
     inventario_inicial_ua = parametros['inventario_inicial_ua']
@@ -328,7 +334,7 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
     #    restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes)
 
     _balance_masa_planta(restricciones=restricciones, variables=variables, cargas=cargas, plantas=plantas,
-                         inventario_inicial=inventario_inicial_ua, ingredientes=ingredientes, periodos=periodos, consumo=consumo_proyectado)
+                         inventario_inicial=inventario_inicial_ua, transitos_a_planta=transitos, ingredientes=ingredientes, periodos=periodos, consumo=consumo_proyectado)
 
     # _satisfaccion_demanda_plantas(restricciones=restricciones, variables=variables, plantas=plantas,
     #                              ingredientes=ingredientes, unidades=unidades, consumo_proyectado=consumo_proyectado, periodos=periodos)

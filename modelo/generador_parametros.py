@@ -293,6 +293,47 @@ def __inventario_planta(parametros: dict, conjuntos: dict, file: str):
     parametros['inventario_inicial_ua'] = ingredientes_dict
 
 
+def __transitos_a_plantas(parametros:dict, conjuntos:dict, file:str):
+    
+    transitos_df = pd.read_excel(io=file, sheet_name='tto_plantas')
+    
+    fechas_dict = {conjuntos['fechas'][x]: x for x in range(
+        len(conjuntos['fechas']))}
+    
+    transitos_df['periodo'] = transitos_df['fecha_llegada'].map(fechas_dict)
+    
+    transitos_df = transitos_df.groupby(['empresa', 'planta', 'ingrediente', 'periodo'])[['cantidad']].sum()
+    
+    transitos_dict = dict()
+    
+    for periodo in conjuntos['periodos']:
+        for planta in conjuntos['plantas']:
+            for ingrediente in conjuntos['ingredientes']:
+                
+                campos = planta.split('_')
+                p_empresa = campos[0]
+                p_planta = campos[1]
+                
+                indextr = (p_empresa, p_planta, ingrediente, periodo)
+                
+                tt_name = f'TT_{p_empresa}_{p_planta}_{ingrediente}_{periodo}'
+                
+                if indextr in transitos_df.index:
+                    tt_value = transitos_df.loc[indextr]['cantidad']
+                else:
+                    tt_value = 0.0
+                
+                transitos_dict[tt_name] = tt_value
+                
+    parametros['transitos_a_plantas'] = transitos_dict
+                
+                
+    
+    
+    
+    
+
+
 def __consumo_proyectado(parametros: dict, conjuntos: dict, file: str, usecols: str):
 
     # $DM_{ki}^{t}$: Demanda del ingrediente $i$ en la planta $k$ durante el día $t$.
@@ -390,10 +431,6 @@ def __costo_backorder_planta(parametros: dict, file: str):
     pass
 
 
-def __transitos_programados_hacia_planta(parametros: dict, file: str):
-    # $TR_{im}^{t}$ : Cantidad en tránsito programada para llegar a la unidad de almacenamiento $m$ durante el día $t$,
-    pass
-
 
 def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: str) -> dict:
 
@@ -412,6 +449,8 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
 
     __capacidad_almacenamiento_planta(
         parametros=parametros, conjuntos=conjuntos, file=file)
+    
+    __transitos_a_plantas(parametros=parametros, conjuntos=conjuntos, file=file)
 
     __inventario_planta(parametros=parametros, conjuntos=conjuntos, file=file)
 
@@ -428,8 +467,6 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
     __costo_insatisfaccion_demanda(parametros=parametros, file=file)
 
     __costo_backorder_planta(parametros=parametros, file=file)
-
-    __transitos_programados_hacia_planta(parametros=parametros, file=file)
 
     __costo_operacion_puerto(parametros=parametros,
                              conjuntos=conjuntos, file=file)
