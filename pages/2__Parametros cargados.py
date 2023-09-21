@@ -30,116 +30,122 @@ def _procesar_parametros(parametros: dict, campos: list):
     return df
 
 
-st.set_page_config(layout="wide")
+if not 'problema' in st.session_state.keys():
 
-st.write('# Parámetros cargados')
+    st.write('Go to Main page and load a file')
 
-problema = st.session_state['problema']
+else:
 
-st.button(label='Callback')
+    st.set_page_config(layout="wide")
 
-fechas_list = problema.conjuntos['fechas']
+    st.write('# Parámetros cargados')
 
-fechas_map = {str(i): fechas_list[i] for i in range(len(fechas_list))}
+    problema = st.session_state['problema']
 
-with st.expander(label='Costos de almacenamiento'):
+    st.button(label='Callback')
 
-    parametros = problema.parametros['costos_almacenamiento']
+    fechas_list = problema.conjuntos['fechas']
 
-    campos = ['tipo', 'empresa', 'ingrediente',
-              'operador', 'importacion', 'periodo']
+    fechas_map = {str(i): fechas_list[i] for i in range(len(fechas_list))}
 
-    df = _procesar_parametros(parametros=parametros, campos=campos)
+    with st.expander(label='Costos de almacenamiento'):
 
-    df['periodo'] = df['periodo'].map(fechas_map)
+        parametros = problema.parametros['costos_almacenamiento']
 
-    df = df.pivot_table(index=['empresa', 'operador', 'importacion', 'ingrediente'],
-                        columns='periodo',
-                        values='value',
-                        aggfunc=sum).reset_index().fillna(0.0)
+        campos = ['tipo', 'empresa', 'ingrediente',
+                  'operador', 'importacion', 'periodo']
 
-    st.write(df)
+        df = _procesar_parametros(parametros=parametros, campos=campos)
 
-with st.expander(label='Costos de Transporte'):
+        df['periodo'] = df['periodo'].map(fechas_map)
 
-    parametros = problema.parametros['fletes_variables']
+        df = df.pivot_table(index=['empresa', 'operador', 'importacion', 'ingrediente'],
+                            columns='periodo',
+                            values='value',
+                            aggfunc=sum).reset_index().fillna(0.0)
 
-    campos = ['operador', 'empresa', 'planta', 'ingrediente']
+        st.write(df)
 
-    df = _procesar_parametros(parametros=parametros, campos=campos)
+    with st.expander(label='Costos de Transporte'):
 
-    df = df.pivot_table(index=['operador', 'ingrediente'],
-                        columns='planta',
-                        values='value', aggfunc=sum)
+        parametros = problema.parametros['fletes_variables']
 
-    st.write(df)
+        campos = ['operador', 'empresa', 'planta', 'ingrediente']
 
-with st.expander(label='Inventario inicial de cargas'):
+        df = _procesar_parametros(parametros=parametros, campos=campos)
 
-    parametros = problema.parametros['inventario_inicial_cargas']
+        df = df.pivot_table(index=['operador', 'ingrediente'],
+                            columns='planta',
+                            values='value', aggfunc=sum)
 
-    campos = ['tipo', 'empresa', 'operador', 'importacion', 'ingrediente']
+        st.write(df)
 
-    df = _procesar_parametros(parametros=parametros, campos=campos)
+    with st.expander(label='Inventario inicial de cargas'):
 
-    df = df[['empresa', 'operador', 'importacion', 'ingrediente', 'value']]
+        parametros = problema.parametros['inventario_inicial_cargas']
 
-    st.write(df)
+        campos = ['tipo', 'empresa', 'operador', 'importacion', 'ingrediente']
 
-with st.expander(label='Llegada de cargas a puerto'):
+        df = _procesar_parametros(parametros=parametros, campos=campos)
 
-    parametros = problema.parametros['llegadas_cargas']
+        df = df[['empresa', 'operador', 'importacion', 'ingrediente', 'value']]
 
-    campos = ['tipo', 'empresa', 'operador',
-              'importacion', 'ingrediente', 'periodo']
+        st.write(df)
 
-    df = _procesar_parametros(parametros=parametros, campos=campos)
+    with st.expander(label='Llegada de cargas a puerto'):
 
-    df = df[['empresa', 'operador', 'importacion',
-             'ingrediente', 'periodo', 'value']]
+        parametros = problema.parametros['llegadas_cargas']
 
-    st.write(df)
+        campos = ['tipo', 'empresa', 'operador',
+                  'importacion', 'ingrediente', 'periodo']
 
-with st.expander(label='Consumo Proyectado'):
+        df = _procesar_parametros(parametros=parametros, campos=campos)
 
-    parametros = problema.parametros['consumo_proyectado']
+        df = df[['empresa', 'operador', 'importacion',
+                'ingrediente', 'periodo', 'value']]
 
-    campos = ['tipo', 'empresa', 'planta',
-              'ingrediente', 'periodo']
+        st.write(df)
 
-    df = _procesar_parametros(parametros=parametros, campos=campos)
+    with st.expander(label='Consumo Proyectado'):
 
-    df['periodo'] = df['periodo'].map(fechas_map)
+        parametros = problema.parametros['consumo_proyectado']
 
-    df = df.pivot_table(index=['empresa', 'planta', 'ingrediente'],
-                        columns='periodo', values='value').reset_index()
+        campos = ['tipo', 'empresa', 'planta',
+                  'ingrediente', 'periodo']
 
-    st.write(df)
+        df = _procesar_parametros(parametros=parametros, campos=campos)
 
-with st.expander(label='Capacidad de almacenamiento plantas'):
+        df['periodo'] = df['periodo'].map(fechas_map)
 
-    parametros = problema.parametros['capacidad_almacenamiento_planta']
+        df = df.pivot_table(index=['empresa', 'planta', 'ingrediente'],
+                            columns='periodo', values='value').reset_index()
 
-    campos = ['tipo', 'empresa', 'planta', 'ingrediente']
+        st.write(df)
 
-    df = _procesar_parametros(parametros=parametros, campos=campos)
+    with st.expander(label='Capacidad de almacenamiento plantas'):
 
-    df = df.pivot_table(index=['empresa', 'planta'],
-                        columns='ingrediente', values='value').reset_index()
+        parametros = problema.parametros['capacidad_almacenamiento_planta']
 
-    st.write(df)
+        campos = ['tipo', 'empresa', 'planta', 'ingrediente']
 
-with st.expander(label='Safety stock'):
+        df = _procesar_parametros(parametros=parametros, campos=campos)
 
-    parametros = problema.parametros['safety_stock']
+        df = df.pivot_table(index=['empresa', 'planta'],
+                            columns='ingrediente', values='value').reset_index()
 
-    campos = ['tipo', 'empresa', 'planta', 'ingrediente']
+        st.write(df)
 
-    df = _procesar_parametros(parametros=parametros, campos=campos)
+    with st.expander(label='Safety stock'):
 
-    df['value'] = df['value'].apply(lambda x: round(x, 0))
+        parametros = problema.parametros['safety_stock']
 
-    df = df.pivot_table(values='value',
-                        index=['ingrediente'], columns=['planta'])
+        campos = ['tipo', 'empresa', 'planta', 'ingrediente']
 
-    st.write(df)
+        df = _procesar_parametros(parametros=parametros, campos=campos)
+
+        df['value'] = df['value'].apply(lambda x: round(x, 0))
+
+        df = df.pivot_table(values='value',
+                            index=['ingrediente'], columns=['planta'])
+
+        st.write(df)
