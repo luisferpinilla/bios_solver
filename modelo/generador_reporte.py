@@ -179,7 +179,7 @@ def _procesar_variables_alacenamiento_puerto(df_dict: dict, variables: dict, con
 
     df = pd.concat([xpl_df, xip_df, xtr_df])
 
-    df = df[df['value'] > 0]
+    # df = df[df['value'] > 0]
 
     df['value'] = df['value'].apply(lambda x: round(x, 0))
 
@@ -633,7 +633,6 @@ def _procesar_costos_transporte(df_dict: dict, variables: dict, parametros: dict
     
     df_dict['costos_transporte'] = df
     
-        
     
 
 
@@ -666,5 +665,6 @@ def guardar_reporte(df_dict: dict):
 
     with pd.ExcelWriter(path='reporte.xlsx') as writer:
         for name, dataframe in df_dict.items():
+            
 
-            dataframe.to_excel(writer, sheet_name=name, index=False)
+            dataframe.to_excel(writer, sheet_name=name, index=True)

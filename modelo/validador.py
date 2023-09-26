@@ -204,6 +204,35 @@ class Validador():
         else:
             self.validaciones['Safety Stock por plantas'] = "OK, las plantas se encontraron en la lista de plantas"
 
+    def _validar_no_exceder_capacidad_almacenamiento(self):
+
+        df = pd.read_excel(self.file, sheet_name='unidades_almacenamiento')
+
+        ingredientes = [x for x in df['ingrediente_actual'].unique() if x in df.columns]
+        
+        count = 0
+        
+        unidades = list()
+        
+        for ingrediente in ingredientes:
+            
+            temp = df[df['ingrediente_actual']==ingrediente]
+            
+            temp = temp[temp['cantidad_actual']>temp[ingrediente]]
+            
+            for i in temp.index:
+                unidades.append(f"unidad {temp.loc[i]['unidad_almacenamiento']} en {temp.loc[i]['planta']}")
+            
+            count += temp.shape[0]
+            
+        if len(unidades)>0:
+            self.cantidad_errores +=1
+            self.validaciones['Capacidad en Unidades de Almacenamiento'] = f"Error, las siguientes unidades {unidades} tienen valores de capacidad sobre la cantidad de inventario"
+        else:
+            self.validaciones['Capacidad en Unidades de Almacenamiento'] = "OK, las capacidades estan sobre las cantidades de inventario"
+        
+        
+
     def ejecutar_validaciones(self):
 
         self._validar_nombres_columnas()
@@ -221,3 +250,5 @@ class Validador():
         self._validar_demanda()
 
         self._validar_safety_stock()
+
+        self._validar_no_exceder_capacidad_almacenamiento()

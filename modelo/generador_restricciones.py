@@ -90,7 +90,7 @@ def _balance_masa_bodega_puerto(restricciones: list, variables: list, cargas: li
     restricciones['Balance_masa_bodega_puerto'] = rest_list
 
 
-def _balance_masa_planta(restricciones: list, variables: list, cargas: list, plantas: list, inventario_inicial: dict, transitos_a_planta:dict, ingredientes: list, periodos: list, consumo: list):
+def _balance_masa_planta(restricciones: list, variables: list, cargas: list, plantas: list, inventario_inicial: dict, transitos_a_planta: dict, ingredientes: list, periodos: list, consumo: list):
 
     print('generando restricciones de balance de masa en planta')
     # XIU = XIUt-1 + TT + SUM(XTR) + SUM(XTD) + XBK - DM
@@ -118,11 +118,11 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
                     ii_name = f'II_{planta}_{ingrediente}'
                     ii_value = inventario_inicial[ii_name]
                     rigth_expresion.append(ii_value)
-                    
+
                 # TT: transitos a plantas
                 tt_name = f'TT_{planta}_{ingrediente}_{periodo}'
-                tt_value = transitos_a_planta[tt_name]                
-                rigth_expresion.append(tt_value)                
+                tt_value = transitos_a_planta[tt_name]
+                # rigth_expresion.append(tt_value)
 
                 # SUM(XTD)
                 # SUM(XTR)
@@ -217,7 +217,7 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, plantas: lis
     restricciones['Safety stock en planta'] = rest_list
 
 
-def _capacidad_camiones(restricciones: list, variables: list, periodos_en_firme=21):
+def _capacidad_camiones(restricciones: list, variables: list, periodos_en_firme=14, gap=0.0):
 
     print('Restricciones de capacidad de carga de camiones')
 
@@ -234,8 +234,11 @@ def _capacidad_camiones(restricciones: list, variables: list, periodos_en_firme=
         periodo = int(itd_name.split('_')[7])
 
         if periodo < periodos_en_firme:
-            rest_list.append(
-                (xtd_var == 34000*itd_var, f'capacidad carga directa {xtd_name}'))
+            if gap ==0.0:
+                rest_list.append((xtd_var == 34000*itd_var, f'capacidad carga directa {xtd_name}'))
+            else:
+                rest_list.append((xtd_var <= (34000*(1+gap))*itd_var, f'capacidad carga directa lq gap {xtd_name}'))
+                rest_list.append((xtd_var >= (34000*(1-gap))*itd_var, f'capacidad carga directa ge gap {xtd_name}'))
 
     for xtr_name, xtr_var in variables['XTR'].items():
 
@@ -245,8 +248,11 @@ def _capacidad_camiones(restricciones: list, variables: list, periodos_en_firme=
         periodo = int(itr_name.split('_')[7])
 
         if periodo < periodos_en_firme:
-            rest_list.append(
-                (xtr_var == 34000*itr_var, f'capacidad carga desde almacenamiento en {xtr_name}'))
+            if gap == 0.0:
+                rest_list.append((xtr_var == 34000*itr_var, f'capacidad carga desde almacenamiento en {xtr_name}'))
+            else:
+                rest_list.append((xtr_var <= (34000*(1+gap))*itr_var, f'capacidad carga desde almacenamiento le gap en {xtr_name}'))
+                rest_list.append((xtr_var >= (34000*(1-gap))*itr_var, f'capacidad carga desde almacenamiento ge gap en {xtr_name}'))                
 
     restricciones['Capacidad carga de camiones'] = rest_list
 
@@ -276,16 +282,16 @@ def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coefi
                         ci_facc = 1/(ci_value)
                         left_expresion.append(ci_facc*xiu_var)
 
-                        rest.append(
-                            (xiu_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
+                        rest.append((xiu_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
 
-            # rest.append((pu.lpSum(left_expresion) <= 1.0,
-            #              f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
+            # Esta restriccion esta generando problemas
+            #rest.append((pu.lpSum(left_expresion) <= 0.95,
+            #             f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
 
     restricciones['Capacidad plantas'] = rest
 
 
-def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict, variables: dict):
+def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict, variables: dict, use_rest_cap_planta=True):
 
     periodos = conjuntos['periodos']
     plantas = conjuntos['plantas']
@@ -313,12 +319,13 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                                 inventario_inicial=inventario_inicial_cargas,
                                 periodos=periodos)
 
-    _capacidad_almacenamiento_planta(restricciones=restricciones,
-                                     variables=variables,
-                                     coeficientes_capacidad=capacidad_plantas,
-                                     plantas=plantas,
-                                     ingredientes=ingredientes,
-                                     periodos=periodos)
+    if use_rest_cap_planta:
+        _capacidad_almacenamiento_planta(restricciones=restricciones,
+                                         variables=variables,
+                                         coeficientes_capacidad=capacidad_plantas,
+                                         plantas=plantas,
+                                         ingredientes=ingredientes,
+                                         periodos=periodos)
 
     _mantenimiento_ss_plantas(restricciones=restricciones,
                               variables=variables,
@@ -328,7 +335,7 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                               safety_stock=safety_stock)
 
     _capacidad_camiones(restricciones=restricciones,
-                        variables=variables)
+                        variables=variables, gap=0.02)
 
     # _asignacion_unidades_almacenamiento(
     #    restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes)

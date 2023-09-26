@@ -29,7 +29,9 @@ else:
 
     df = solucion['Despacho directo'].reset_index()
 
+
     with col1:
+
 
         operadores_list = ['Todos'] + list(df['operador'].unique())
 

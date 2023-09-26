@@ -3,7 +3,7 @@ from problema import Problema
 
 conjuntos = dict()
 
-prametros = dict()
+parametros = dict()
 
 
 def _generar_conjuntos(file: str, planta: str):
@@ -15,28 +15,41 @@ def _generar_conjuntos(file: str, planta: str):
         df['unidad_almacenamiento'].unique())
 
 
-def _generar_parametros(file: str, planta: str):
+def _generar_parametros(file: str, planta: str, parametros:dict):
 
     # Cantidaes de inventario
 
     inventario_inicial_dict = dict()
+    capacidad_ua_dict = dict()
+
     inventario_df = pd.read_excel(file, sheet_name='unidades_almacenamiento')
     inventario_df = inventario_df[inventario_df['planta'] == planta].copy()
     inventario_df.set_index('unidad_almacenamiento', drop=True, inplace=True)
 
     for ua in conjuntos['unidades_almacenamiento']:
         for ingrediente in conjuntos['ingredientes']:
-            par_name = f'II_{ua}_{ingrediente}'
+
+            inv_par_name = f'II_{ua}_{ingrediente}'
+            
             if inventario_df.loc[ua]['ingrediente_actual'] == ingrediente:
-                par_value = inventario_df.loc[ua]['cantidad_actual']
+                inv_par_value = inventario_df.loc[ua]['cantidad_actual']
             else:
-                par_value = 0.0
-            inventario_inicial_dict[par_name] = par_value
+                inv_par_value = 0.0
+            inventario_inicial_dict[inv_par_name] = inv_par_value
+
+            # Capacidades por UA
+            cap_par_name = f'CP_{ua}_{ingrediente}'
+            cap_par_value = inventario_df.loc[ua][ingrediente]
+            capacidad_ua_dict[cap_par_name] = cap_par_value
+
 
     parametros['inventario_inicial'] = inventario_inicial_dict
 
-    # Capacidades por UA
+    parametros['capacidad_unidades'] = capacidad_ua_dict
+
     # Demanda a consumir
+
+    
     # Llegadas de material
     pass
 
@@ -76,7 +89,7 @@ def main(problema: Problema, planta: str):
     conjuntos['periodos'] = problema.conjuntos['periodos']
     conjuntos['ingredientes'] = problema.conjuntos['ingredientes']
 
-    _generar_conjuntos(file=file, planta=planta)
+    _generar_conjuntos(file=file, planta=planta, para)
 
     _generar_parametros(problema=problema, planta=planta)
 

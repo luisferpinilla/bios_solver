@@ -48,15 +48,19 @@ def __llegadas_a_puerto(parametros: dict, conjuntos: dict, file: str):
         inventarios_puerto_df[campo] = inventarios_puerto_df[campo].apply(
             __remover_underscores)
 
-    # regenerar key
-    inventarios_puerto_df['key'] = inventarios_puerto_df.apply(
-        lambda field: '_'.join([field[x] for x in campos]), axis=1)
-
+    
     fechas_dict = {conjuntos['fechas'][x]: str(
         x) for x in conjuntos['periodos']}
 
     inventarios_puerto_df['periodo'] = inventarios_puerto_df['fecha_llegada'].map(
         fechas_dict)
+    
+    inventarios_puerto_df = inventarios_puerto_df[~inventarios_puerto_df['periodo'].isna()]
+    
+    # regenerar key
+    inventarios_puerto_df['key'] = inventarios_puerto_df.apply(
+        lambda field: '_'.join([field[x] for x in campos]), axis=1)
+    
     
     df_dict = {column:list() for column in inventarios_puerto_df.columns}
     
@@ -87,9 +91,6 @@ def __llegadas_a_puerto(parametros: dict, conjuntos: dict, file: str):
             
     df = pd.DataFrame(df_dict)
     
-
-    # Extraer los que caen fuera del horizonte de planeación
-    # df = df[~inventarios_puerto_df['periodo'].isna()]
     
     parametros['llegadas_cargas'] = {
         f"AR_{df.iloc[i]['key']}_{df.iloc[i]['periodo']}": df.iloc[i]['cantidad_kg'] for i in range(df.shape[0])}
@@ -223,25 +224,21 @@ def __capacidad_almacenamiento_planta(parametros: dict, conjuntos: dict, file: s
 
     inventario_planta_df = inventario_planta_df[inventario_planta_df['ingrediente_actual'].isin(
         conjuntos['ingredientes'])].copy()
-
+    
+    # Eliminar nulos del reporte
+    
+    for ingrediente in conjuntos['ingredientes']:
+        inventario_planta_df[ingrediente] = inventario_planta_df[ingrediente].fillna(0.0)
+    
     inventario_planta_df['Suma'] = inventario_planta_df[conjuntos['ingredientes']].apply(
         sum, axis=1)
 
     # Eliminar unidades de almacenamiento que no reportan capacidad para ningun ingrediente
-    inventario_planta_df = inventario_planta_df[inventario_planta_df['Suma'] > 0].copy(
-    )
+    inventario_planta_df = inventario_planta_df[inventario_planta_df['Suma'] > 0].copy()
 
     # Eliminar columna de suma recién creada
     inventario_planta_df.drop(columns=['Suma'], inplace=True)
 
-    # Eliminar nulos en las columnas de ingredientes
-
-    for ingrediente in conjuntos['ingredientes']:
-        inventario_planta_df[ingrediente] = inventario_planta_df[ingrediente].fillna(
-            0.0)
-
-        inventario_planta_df[ingrediente] = inventario_planta_df.apply(
-            lambda x: x['cantidad_actual'] if x['cantidad_actual'] > x[ingrediente] else x[ingrediente], axis=1)
 
     capacidad_df = inventario_planta_df.melt(id_vars=['empresa', 'planta'],
                                              value_vars=conjuntos['ingredientes'],
@@ -326,11 +323,6 @@ def __transitos_a_plantas(parametros:dict, conjuntos:dict, file:str):
                 transitos_dict[tt_name] = tt_value
                 
     parametros['transitos_a_plantas'] = transitos_dict
-                
-                
-    
-    
-    
     
 
 

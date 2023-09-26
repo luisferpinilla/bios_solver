@@ -16,113 +16,120 @@ st.button(label='callback')
 if not 'problema' in st.session_state.keys():
     st.write('Go to Main page and load a file')
 else:
-    problema = st.session_state['problema']
 
-    solucion = problema.generar_reporte()
+    with st.spinner(text='Construyendo reporte'):
 
-    problema.guardar_reporte()
+        problema = st.session_state['problema']
 
-    ca_df = solucion['costo_almacenamiento']
+        solucion = problema.generar_reporte()
 
-    ca_df['costo_almacenamiento'] = ca_df['costo_almacenamiento'].apply(
-        lambda x: round(x, 0))
-    ca_df['kilos'] = ca_df['kilos'].apply(
-        lambda x: round(x, 0))
+        problema.guardar_reporte()
 
-    ca_df['costo_kilo'] = ca_df['costo_kilo'].apply(
-        lambda x: round(x, 2))
+        ca_df = solucion['costo_almacenamiento']
 
-    coa_df = solucion['Costo_operacion_almacenamiento']
+        ca_df['costo_almacenamiento'] = ca_df['costo_almacenamiento'].apply(
+            lambda x: round(x, 0))
+        ca_df['kilos'] = ca_df['kilos'].apply(
+            lambda x: round(x, 0))
 
-    coa_df['cantidad_kg'] = coa_df['cantidad_kg'].apply(lambda x: round(x, 0))
+        ca_df['costo_kilo'] = ca_df['costo_kilo'].apply(
+            lambda x: round(x, 2))
 
-    coa_df['costo_op_almacenamiento'] = coa_df['costo_op_almacenamiento'].apply(
-        lambda x: round(x, 2))
+        coa_df = solucion['Costo_operacion_almacenamiento']
 
-    coa_df['CostoTotal'] = coa_df['CostoTotal'].apply(lambda x: round(x, 0))
+        coa_df['cantidad_kg'] = coa_df['cantidad_kg'].apply(
+            lambda x: round(x, 0))
 
-    coa_df = coa_df[coa_df['CostoTotal'] > 0]
+        coa_df['costo_op_almacenamiento'] = coa_df['costo_op_almacenamiento'].apply(
+            lambda x: round(x, 2))
 
-    cod_df = solucion['Costo_operacion_despacho']
+        coa_df['CostoTotal'] = coa_df['CostoTotal'].apply(
+            lambda x: round(x, 0))
 
-    cod_df['CostoTotal'] = cod_df['CostoTotal'].apply(lambda x: round(x, 0))
+        coa_df = coa_df[coa_df['CostoTotal'] > 0]
 
-    cod_df = cod_df[cod_df['CostoTotal'] > 0]
+        cod_df = solucion['Costo_operacion_despacho']
 
-    cftd_df = solucion['costos_transporte']
+        cod_df['CostoTotal'] = cod_df['CostoTotal'].apply(
+            lambda x: round(x, 0))
 
-    cftd_df['CostoTotal'] = cftd_df['CostoTotal'].apply(lambda x: round(x, 0))
+        cod_df = cod_df[cod_df['CostoTotal'] > 0]
 
-    cftd_df = cftd_df[cftd_df['CostoTotal'] > 0]
+        cftd_df = solucion['costos_transporte']
 
-    costo_almacenamiento_col, costo_op_alacenamiento_col, costo_op_despacho_col, costo_flete_col = st.columns(
-        4)
+        cftd_df['CostoTotal'] = cftd_df['CostoTotal'].apply(
+            lambda x: round(x, 0))
 
-    with costo_almacenamiento_col:
+        cftd_df = cftd_df[cftd_df['CostoTotal'] > 0]
 
-        costo_almacenamiento = ca_df['costo_almacenamiento'].sum()
+        costo_almacenamiento_col, costo_op_alacenamiento_col, costo_op_despacho_col, costo_flete_col = st.columns(
+            4)
 
-        st.metric(label='Costos de Almacenamiento',
-                  value=f"{round(costo_almacenamiento/1000000,0)} MM")
+        with costo_almacenamiento_col:
 
-    with costo_op_alacenamiento_col:
+            costo_almacenamiento = ca_df['costo_almacenamiento'].sum()
 
-        costo_op_alacenamiento = coa_df['CostoTotal'].sum()
+            st.metric(label='Costos de Almacenamiento',
+                      value=f"{round(costo_almacenamiento/1000000,0)} MM")
 
-        st.metric(label="Descarge a bodega",
-                  value=f"{round(costo_op_alacenamiento/1000000, 2)} MM")
+        with costo_op_alacenamiento_col:
 
-    with costo_op_despacho_col:
+            costo_op_alacenamiento = coa_df['CostoTotal'].sum()
 
-        costo_op_despacho = cod_df['CostoTotal'].sum()
+            st.metric(label="Descarge a bodega",
+                      value=f"{round(costo_op_alacenamiento/1000000, 2)} MM")
 
-        st.metric(label="Operación despacho",
-                  value=f"{round(costo_op_despacho/1000000, 2)} MM")
+        with costo_op_despacho_col:
 
-    with costo_flete_col:
+            costo_op_despacho = cod_df['CostoTotal'].sum()
 
-        costo_transporte = cftd_df['CostoTotal'].sum()
+            st.metric(label="Operación despacho",
+                      value=f"{round(costo_op_despacho/1000000, 2)} MM")
 
-        st.metric(label="Costos de transporte",
-                  value=f"{round(costo_transporte/1000000, 2)} MM")
+        with costo_flete_col:
 
-        costo_total = costo_almacenamiento + costo_op_alacenamiento + \
-            costo_op_despacho + costo_transporte
+            costo_transporte = cftd_df['CostoTotal'].sum()
 
-        st.metric(label="Costos Total",
-                  value=f"{round(costo_total/1000000, 2)} MM")
+            st.metric(label="Costos de transporte",
+                      value=f"{round(costo_transporte/1000000, 2)} MM")
 
-    with st.expander(label='Costos de almacenamiento'):
-        st.write(ca_df)
+            costo_total = costo_almacenamiento + costo_op_alacenamiento + \
+                costo_op_despacho + costo_transporte
 
-        csv = convert_df(ca_df)
+            st.metric(label="Costos Total",
+                      value=f"{round(costo_total/1000000, 2)} MM")
 
-        st.download_button(label='descargar reporte',
-                           data=csv,    file_name='data.csv',    mime='text/csv')
+        with st.expander(label='Costos de almacenamiento'):
+            st.write(ca_df)
 
-    with st.expander(label='Descarge a bodega'):
+            csv = convert_df(ca_df)
 
-        st.write(coa_df)
+            st.download_button(label='descargar reporte',
+                               data=csv,    file_name='data.csv',    mime='text/csv')
 
-        csv2 = convert_df(coa_df)
+        with st.expander(label='Descarge a bodega'):
 
-        st.download_button(label='descargar reporte',
-                           data=csv2,    file_name='data.csv',    mime='text/csv')
+            st.write(coa_df)
 
-    with st.expander(label='Operación despacho'):
+            csv2 = convert_df(coa_df)
 
-        st.write(cod_df)
+            st.download_button(label='descargar reporte',
+                               data=csv2,    file_name='data.csv',    mime='text/csv')
 
-        csv3 = convert_df(cod_df)
+        with st.expander(label='Operación despacho'):
 
-        st.download_button(label='descargar reporte',
-                           data=csv3,    file_name='data.csv',    mime='text/csv')
+            st.write(cod_df)
 
-    with st.expander(label='Costos de transporte'):
+            csv3 = convert_df(cod_df)
 
-        st.write(cftd_df)
+            st.download_button(label='descargar reporte',
+                               data=csv3,    file_name='data.csv',    mime='text/csv')
 
-        csv3 = convert_df(cftd_df)
+        with st.expander(label='Costos de transporte'):
 
-        st.download_button(label='descargar reporte',
-                           data=csv3,    file_name='data.csv',    mime='text/csv')
+            st.write(cftd_df)
+
+            csv3 = convert_df(cftd_df)
+
+            st.download_button(label='descargar reporte',
+                               data=csv3,    file_name='data.csv',    mime='text/csv')
