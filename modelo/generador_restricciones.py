@@ -137,13 +137,26 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
 
                     if ingrediente == c_ingrediente:
 
-                        xtd_name = f'XTD_{carga}_{planta}_{periodo}'
-                        xtd_var = variables['XTD'][xtd_name]
-                        rigth_expresion.append(xtd_var)
+                        if periodo >= 2:
 
-                        xtr_name = f'XTR_{carga}_{planta}_{periodo}'
-                        xtr_var = variables['XTR'][xtr_name]
-                        rigth_expresion.append(xtr_var)
+                            xtd_name = f'XTD_{carga}_{planta}_{periodo-2}'
+                            xtd_var = variables['XTD'][xtd_name]
+                            rigth_expresion.append(xtd_var)
+
+                            xtr_name = f'XTR_{carga}_{planta}_{periodo-2}'
+                            xtr_var = variables['XTR'][xtr_name]
+                            rigth_expresion.append(xtr_var)
+
+                        if periodo in periodos[-2:]:
+                            xtd_name = f'XTD_{carga}_{planta}_{periodo}'
+                            xtd_var = variables['XTD'][xtd_name]
+                            rest_list.append(
+                                (xtd_var == 0.0, f'no escape en {xtd_name}'))
+
+                            xtr_name = f'XTR_{carga}_{planta}_{periodo}'
+                            xtr_var = variables['XTR'][xtr_name]
+                            rest_list.append(
+                                (xtd_var == 0.0, f'no escape en {xtr_name}'))
 
                 # XBK
                 xdm_name = f'XBK_{planta}_{ingrediente}_{periodo}'
@@ -234,11 +247,14 @@ def _capacidad_camiones(restricciones: list, variables: list, periodos_en_firme=
         periodo = int(itd_name.split('_')[7])
 
         if periodo < periodos_en_firme:
-            if gap ==0.0:
-                rest_list.append((xtd_var == 34000*itd_var, f'capacidad carga directa {xtd_name}'))
+            if gap == 0.0:
+                rest_list.append(
+                    (xtd_var == 34000*itd_var, f'capacidad carga directa {xtd_name}'))
             else:
-                rest_list.append((xtd_var <= (34000*(1+gap))*itd_var, f'capacidad carga directa lq gap {xtd_name}'))
-                rest_list.append((xtd_var >= (34000*(1-gap))*itd_var, f'capacidad carga directa ge gap {xtd_name}'))
+                rest_list.append((xtd_var <= (34000*(1+gap))*itd_var,
+                                 f'capacidad carga directa lq gap {xtd_name}'))
+                rest_list.append((xtd_var >= (34000*(1-gap))*itd_var,
+                                 f'capacidad carga directa ge gap {xtd_name}'))
 
     for xtr_name, xtr_var in variables['XTR'].items():
 
@@ -249,10 +265,13 @@ def _capacidad_camiones(restricciones: list, variables: list, periodos_en_firme=
 
         if periodo < periodos_en_firme:
             if gap == 0.0:
-                rest_list.append((xtr_var == 34000*itr_var, f'capacidad carga desde almacenamiento en {xtr_name}'))
+                rest_list.append(
+                    (xtr_var == 34000*itr_var, f'capacidad carga desde almacenamiento en {xtr_name}'))
             else:
-                rest_list.append((xtr_var <= (34000*(1+gap))*itr_var, f'capacidad carga desde almacenamiento le gap en {xtr_name}'))
-                rest_list.append((xtr_var >= (34000*(1-gap))*itr_var, f'capacidad carga desde almacenamiento ge gap en {xtr_name}'))                
+                rest_list.append((xtr_var <= (
+                    34000*(1+gap))*itr_var, f'capacidad carga desde almacenamiento le gap en {xtr_name}'))
+                rest_list.append((xtr_var >= (
+                    34000*(1-gap))*itr_var, f'capacidad carga desde almacenamiento ge gap en {xtr_name}'))
 
     restricciones['Capacidad carga de camiones'] = rest_list
 
@@ -282,10 +301,11 @@ def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coefi
                         ci_facc = 1/(ci_value)
                         left_expresion.append(ci_facc*xiu_var)
 
-                        rest.append((xiu_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
+                        rest.append(
+                            (xiu_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
 
             # Esta restriccion esta generando problemas
-            #rest.append((pu.lpSum(left_expresion) <= 0.95,
+            # rest.append((pu.lpSum(left_expresion) <= 0.95,
             #             f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
 
     restricciones['Capacidad plantas'] = rest
