@@ -14,7 +14,7 @@ col2, col3 = st.columns(2)
 
 with col2:
     tmax = st.slider(label='Tiempo máximo de trabajo en minutos',
-                     min_value=5, max_value=60, value=30)
+                     min_value=5, max_value=60, value=10)
 
 with col3:
     uploaded_file = st.file_uploader("Choose a file")
@@ -45,7 +45,6 @@ else:
     st.button(label='callback')
 
     if validador.cantidad_errores == 0:
-        
 
         problema = Problema(excel_file_path=file)
 
@@ -73,18 +72,17 @@ else:
         progress_bar.progress(
             value=70, text='Ejecutando el soluccionador del modelo')
 
-        problema.solve(engine='coin', tlimit=60 * tmax)
+        # problema.solve(engine='coin', tlimit=60 * tmax)
+        problema.solve()
 
-    
         if problema.estatus == 'Infeasible':
             st.error('El solucionador reporta Infactibilidad')
-            
-                    
+
         progress_bar.progress(value=90, text='Escribiendo modelo LP')
 
-        problema.imprimir_modelo_lp('model.lp')
-        
-        problema.guardar_reporte()
+        # problema.imprimir_modelo_lp('model.lp')
+
+        # problema.guardar_reporte()
 
         progress_bar.progress(
             value=96, text='Cargando parámetros del problema')
@@ -96,5 +94,5 @@ else:
         st.session_state['solucion_status'] = problema.estatus
 
         progress_bar.progress(value=100, text='Modelo ejecutado completamente')
-        
+
         st.write(problema.estatus)

@@ -16,6 +16,8 @@ def __remover_underscores(x: str) -> str:
 def _generar_periodos(problema: dict, file: str, usecols: str):
 
     # extraer los periodos de los títulos del archivo
+    
+    print('sets: periodos')
 
     df = pd.read_excel(
         io=file, sheet_name='consumo_proyectado', usecols=usecols)
@@ -33,6 +35,8 @@ def _generar_periodos(problema: dict, file: str, usecols: str):
 
 
 def _generar_empresas(file: str):
+    
+    print('sets: empresas')
 
     empresas_df = pd.read_excel(file, sheet_name='empresas')
 
@@ -43,6 +47,8 @@ def _generar_empresas(file: str):
 
 
 def _generar_ingredientes(file: str):
+    
+    print('sets: ingredientes')
 
     ingredientes_df = pd.read_excel(file, sheet_name='ingredientes')
 
@@ -53,21 +59,19 @@ def _generar_ingredientes(file: str):
 
 
 def _generar_operadores(file: str):
+    
+    print('sets: operadores logísticos')
 
     puertos_df = pd.read_excel(file, sheet_name='puertos')
 
-    campos = ['operador-puerto', 'puerto']
+    puertos_df['operador-puerto'] = puertos_df['operador-puerto'].apply(__remover_underscores)
 
-    for campo in campos:
-        puertos_df[campo] = puertos_df[campo].apply(__remover_underscores)
-
-    puertos_df['key'] = puertos_df.apply(
-        lambda field: '_'.join([field[x] for x in campos]), axis=1)
-
-    return puertos_df['key'].to_list()
+    return list(puertos_df['operador-puerto'].unique())
 
 
 def _generar_plantas(file: str):
+    
+    print('sets: plantas')
 
     plantas_df = pd.read_excel(file, sheet_name='plantas')
 
@@ -82,6 +86,8 @@ def _generar_plantas(file: str):
 
 
 def _generar_unidades_almacenamiento(file: str):
+    
+    print('sets: unidades de almacenamiento')
 
     unidades_df = pd.read_excel(
         file, sheet_name='unidades_almacenamiento')
@@ -92,6 +98,9 @@ def _generar_unidades_almacenamiento(file: str):
 
 
 def _generar_cargas_en_puerto(file=str):
+    
+    print('sets: cargas')
+    
 
     transitos_a_puerto_df = pd.read_excel(file, sheet_name='tto_puerto')
     inventarios_puerto_df = pd.read_excel(file, sheet_name='inventario_puerto')
@@ -125,8 +134,7 @@ def generar_conjuntos(problema: dict, file: str, usecols: str) -> dict:
     problema['empresas'] = _generar_empresas(file=file)
 
     # Calendario
-    periodos, fechas = _generar_periodos(
-        problema=problema, file=file, usecols=usecols)
+    periodos, fechas = _generar_periodos(problema=problema, file=file, usecols=usecols)
     problema['periodos'] = periodos
     problema['fechas'] = fechas
 
@@ -134,7 +142,7 @@ def generar_conjuntos(problema: dict, file: str, usecols: str) -> dict:
     problema['ingredientes'] = _generar_ingredientes(file=file)
 
     # Puertos
-    problema['puertos'] = _generar_operadores(file=file)
+    problema['operadores'] = _generar_operadores(file=file)
 
     # plantas
     problema['plantas'] = _generar_plantas(file=file)

@@ -236,15 +236,15 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, co
     cumple_SS_df.rename(columns={'value': 'alarma safety stock'}, inplace=True)
 
     # Leer y procesar transitos hacia plantas
-    
+
     campos = ['tipo', 'empresa', 'planta', 'ingrediente', 'periodo']
 
     par_dict = parametros['transitos_a_plantas']
-    
+
     transitos_df = __procesar_listado_parametros(par_dict, campos)
 
     transitos_df.drop(columns=['tipo'], inplace=True)
-    
+
     transitos_df.rename(columns={'value': 'transitos'}, inplace=True)
 
     transitos_df['periodo'] = transitos_df['periodo'].apply(lambda x: int(x))
@@ -259,7 +259,7 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, co
               'planta',
               'periodo']
 
-    variable_dict = variables['XTD']
+    variable_dict = variables['XAD']
 
     despacho_directo_df = __procesar_listado_variables(variable_dict, campos)
 
@@ -278,7 +278,7 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, co
 
     # Leer y procesar despachos desde bodega en puerto
 
-    variable_dict = variables['XTR']
+    variable_dict = variables['XAR']
 
     despacho_bodega_df = __procesar_listado_variables(variable_dict, campos)
 
@@ -348,7 +348,7 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, co
                   left_on=['empresa', 'planta', 'ingrediente', 'periodo'],
                   right_on=['empresa', 'planta', 'ingrediente', 'periodo'],
                   how='left')
-    
+
     df = pd.merge(left=df, right=despacho_directo_df,
                   left_on=['empresa', 'planta', 'ingrediente', 'periodo'],
                   right_on=['empresa', 'planta', 'ingrediente', 'periodo'],
@@ -452,8 +452,9 @@ def _procesar_costos_almacenamiento(df_dict: dict, variables: dict, parametros: 
         columns={'value': 'costo_kilo'}, inplace=True)
 
     costos_almacenamiento_df.drop(columns=['tipo'], inplace=True)
-    
-    costos_almacenamiento_df['periodo'] = costos_almacenamiento_df['periodo'].astype(int)
+
+    costos_almacenamiento_df['periodo'] = costos_almacenamiento_df['periodo'].astype(
+        int)
 
     campos_cruce = ['empresa', 'ingrediente',
                     'operador', 'importacion', 'periodo']
@@ -480,160 +481,166 @@ def _procesar_costos_portuarios(df_dict: dict, variables: dict, parametros: dict
 
     # operacion de almacenamiento en puerto CB
     campos = ['tipo', 'operador', 'ingrediente']
-    
+
     par_dict = parametros['costos_operacion_bodega']
-    
+
     costos_almacenamiento_df = __procesar_listado_parametros(par_dict, campos)
-    
-    costos_almacenamiento_df.rename(columns={'value':'costo_op_almacenamiento'}, inplace=True)
+
+    costos_almacenamiento_df.rename(
+        columns={'value': 'costo_op_almacenamiento'}, inplace=True)
 
     costos_almacenamiento_df.drop(columns=['tipo'], inplace=True)
-    
+
     # cantidades almacenamiento en puerto XPL
-    
+
     variable_dict = variables['XPL']
-    
-    campos = ['tipo', 'empresa', 'operador', 'importacion', 'ingrediente', 'periodo']
-    
+
+    campos = ['tipo', 'empresa', 'operador',
+              'importacion', 'ingrediente', 'periodo']
+
     almacenamiento_df = __procesar_listado_variables(variable_dict, campos)
-    
+
     almacenamiento_df.drop(columns=['tipo'], inplace=True)
-    
-    almacenamiento_df.rename(columns={'value':'cantidad_kg'}, inplace=True)
 
-    fechas = __obtener_map_fechas(conjuntos=conjuntos)    
+    almacenamiento_df.rename(columns={'value': 'cantidad_kg'}, inplace=True)
 
-    almacenamiento_df['fecha'] = almacenamiento_df['periodo'].map(fechas) 
-    
+    fechas = __obtener_map_fechas(conjuntos=conjuntos)
+
+    almacenamiento_df['fecha'] = almacenamiento_df['periodo'].map(fechas)
+
     # totalizar
-    
-    df = pd.merge(left=almacenamiento_df, 
+
+    df = pd.merge(left=almacenamiento_df,
                   right=costos_almacenamiento_df,
                   left_on=['operador', 'ingrediente'],
                   right_on=['operador', 'ingrediente'],
                   how='inner')
-    
+
     df['CostoTotal'] = df['costo_op_almacenamiento']*df['cantidad_kg']
-    
+
     df.drop(columns=['periodo'], inplace=True)
 
-    df_dict['Costo_operacion_almacenamiento']  = df  
-    
-    
+    df_dict['Costo_operacion_almacenamiento'] = df
+
     # Operacion de despacho directo CD
-    
+
     par_dict = parametros['costos_operacion_directo']
-    
-    campos= ['tipo', 'operador', 'ingrediente']
-    
+
+    campos = ['tipo', 'operador', 'ingrediente']
+
     costos_despacho_df = __procesar_listado_parametros(par_dict, campos)
-    
+
     costos_despacho_df.drop(columns=['tipo'], inplace=True)
-    
-    costos_despacho_df.rename(columns={'value':'costo_op_despacho'}, inplace=True)
-    
+
+    costos_despacho_df.rename(
+        columns={'value': 'costo_op_despacho'}, inplace=True)
+
     # cantidades despachadas directo XTR
-    
-    campos = ['tipo', 'empresa_origen', 'operador', 'importacion', 'ingrediente', 'empresa_destino', 'planta', 'periodo']
-    
+
+    campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
+              'ingrediente', 'empresa_destino', 'planta', 'periodo']
+
     variable_dict = variables['XTD']
-    
+
     despachos_df = __procesar_listado_variables(variable_dict, campos)
-    
+
     despachos_df.drop(columns=['tipo'], inplace=True)
-    
-    despachos_df.rename(columns={'value':'cantidad_kg'}, inplace=True)
-    
-    despachos_df['fecha'] = despachos_df['periodo'].map(fechas) 
-    
-    df = pd.merge(left=despachos_df, 
-                  right= costos_despacho_df,
+
+    despachos_df.rename(columns={'value': 'cantidad_kg'}, inplace=True)
+
+    despachos_df['fecha'] = despachos_df['periodo'].map(fechas)
+
+    df = pd.merge(left=despachos_df,
+                  right=costos_despacho_df,
                   left_on=['operador', 'ingrediente'],
                   right_on=['operador', 'ingrediente'],
                   how='inner')
-    
+
     df['CostoTotal'] = df['cantidad_kg']*df['costo_op_despacho']
-    
+
     df.drop(columns=['periodo'], inplace=True)
-    
+
     df_dict['Costo_operacion_despacho'] = df
 
-    
+
 def _procesar_costos_transporte(df_dict: dict, variables: dict, parametros: dict, conjuntos: dict):
-         
+
     # Despachos directos
-    campos = ['tipo', 'empresa_origen', 'operador', 'importacion', 'ingrediente', 'empresa_destino', 'planta', 'periodo']
-    
+    campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
+              'ingrediente', 'empresa_destino', 'planta', 'periodo']
+
     variable_dict = variables['XTD']
-    
+
     directo_df = __procesar_listado_variables(variable_dict, campos)
-    
+
     directo_df.drop(columns=['tipo'], inplace=True)
-    
-    directo_df.rename(columns={'value':'cantidad_kg'}, inplace=True)
-    
+
+    directo_df.rename(columns={'value': 'cantidad_kg'}, inplace=True)
+
     directo_df['tipo_despacho'] = 'Directo'
-    
+
     # Despachos desde bodega
-    
-    campos = ['tipo', 'empresa_origen', 'operador', 'importacion', 'ingrediente', 'empresa_destino', 'planta', 'periodo']
-    
+
+    campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
+              'ingrediente', 'empresa_destino', 'planta', 'periodo']
+
     variable_dict = variables['XTR']
-    
+
     bodega_df = __procesar_listado_variables(variable_dict, campos)
-    
+
     bodega_df.drop(columns=['tipo'], inplace=True)
-    
-    bodega_df.rename(columns={'value':'cantidad_kg'}, inplace=True)
-    
+
+    bodega_df.rename(columns={'value': 'cantidad_kg'}, inplace=True)
+
     bodega_df['tipo_despacho'] = 'Desde bodega'
-    
+
     df = pd.concat([directo_df, bodega_df])
-    
-    df.rename(columns={'value':'cantidad_kg'}, inplace=False)
-    
+
+    df.rename(columns={'value': 'cantidad_kg'}, inplace=False)
+
     # Fletes variables
-    
+
     campos = ['operador', 'empresa', 'planta', 'ingrediente']
-    
+
     par_dict = parametros['fletes_variables']
 
-    variables_df = __procesar_listado_parametros(par_dict, campos) 
-    
-    variables_df['operador'] = variables_df['operador'].apply(lambda x: x.replace('-',''))
-    
-    variables_df.rename(columns={'value':'costo_variable'}, inplace=True)
-    
+    variables_df = __procesar_listado_parametros(par_dict, campos)
+
+    variables_df['operador'] = variables_df['operador'].apply(
+        lambda x: x.replace('-', ''))
+
+    variables_df.rename(columns={'value': 'costo_variable'}, inplace=True)
+
     # Fletes fijos
-    
+
     campos = ['operador', 'empresa', 'planta', 'ingrediente']
-    
+
     par_dict = parametros['fletes_fijos']
 
-    fijos_df = __procesar_listado_parametros(par_dict, campos) 
-    
-    fijos_df['operador'] = fijos_df['operador'].apply(lambda x: x.replace('-',''))
-    
-    fijos_df.rename(columns={'value':'costo_fijos'}, inplace=True)
-    
-    costos_df = pd.merge(left=variables_df, 
+    fijos_df = __procesar_listado_parametros(par_dict, campos)
+
+    fijos_df['operador'] = fijos_df['operador'].apply(
+        lambda x: x.replace('-', ''))
+
+    fijos_df.rename(columns={'value': 'costo_fijos'}, inplace=True)
+
+    costos_df = pd.merge(left=variables_df,
                          right=fijos_df,
                          left_on=campos,
                          right_on=campos,
                          how='inner')
-    
-    
+
     df = pd.merge(left=df,
-            right=costos_df,
-            left_on=['operador', 'ingrediente', 'empresa_destino', 'planta'],
-            right_on=['operador', 'ingrediente', 'empresa', 'planta'],
-            how='left')
-    
-    df['CostoTotal'] = df['cantidad_kg']*df['costo_variable'] + df['costo_fijos']
-    
+                  right=costos_df,
+                  left_on=['operador', 'ingrediente',
+                           'empresa_destino', 'planta'],
+                  right_on=['operador', 'ingrediente', 'empresa', 'planta'],
+                  how='left')
+
+    df['CostoTotal'] = df['cantidad_kg'] * \
+        df['costo_variable'] + df['costo_fijos']
+
     df_dict['costos_transporte'] = df
-    
-    
 
 
 def generar_reporte(variables: dict, parametros: dict, conjuntos: dict):
@@ -655,7 +662,7 @@ def generar_reporte(variables: dict, parametros: dict, conjuntos: dict):
 
     _procesar_costos_portuarios(
         df_dict=df_dict, variables=variables, parametros=parametros, conjuntos=conjuntos)
-    
+
     _procesar_costos_transporte(df_dict, variables, parametros, conjuntos)
 
     return df_dict
@@ -665,6 +672,4 @@ def guardar_reporte(df_dict: dict):
 
     with pd.ExcelWriter(path='reporte.xlsx') as writer:
         for name, dataframe in df_dict.items():
-            
-
             dataframe.to_excel(writer, sheet_name=name, index=True)

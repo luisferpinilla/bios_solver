@@ -2,7 +2,7 @@ from modelo.problema import Problema
 
 if __name__ == '__main__':
 
-    file = './model_rev_20230831.xlsm'
+    file = '0_model_21sept-2_rev.xlsm'
 
     problema = Problema(excel_file_path=file)
 
@@ -11,11 +11,17 @@ if __name__ == '__main__':
     problema.generar_parameters()
 
     problema.generar_vars()
-
-    problema.gen_constrains()
-
+    
+    conjuntos = problema.conjuntos
+    parametros = problema.parametros
+    variables = problema.variables  
+    
     problema.generar_target()
 
-    problema.solve(gen_lp_file=True)
+    problema.gen_constrains()
+    
+    problema.solve()
+    
+    problema.imprimir_modelo_lp('model.lp')
 
     solucion = problema.generar_reporte()

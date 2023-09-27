@@ -5,6 +5,7 @@ def _despacho_directo(variables: dict, periodos: list,  cargas: list, plantas: l
 
     # $XTD_{lm}^{t}$ : Cantidad de carga $l$ en barco a transportar bajo despacho directo hacia la planta $k$ durante el día $t$
     variables['XTD'] = dict()
+    variables['XAD'] = dict()
 
     # $ITD_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar directamente hacia la panta $k$ durante el día $t$
     variables['ITD'] = dict()
@@ -16,6 +17,11 @@ def _despacho_directo(variables: dict, periodos: list,  cargas: list, plantas: l
                 xtd_var = pu.LpVariable(
                     name=xtd_name, lowBound=0.0, upBound=34000*max_trucks, cat=pu.LpContinuous)
                 variables['XTD'][xtd_name] = xtd_var
+
+                xad_name = f'XAD_{carga}_{planta}_{periodo}'
+                xad_var = pu.LpVariable(
+                    name=xad_name, lowBound=0.0, cat=pu.LpContinuous)
+                variables['XAD'][xad_name] = xad_var
 
                 itd_name = f'ITD_{carga}_{planta}_{periodo}'
                 itd_var = pu.LpVariable(
@@ -38,6 +44,7 @@ def _despacho_desde_puerto(variables: dict, cargas: list, plantas: list, periodo
 
     # $XTD_{lm}^{t}$ : Cantidad de carga $l$ en barco a transportar bajo despacho directo hacia la unidad $m$ durante el día $t$
     variables['XTR'] = dict()
+    variables['XAR'] = dict()
 
     # $ITD_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar directamente hacia la unidad $m$ durante el día $t$
     variables['ITR'] = dict()
@@ -45,10 +52,15 @@ def _despacho_desde_puerto(variables: dict, cargas: list, plantas: list, periodo
     for periodo in periodos:
         for carga in cargas:
             for planta in plantas:
-                xtd_name = f'XTR_{carga}_{planta}_{periodo}'
-                xtd_var = pu.LpVariable(
-                    name=xtd_name, lowBound=0.0, upBound=34000*max_trucks, cat=pu.LpContinuous)
-                variables['XTR'][xtd_name] = xtd_var
+                xtr_name = f'XTR_{carga}_{planta}_{periodo}'
+                xtr_var = pu.LpVariable(
+                    name=xtr_name, lowBound=0.0, upBound=34000*max_trucks, cat=pu.LpContinuous)
+                variables['XTR'][xtr_name] = xtr_var
+
+                xar_name = f'XAR_{carga}_{planta}_{periodo}'
+                xar_var = pu.LpVariable(
+                    name=xar_name, lowBound=0.0, upBound=34000*max_trucks, cat=pu.LpContinuous)
+                variables['XAR'][xar_name] = xar_var
 
                 itd_name = f'ITR_{carga}_{planta}_{periodo}'
                 itd_var = pu.LpVariable(

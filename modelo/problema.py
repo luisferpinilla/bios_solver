@@ -63,7 +63,7 @@ class Problema():
         generar_fob(fob=self.target, parametros=self.parametros,
                     conjuntos=self.conjuntos, variables=self.variables)
 
-    def solve(self, engine='coin', gap=0.0, tlimit=60, gen_lp_file=False):
+    def solve(self, engine='coin', gap=0.0, tlimit=300, gen_lp_file=False):
 
         print('restolviendo el problema')
 
@@ -84,14 +84,16 @@ class Problema():
                 engine = pu.GLPK_CMD(timeLimit=tlimit)
             else:
                 engine = pu.GLPK_CMD(timeLimit=tlimit, options=['--mipgap', str(gap), '--check'])
+            
             self.solver.solve(solver=engine)
+            
         else:
             if gap==0.0:
                 engine = pu.PULP_CBC_CMD(
                     timeLimit=tlimit)
-            engine = pu.PULP_CBC_CMD(
-                gapRel=gap,
-                timeLimit=tlimit)
+            else:
+                engine = pu.PULP_CBC_CMD(gapRel=gap,timeLimit=tlimit)
+            
             self.solver.solve(solver=engine)
             
 

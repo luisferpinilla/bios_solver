@@ -15,11 +15,8 @@ def _balance_masa_bif(restricciones: dict, variables: dict, cargas: list, llegad
 
             # XPL + sum(XTD) = AR
             ar_name = f'AR_{carga}_{periodo}'
+            ar_val = llegadas[ar_name]
 
-            if ar_name in llegadas.keys():
-                ar_val = llegadas[ar_name]
-            else:
-                ar_val = 0.0
 
             xpl_name = f'XPL_{carga}_{periodo}'
             xpl_var = variables['XPL'][xpl_name]
@@ -122,7 +119,7 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
                 # TT: transitos a plantas
                 tt_name = f'TT_{planta}_{ingrediente}_{periodo}'
                 tt_value = transitos_a_planta[tt_name]
-                # rigth_expresion.append(tt_value)
+                rigth_expresion.append(tt_value)
 
                 # SUM(XTD)
                 # SUM(XTR)
@@ -137,26 +134,13 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
 
                     if ingrediente == c_ingrediente:
 
-                        if periodo >= 2:
+                        xad_name = f'XAD_{carga}_{planta}_{periodo}'
+                        xad_var = variables['XAD'][xad_name]
+                        rigth_expresion.append(xad_var)
 
-                            xtd_name = f'XTD_{carga}_{planta}_{periodo-2}'
-                            xtd_var = variables['XTD'][xtd_name]
-                            rigth_expresion.append(xtd_var)
-
-                            xtr_name = f'XTR_{carga}_{planta}_{periodo-2}'
-                            xtr_var = variables['XTR'][xtr_name]
-                            rigth_expresion.append(xtr_var)
-
-                        if periodo in periodos[-2:]:
-                            xtd_name = f'XTD_{carga}_{planta}_{periodo}'
-                            xtd_var = variables['XTD'][xtd_name]
-                            rest_list.append(
-                                (xtd_var == 0.0, f'no escape en {xtd_name}'))
-
-                            xtr_name = f'XTR_{carga}_{planta}_{periodo}'
-                            xtr_var = variables['XTR'][xtr_name]
-                            rest_list.append(
-                                (xtd_var == 0.0, f'no escape en {xtr_name}'))
+                        xar_name = f'XAR_{carga}_{planta}_{periodo}'
+                        xar_var = variables['XAR'][xar_name]
+                        rigth_expresion.append(xar_var)
 
                 # XBK
                 xdm_name = f'XBK_{planta}_{ingrediente}_{periodo}'
@@ -176,20 +160,70 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
     restricciones['Balance_masa_unidades'] = rest_list
 
 
-def select_ua_by_period_planta(planta: str, period: int, unidades: list):
-    list_to_return = list()
+def _tiempo_transitos(restricciones: list, variables: list, cargas: list, plantas: list, periodos: list):
+    # Cargas => ['empresa', 'operador',  'imp-motonave', 'ingrediente']
+    # Plantas => x['empresa', 'planta']
+    # variables de despacho directo
 
-    for ua in unidades:
-        campos = ua.split('_')
-        ua_empresa = campos[0]
-        ua_planta = campos[1]
-        ua_codigo = campos[2]
-        ua_periodo = int(campos[3])
+    rest_list = list()
 
-        if planta == f'{ua_empresa}_{ua_planta}' and period == ua_periodo:
-            list_to_return.append(ua)
 
-    return list_to_return
+    for name_var_despacho, var_despacho in variables['XTD'].items():
+        campos = name_var_despacho.split('_')
+        empresa_origen = campos[1]
+        operador = campos[2]
+        importacion = campos[3]
+        ingrediente = campos[4]
+        empresa_destino = campos[5]
+        planta = campos[6]
+        periodo = int(campos[7])
+
+        if not periodo in periodos[-2:]:
+            name_recibo_2 = f'XAD_{empresa_origen}_{operador}_{importacion}_{ingrediente}_{empresa_destino}_{planta}_{periodo+2}'
+            var_recibo_2 = variables['XAD'][name_recibo_2]
+            rest = (var_despacho == var_recibo_2, f'Transitos directos {name_var_despacho} y {name_recibo_2}')
+            rest_list.append(rest)
+
+        if periodo in periodos[-2:]:
+            rest_list.append((var_despacho == 0.0, f'No fuga puerto por {var_despacho} directo'))
+            
+        if periodo < 2:
+
+            name_recibo = f'XAD_{empresa_origen}_{operador}_{importacion}_{ingrediente}_{empresa_destino}_{planta}_{periodo}'
+            var_recibo = variables['XAD'][name_recibo]
+            rest_list.append((var_recibo == 0.0, f'No fuga planta por {var_recibo} directo'))
+
+        restricciones['Tiempo Transporte Directo'] = rest_list
+       
+    rest_list = list()
+        
+    for name_var_despacho, var_despacho in variables['XTR'].items():
+        campos = name_var_despacho.split('_')
+        empresa_origen = campos[1]
+        operador = campos[2]
+        importacion = campos[3]
+        ingrediente = campos[4]
+        empresa_destino = campos[5]
+        planta = campos[6]
+        periodo = int(campos[7])
+
+        if not periodo in periodos[-2:]:
+            name_recibo_2 = f'XAR_{empresa_origen}_{operador}_{importacion}_{ingrediente}_{empresa_destino}_{planta}_{periodo+2}'
+            var_recibo_2 = variables['XAR'][name_recibo_2]
+            rest = (var_despacho == var_recibo_2, f'Transitos bodega {name_var_despacho} y {name_recibo_2}')
+            rest_list.append(rest)
+
+        if periodo in periodos[-2:]:
+            rest_list.append((var_despacho == 0.0, f'No fuga puerto por {var_despacho} bodega'))
+                
+        if periodo < 2:
+
+            name_recibo = f'XAR_{empresa_origen}_{operador}_{importacion}_{ingrediente}_{empresa_destino}_{planta}_{periodo}'
+            var_recibo = variables['XAR'][name_recibo]
+            rest_list.append((var_recibo == 0.0, f'No fuga planta por {var_recibo} bodega'))
+
+        restricciones['Tiempo Transporte Desde Bodega'] = rest_list
+
 
 
 def _mantenimiento_ss_plantas(restricciones: list, variables: list, plantas: list, ingredientes: list, periodos: list, safety_stock: dict):
@@ -230,7 +264,7 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, plantas: lis
     restricciones['Safety stock en planta'] = rest_list
 
 
-def _capacidad_camiones(restricciones: list, variables: list, periodos_en_firme=14, gap=0.0):
+def _capacidad_camiones(restricciones: list, variables: list, periodos_en_firme=45, gap=0.0):
 
     print('Restricciones de capacidad de carga de camiones')
 
@@ -313,6 +347,7 @@ def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coefi
 
 def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict, variables: dict, use_rest_cap_planta=True):
 
+
     periodos = conjuntos['periodos']
     plantas = conjuntos['plantas']
     consumo_proyectado = parametros['consumo_proyectado']
@@ -355,13 +390,26 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                               safety_stock=safety_stock)
 
     _capacidad_camiones(restricciones=restricciones,
-                        variables=variables, gap=0.02)
+                        variables=variables)
 
     # _asignacion_unidades_almacenamiento(
     #    restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes)
 
-    _balance_masa_planta(restricciones=restricciones, variables=variables, cargas=cargas, plantas=plantas,
-                         inventario_inicial=inventario_inicial_ua, transitos_a_planta=transitos, ingredientes=ingredientes, periodos=periodos, consumo=consumo_proyectado)
+    _tiempo_transitos(restricciones=restricciones,
+                      variables=variables,
+                      cargas=cargas,
+                      plantas=plantas,
+                      periodos=periodos)
+
+    _balance_masa_planta(restricciones=restricciones,
+                         variables=variables,
+                         cargas=cargas,
+                         plantas=plantas,
+                         inventario_inicial=inventario_inicial_ua,
+                         transitos_a_planta=transitos,
+                         ingredientes=ingredientes,
+                         periodos=periodos,
+                         consumo=consumo_proyectado)
 
     # _satisfaccion_demanda_plantas(restricciones=restricciones, variables=variables, plantas=plantas,
     #                              ingredientes=ingredientes, unidades=unidades, consumo_proyectado=consumo_proyectado, periodos=periodos)
