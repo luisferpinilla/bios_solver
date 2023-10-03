@@ -48,35 +48,34 @@ def __llegadas_a_puerto(parametros: dict, conjuntos: dict, file: str):
         inventarios_puerto_df[campo] = inventarios_puerto_df[campo].apply(
             __remover_underscores)
 
-    
     fechas_dict = {conjuntos['fechas'][x]: str(
         x) for x in conjuntos['periodos']}
 
     inventarios_puerto_df['periodo'] = inventarios_puerto_df['fecha_llegada'].map(
         fechas_dict)
-    
-    inventarios_puerto_df = inventarios_puerto_df[~inventarios_puerto_df['periodo'].isna()]
-    
+
+    inventarios_puerto_df = inventarios_puerto_df[~inventarios_puerto_df['periodo'].isna(
+    )]
+
     # regenerar key
-    
+
     campos = campos + ['periodo']
-    
+
     inventarios_puerto_df['key'] = inventarios_puerto_df.apply(
         lambda field: '_'.join([field[x] for x in campos]), axis=1)
-    
-    
-    df_dict = {column:list() for column in inventarios_puerto_df.columns}
-    
+
+    df_dict = {column: list() for column in inventarios_puerto_df.columns}
+
     for i in inventarios_puerto_df.index:
         empresa = inventarios_puerto_df.loc[i]['empresa']
-        operador =inventarios_puerto_df.loc[i]['operador']
+        operador = inventarios_puerto_df.loc[i]['operador']
         ingrediente = inventarios_puerto_df.loc[i]['ingrediente']
         impmotonave = inventarios_puerto_df.loc[i]['imp-motonave']
         cantidad_kg = inventarios_puerto_df.loc[i]['cantidad_kg']
         fecha_llegada = inventarios_puerto_df.loc[i]['fecha_llegada']
         valor_kg = inventarios_puerto_df.loc[i]['valor_kg']
         periodo = int(inventarios_puerto_df.loc[i]['periodo'])
-        
+
         while cantidad_kg > 0:
             df_dict['empresa'].append(empresa)
             df_dict['operador'].append(operador)
@@ -88,32 +87,31 @@ def __llegadas_a_puerto(parametros: dict, conjuntos: dict, file: str):
             df_dict['fecha_llegada'].append(fecha_llegada)
             df_dict['valor_kg'].append(valor_kg)
             key = f'AR_{empresa}_{operador}_{impmotonave}_{ingrediente}_{periodo}'
-            df_dict['key'].append(key)            
-            df_dict['periodo'].append(str(periodo))  
+            df_dict['key'].append(key)
+            df_dict['periodo'].append(str(periodo))
             periodo = periodo+1
-            
+
     df = pd.DataFrame(df_dict)
-    
+
     df.set_index('key', drop=True, inplace=True)
-    
+
     ar_dict = dict()
-    
+
     for periodo in conjuntos['periodos']:
         for carga in conjuntos['cargas']:
-            
-            par_name =f'AR_{carga}_{periodo}'
-            
+
+            par_name = f'AR_{carga}_{periodo}'
+
             if par_name in df.index:
-                
+
                 par_value = df.loc[par_name]['cantidad_kg']
-                
+
             else:
-                
+
                 par_value = 0.0
-                
+
             ar_dict[par_name] = par_value
- 
-    
+
     parametros['llegadas_cargas'] = ar_dict
 
 
@@ -134,17 +132,18 @@ def __costo_almacenamiento_puerto(parametros: dict, conjuntos: dict, file: str):
     fechas_dict = {conjuntos['fechas'][x]: x for x in range(len(conjuntos['fechas']))}
 
     cc_df['periodo'] = cc_df['fecha_corte'].map(fechas_dict)
-    
-    # regenerar key
-    campos = campos + ['periodo']    
-    cc_df['key'] = cc_df.apply(lambda field: '_'.join([str(field[x]) for x in campos]), axis=1)
 
-    cc_df['key'] = cc_df['key'].apply(lambda x: f'CC_{x}') 
+    # regenerar key
+    campos = campos + ['periodo']
+    cc_df['key'] = cc_df.apply(lambda field: '_'.join(
+        [str(field[x]) for x in campos]), axis=1)
+
+    cc_df['key'] = cc_df['key'].apply(lambda x: f'CC_{x}')
 
     cc_df.set_index('key', drop=True, inplace=True)
 
     costos_dict = dict()
-    
+
     for carga in conjuntos['cargas']:
         for periodo in conjuntos['periodos']:
             par_name = f'CC_{carga}_{periodo}'
@@ -152,10 +151,11 @@ def __costo_almacenamiento_puerto(parametros: dict, conjuntos: dict, file: str):
                 par_value = cc_df.loc[par_name]['valor_kg']
             else:
                 par_value = 0.0
-            
-            costos_dict[par_name]= par_value
+
+            costos_dict[par_name] = par_value
 
     parametros['costos_almacenamiento'] = costos_dict
+
 
 def __costo_operacion_puerto(parametros: dict, conjuntos: dict, file: str):
 
@@ -189,21 +189,20 @@ def __costo_operacion_puerto(parametros: dict, conjuntos: dict, file: str):
     parametros['costos_operacion_bodega'] = cb_dict
 
 
-def __costos_transporte(conjuntos:dict, parametros: dict, file: str):
+def __costos_transporte(conjuntos: dict, parametros: dict, file: str):
     # $CF_{lm}$ : Costo fijo de transporte por camión despachado llevando la carga $l$ hasta la unidad de almacenamiento $m$.
     # $ CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
 
-    fletes = {'fletes_fijos':'CF', 'fletes_variables':'CV'}
-    
-    
+    fletes = {'fletes_fijos': 'CF', 'fletes_variables': 'CV'}
 
     for flete, codigo in fletes.items():
 
         values_dict = dict()
 
         df = pd.read_excel(file, sheet_name=flete)
-        
-        df['operador-puerto-ing'] = df['operador-puerto-ing'].apply(lambda x: str(x).replace('-', ''))
+
+        df['operador-puerto-ing'] = df['operador-puerto-ing'].apply(
+            lambda x: str(x).replace('-', ''))
 
         df = df.melt(id_vars=['operador-puerto-ing'], value_vars=list(df.columns).remove(
             'operador-puerto-ing'), var_name='planta', value_name='costo')
@@ -216,11 +215,11 @@ def __costos_transporte(conjuntos:dict, parametros: dict, file: str):
 
         df['key'] = codigo + "_" + df['operador'] + "_" + \
             df['planta'] + "_" + df['ingrediente']
-            
+
         df.set_index('key', drop=True, inplace=True)
-        
+
         big_m = df['costo'].sum()
-            
+
         for operador in conjuntos['operadores']:
             for planta in conjuntos['plantas']:
                 for ingrediente in conjuntos['ingredientes']:
@@ -229,9 +228,8 @@ def __costos_transporte(conjuntos:dict, parametros: dict, file: str):
                         par_value = df.loc[par_name]['costo']
                     else:
                         par_value = big_m
-                        
-                    values_dict[par_name] = par_value
 
+                    values_dict[par_name] = par_value
 
         parametros[flete] = values_dict
 
@@ -274,22 +272,42 @@ def __capacidad_almacenamiento_planta(parametros: dict, conjuntos: dict, file: s
 
     inventario_planta_df = inventario_planta_df[inventario_planta_df['ingrediente_actual'].isin(
         conjuntos['ingredientes'])].copy()
-    
+
     # Eliminar nulos del reporte
-    
+
     for ingrediente in conjuntos['ingredientes']:
-        inventario_planta_df[ingrediente] = inventario_planta_df[ingrediente].fillna(0.0)
+        inventario_planta_df[ingrediente] = inventario_planta_df[ingrediente].fillna(
+            0.0)
     
+
     inventario_planta_df['Suma'] = inventario_planta_df[conjuntos['ingredientes']].apply(
         sum, axis=1)
 
     # Eliminar unidades de almacenamiento que no reportan capacidad para ningun ingrediente
-    inventario_planta_df = inventario_planta_df[inventario_planta_df['Suma'] > 0].copy()
+    inventario_planta_df = inventario_planta_df[inventario_planta_df['Suma'] > 0].copy(
+    )
 
     # Eliminar columna de suma recién creada
     inventario_planta_df.drop(columns=['Suma'], inplace=True)
+    
+    # Calcular Capacidad Maxima
+    
+    max_df = inventario_planta_df.groupby(['empresa', 'planta'])[conjuntos['ingredientes']].sum()
+    
+    max_df['capacidad_max'] = max_df.apply(np.max, axis=1)
+    
+    max_dict= dict()
+    
+    for planta in conjuntos['plantas']:
+        
+        par_name = f'MX_{planta}'
+        par_value = max_df.loc[(planta.split('_')[0],planta.split('_')[1])]['capacidad_max']
+        
+        max_dict[par_name] = par_value
+    
 
-
+    # Traer la capacidad por ingrediente
+    
     capacidad_df = inventario_planta_df.melt(id_vars=['empresa', 'planta'],
                                              value_vars=conjuntos['ingredientes'],
                                              var_name='ingrediente',
@@ -298,13 +316,32 @@ def __capacidad_almacenamiento_planta(parametros: dict, conjuntos: dict, file: s
     capacidad_df = capacidad_df.groupby(['empresa', 'planta', 'ingrediente'])[
         ['capacidad']].sum().reset_index()
 
-    capacidad_df['key'] = capacidad_df['empresa'] + "_" + \
+    capacidad_df['key'] = 'CI_' + capacidad_df['empresa'] + "_" + \
         capacidad_df['planta'] + "_" + capacidad_df['ingrediente']
+        
+    capacidad_df.set_index('key', drop=True, inplace=True)
 
-    capacidad_dict = {f"CI_{capacidad_df.iloc[x]['key']}": capacidad_df.iloc[x]['capacidad'] for x in range(
-        capacidad_df.shape[0])}
+    capacidad_dict = dict()
+        
+    for planta in conjuntos['plantas']:
+        
+        for ingrediente in conjuntos['ingredientes']:
+            par_name = f'CI_{planta}_{ingrediente}'
+           
+            if par_name in capacidad_df.index:
+               
+                par_value = capacidad_df.loc[par_name]['capacidad']
+               
+            else:
+               
+               par_value = 0.0
+               
+            capacidad_dict[par_name] = par_value
+
 
     parametros['capacidad_almacenamiento_planta'] = capacidad_dict
+    
+    parametros['capacidad_almacenamiento_maxima'] = max_dict
 
 
 def __inventario_planta(parametros: dict, conjuntos: dict, file: str):
@@ -340,40 +377,40 @@ def __inventario_planta(parametros: dict, conjuntos: dict, file: str):
     parametros['inventario_inicial_ua'] = ingredientes_dict
 
 
-def __transitos_a_plantas(parametros:dict, conjuntos:dict, file:str):
-    
+def __transitos_a_plantas(parametros: dict, conjuntos: dict, file: str):
+
     transitos_df = pd.read_excel(io=file, sheet_name='tto_plantas')
-    
+
     fechas_dict = {conjuntos['fechas'][x]: x for x in range(
         len(conjuntos['fechas']))}
-    
+
     transitos_df['periodo'] = transitos_df['fecha_llegada'].map(fechas_dict)
-    
-    transitos_df = transitos_df.groupby(['empresa', 'planta', 'ingrediente', 'periodo'])[['cantidad']].sum()
-    
+
+    transitos_df = transitos_df.groupby(
+        ['empresa', 'planta', 'ingrediente', 'periodo'])[['cantidad']].sum()
+
     transitos_dict = dict()
-    
+
     for periodo in conjuntos['periodos']:
         for planta in conjuntos['plantas']:
             for ingrediente in conjuntos['ingredientes']:
-                
+
                 campos = planta.split('_')
                 p_empresa = campos[0]
                 p_planta = campos[1]
-                
+
                 indextr = (p_empresa, p_planta, ingrediente, periodo)
-                
+
                 tt_name = f'TT_{p_empresa}_{p_planta}_{ingrediente}_{periodo}'
-                
+
                 if indextr in transitos_df.index:
                     tt_value = transitos_df.loc[indextr]['cantidad']
                 else:
                     tt_value = 0.0
-                
+
                 transitos_dict[tt_name] = tt_value
-                
+
     parametros['transitos_a_plantas'] = transitos_dict
-    
 
 
 def __consumo_proyectado(parametros: dict, conjuntos: dict, file: str, usecols: str):
@@ -389,7 +426,6 @@ def __consumo_proyectado(parametros: dict, conjuntos: dict, file: str, usecols: 
 
     mean_df.set_index(['empresa', 'ingrediente', 'planta'],
                       drop=True, inplace=True)
-
 
     mean_df['mean'] = mean_df.apply(np.mean, axis=1)
 
@@ -414,24 +450,24 @@ def __consumo_proyectado(parametros: dict, conjuntos: dict, file: str, usecols: 
     # regenerar key
     demanda_df['key'] = demanda_df.apply(
         lambda field: '_'.join([str(field[x]) for x in campos]), axis=1)
-    
+
     demanda_df['key'] = demanda_df['key'].apply(lambda x: f'DM_{x}')
 
     demanda_df.set_index('key', drop=True, inplace=True)
-    
+
     demanda_dict = dict()
-    
+
     for planta in conjuntos['plantas']:
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
-                
+
                 par_name = f'DM_{planta}_{ingrediente}_{periodo}'
-                
+
                 if par_name in demanda_df.index:
                     par_value = demanda_df.loc[par_name]['consumo']
                 else:
                     par_value = 0.0
-                    
+
                 demanda_dict[par_name] = par_value
 
     parametros['consumo_proyectado'] = demanda_dict
@@ -489,7 +525,6 @@ def __costo_backorder_planta(parametros: dict, file: str):
     pass
 
 
-
 def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: str) -> dict:
 
     __inventario_inicial_puerto(parametros=parametros, file=file)
@@ -507,8 +542,9 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
 
     __capacidad_almacenamiento_planta(
         parametros=parametros, conjuntos=conjuntos, file=file)
-    
-    __transitos_a_plantas(parametros=parametros, conjuntos=conjuntos, file=file)
+
+    __transitos_a_plantas(parametros=parametros,
+                          conjuntos=conjuntos, file=file)
 
     __inventario_planta(parametros=parametros, conjuntos=conjuntos, file=file)
 
