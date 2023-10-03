@@ -14,7 +14,7 @@ col2, col3 = st.columns(2)
 
 with col2:
     tmax = st.slider(label='Tiempo máximo de trabajo en minutos',
-                     min_value=5, max_value=60, value=10)
+                     min_value=5, max_value=60, value=15)
 
 with col3:
     uploaded_file = st.file_uploader("Choose a file")

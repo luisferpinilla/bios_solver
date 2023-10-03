@@ -8,7 +8,7 @@ def _costos_almacenamiento_puerto(variables: dict, costos_almacenamiento: dict, 
     fobj = list()
     for carga in cargas:
         for periodo in periodos:
-            
+
             var_name = f'XIP_{carga}_{periodo}'
             var = variables['XIP'][var_name]
 
@@ -25,7 +25,7 @@ def _costo_operacion_portuaria(variables: dict, costos_despacho_directo: dict, c
 
     # XTD * CD
     # XPL * CB
-    
+
     print('fob: Agregando costos de operacion portuaria')
 
     fobj = list()
@@ -74,7 +74,7 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
 
             puerto = carga.split('_')[2]
             for planta in plantas:
-                
+
                 empresa_destino = planta.split('_')[0]
 
                 xtr_name = f'XTR_{carga}_{planta}_{periodo}'
@@ -82,24 +82,27 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
 
                 xtd_name = f'XTD_{carga}_{planta}_{periodo}'
                 xtd_var = variables['XTD'][xtd_name]
-                
+
                 itr_name = f'ITR_{carga}_{planta}_{periodo}'
                 itr_var = variables['ITR'][itr_name]
 
                 itd_name = f'ITD_{carga}_{planta}_{periodo}'
                 itd_var = variables['ITD'][itd_name]
-                
+
                 # Totalizar costos intercompany por kilo y variables
                 # Costo variables por transporte entre operdor y planta
                 cv_coef_name = f'CV_{operador}_{planta}_{ingrediente}'
                 # Costo intercompany
                 ci_iter_name = f"CW_{empresa_origen}_{empresa_destino}"
-                                
-                ct_coef_value = costo_transporte_variable[cv_coef_name] +  costo_intercompany[ci_iter_name]
+
+                ct_coef_value = costo_transporte_variable[cv_coef_name] + \
+                    costo_intercompany[ci_iter_name]
+
+                ct_coef_value += ct_coef_value*(periodo/10)
 
                 fobj.append(ct_coef_value*xtr_var)
                 fobj.append(ct_coef_value*xtd_var)
-                
+
                 cf_coef_name = f'CF_{operador}_{planta}_{ingrediente}'
 
                 cf_coef_value = costo_transporte_fijos[cf_coef_name]
@@ -111,7 +114,7 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
 
 def _costo_safety_stock(variables: dict):
 
-    print('fob: Agregando costos de penalidad por Safety Stock')    
+    print('fob: Agregando costos de penalidad por Safety Stock')
 
     fobj = list()
     costo_bss = 1000
@@ -124,8 +127,8 @@ def _costo_safety_stock(variables: dict):
 
 
 def _costo_bakorder(variables: dict):
-    
-    print('fob: Agregando costos de penalidad por backorder') 
+
+    print('fob: Agregando costos de penalidad por backorder')
 
     fobj = list()
     costo_xbk = 10000
@@ -135,7 +138,6 @@ def _costo_bakorder(variables: dict):
         # fobj.append(costo_xbk*var)
 
     return fobj
-
 
 
 def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
@@ -175,4 +177,3 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
 
     # Costo del backorder
     fob.append(_costo_bakorder(variables))
-
