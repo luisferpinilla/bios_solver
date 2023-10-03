@@ -90,11 +90,12 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
                 itd_var = variables['ITD'][itd_name]
                 
                 # Totalizar costos intercompany por kilo y variables
+                # Costo variables por transporte entre operdor y planta
                 cv_coef_name = f'CV_{operador}_{planta}_{ingrediente}'
+                # Costo intercompany
                 ci_iter_name = f"CW_{empresa_origen}_{empresa_destino}"
                                 
-                ct_coef_value = costo_transporte_variable[cv_coef_name]
-                ct_coef_value += costo_intercompany[ci_iter_name]
+                ct_coef_value = costo_transporte_variable[cv_coef_name] +  costo_intercompany[ci_iter_name]
 
                 fobj.append(ct_coef_value*xtr_var)
                 fobj.append(ct_coef_value*xtd_var)

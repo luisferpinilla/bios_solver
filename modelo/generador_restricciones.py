@@ -313,16 +313,16 @@ def _capacidad_camiones(restricciones: list, variables: list, periodos_en_firme=
     restricciones['Capacidad carga de camiones'] = rest_list
 
 
-def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coeficientes_capacidad: dict, plantas: list, ingredientes: list, max_cap:dict, periodos: list):
+def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coeficientes_capacidad: dict, plantas: list, ingredientes: list, max_cap: dict, periodos: list):
 
     rest = list()
 
     # SUM(XPI)<=1.0
 
     for planta in plantas:
-        
-        capacidad_maxima = max_cap[f'MX_{planta}']        
-        
+
+        capacidad_maxima = max_cap[f'MX_{planta}']
+
         for periodo in periodos:
 
             left_expresion = list()
@@ -334,16 +334,15 @@ def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coefi
 
                 ci_name = f'CI_{planta}_{ingrediente}'
                 ci_value = coeficientes_capacidad[ci_name]
-                
-                rest.append((xiu_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
 
-                    
+                rest.append(
+                    (xiu_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
+
                 if ci_value > 0:
                     # evitar que el valor sea cero y convertirlo
                     ci_facc = capacidad_maxima/(ci_value)
                     left_expresion.append(ci_facc*xiu_var)
 
-                        
             # Esta restriccion esta generando problemas
             # rest.append((pu.lpSum(left_expresion) <= capacidad_maxima , f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
 
