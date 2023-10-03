@@ -70,6 +70,7 @@ class Problema():
         self.estatus = 'Trabajando'
 
         # Agregar función objetivosolver += fobjetivo
+        print('agregando target')
         self.solver += pu.lpSum(self.target)
 
         # Agregar restricciones
@@ -79,6 +80,8 @@ class Problema():
                 # print('agregando restriccion', name, rest)
                 self.solver += rest
 
+
+        print('ejecutando solver')
         if engine == 'glpk':
             if gap==0.0:
                 engine = pu.GLPK_CMD(timeLimit=tlimit)
@@ -96,7 +99,7 @@ class Problema():
             
             self.solver.solve(solver=engine)
             
-
+        print('solver ejecutado')    
         self.estatus = pu.LpStatus[self.solver.status]
         
 
