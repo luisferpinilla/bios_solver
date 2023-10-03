@@ -95,8 +95,7 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
                 # Costo intercompany
                 ci_iter_name = f"CW_{empresa_origen}_{empresa_destino}"
 
-                ct_coef_value = costo_transporte_variable[cv_coef_name] + \
-                    costo_intercompany[ci_iter_name]
+                ct_coef_value = costo_transporte_variable[cv_coef_name] * (1 + costo_intercompany[ci_iter_name])
 
                 ct_coef_value += ct_coef_value*(periodo/10)
 
