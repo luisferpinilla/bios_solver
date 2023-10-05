@@ -3,7 +3,7 @@ import pulp as pu
 
 def _balance_masa_bif(restricciones: dict, variables: dict, cargas: list, llegadas: dict, plantas: list, periodos: list):
 
-    print('generando restricciones de balance de masa en bifurcación')
+    print('rest: balance de masa en bifurcación')
     # XPL + XTD = AR
 
     rest_list = list()
@@ -37,7 +37,7 @@ def _balance_masa_bif(restricciones: dict, variables: dict, cargas: list, llegad
 
 def _balance_masa_bodega_puerto(restricciones: list, variables: list, cargas: list, plantas: list, inventario_inicial: dict, periodos=list):
 
-    print('generando restricciones de balance de masa en almacenamiento de puerto')
+    print('rest: balance de masa en almacenamiento de puerto')
     # XIP = XIPt-1 + XPL - sum(XTR)
     # XIP + sum(XTR) = XIPt-1 + XPL
 
@@ -88,7 +88,7 @@ def _balance_masa_bodega_puerto(restricciones: list, variables: list, cargas: li
 
 def _balance_masa_planta(restricciones: list, variables: list, cargas: list, plantas: list, inventario_inicial: dict, transitos_a_planta: dict, ingredientes: list, periodos: list, consumo: list):
 
-    print('generando restricciones de balance de masa en planta')
+    print('rest: balance de masa en planta')
     # XIU = XIUt-1 + TT + SUM(XTR) + SUM(XTD) + XBK - DM
 
     rest_list = list()
@@ -164,6 +164,8 @@ def _tiempo_transitos(restricciones: list, variables: list, cargas: list, planta
     # Plantas => x['empresa', 'planta']
     # variables de despacho directo
 
+    print('rest: sobre tiempo de tránsitos')
+
     rest_list = list()
 
     for name_var_despacho, var_despacho in variables['XTD'].items():
@@ -231,7 +233,7 @@ def _tiempo_transitos(restricciones: list, variables: list, cargas: list, planta
 
 def _mantenimiento_ss_plantas(restricciones: list, variables: list, plantas: list, ingredientes: list, periodos: list, safety_stock: dict):
 
-    print('Generando restricciones de mantnimiento de safety stock en planta')
+    print('rest: mantnimiento de safety stock en planta')
 
     # XIU >= SS * (1-BSS)
     # XIU >= SS - SS*BSS
@@ -269,7 +271,7 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, plantas: lis
 
 def _capacidad_camiones(restricciones: list, variables: list, periodos_en_firme=45, gap=0.0):
 
-    print('Restricciones de capacidad de carga de camiones')
+    print('rest: capacidad de carga de camiones')
 
     # XTD <= 34*ITD
     # XTR <= 34*ITR
@@ -281,39 +283,23 @@ def _capacidad_camiones(restricciones: list, variables: list, periodos_en_firme=
         itd_name = xtd_name.replace('XTD', 'ITD')
         itd_var = variables['ITD'][itd_name]
 
-        periodo = int(itd_name.split('_')[7])
-
-        if periodo < periodos_en_firme:
-            if gap == 0.0:
-                rest_list.append(
-                    (xtd_var == 34000*itd_var, f'capacidad carga directa {xtd_name}'))
-            else:
-                rest_list.append((xtd_var <= (34000*(1+gap))*itd_var,
-                                 f'capacidad carga directa lq gap {xtd_name}'))
-                rest_list.append((xtd_var >= (34000*(1-gap))*itd_var,
-                                 f'capacidad carga directa ge gap {xtd_name}'))
+        rest_list.append(
+            (xtd_var == 34000*itd_var, f'capacidad carga directa {xtd_name}'))
 
     for xtr_name, xtr_var in variables['XTR'].items():
 
         itr_name = xtr_name.replace('XTR', 'ITR')
         itr_var = variables['ITR'][itr_name]
 
-        periodo = int(itr_name.split('_')[7])
-
-        if periodo < periodos_en_firme:
-            if gap == 0.0:
-                rest_list.append(
-                    (xtr_var == 34000*itr_var, f'capacidad carga desde almacenamiento en {xtr_name}'))
-            else:
-                rest_list.append((xtr_var <= (
-                    34000*(1+gap))*itr_var, f'capacidad carga desde almacenamiento le gap en {xtr_name}'))
-                rest_list.append((xtr_var >= (
-                    34000*(1-gap))*itr_var, f'capacidad carga desde almacenamiento ge gap en {xtr_name}'))
+        rest_list.append((xtr_var == 34000*itr_var,
+                         f'capacidad carga desde almacenamiento en {xtr_name}'))
 
     restricciones['Capacidad carga de camiones'] = rest_list
 
 
 def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coeficientes_capacidad: dict, plantas: list, ingredientes: list, max_cap: dict, periodos: list):
+
+    print('rest: capacidad de almacenamiento en planta')
 
     rest = list()
 
@@ -344,7 +330,8 @@ def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coefi
                     left_expresion.append(ci_facc*xiu_var)
 
             # Esta restriccion esta generando problemas
-            # rest.append((pu.lpSum(left_expresion) <= capacidad_maxima , f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
+            rest.append((pu.lpSum(left_expresion) <= capacidad_maxima,
+                        f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
 
     restricciones['Capacidad plantas'] = rest
 
