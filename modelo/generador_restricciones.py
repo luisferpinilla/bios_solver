@@ -4,7 +4,8 @@ import pulp as pu
 def _balance_masa_bif(restricciones: dict, variables: dict, cargas: list, llegadas: dict, plantas: list, periodos: list):
 
     print('rest: balance de masa en bifurcación')
-    # XPL + XTD = AR
+    # XPL + XTD = AR (obsolete)
+    # XPL +34000*ITD = AR
 
     rest_list = list()
 
@@ -24,10 +25,10 @@ def _balance_masa_bif(restricciones: dict, variables: dict, cargas: list, llegad
 
             for planta in plantas:
 
-                xtd_name = f'XTD_{carga}_{planta}_{periodo}'
-                xtd_var = variables['XTD'][xtd_name]
+                itd_name = f'ITD_{carga}_{planta}_{periodo}'
+                itd_var = variables['ITD'][itd_name]
 
-                left_expesion.append(xtd_var)
+                left_expesion.append(34000*itd_var)
 
             rest_list.append((pu.lpSum(left_expesion) == ar_val,
                              f'balance bif_{carga}_{periodo}'))
@@ -74,9 +75,9 @@ def _balance_masa_bodega_puerto(restricciones: list, variables: list, cargas: li
 
             # sum(XTR)
             for planta in plantas:
-                xtr_name = f'XTR_{carga}_{planta}_{periodo}'
-                xtr_var = variables['XTR'][xtr_name]
-                left_expresion.append(xtr_var)
+                itr_name = f'ITR_{carga}_{planta}_{periodo}'
+                itr_var = variables['ITR'][itr_name]
+                left_expresion.append(34000*itr_var)
 
             rest = (pu.lpSum(left_expresion) == pu.lpSum(
                 rigth_expresion), f'balance de masa en {carga}_{periodo}')
@@ -168,7 +169,7 @@ def _tiempo_transitos(restricciones: list, variables: list, cargas: list, planta
 
     rest_list = list()
 
-    for name_var_despacho, var_despacho in variables['XTD'].items():
+    for name_var_despacho, var_despacho in variables['ITD'].items():
         campos = name_var_despacho.split('_')
         empresa_origen = campos[1]
         operador = campos[2]
@@ -181,13 +182,13 @@ def _tiempo_transitos(restricciones: list, variables: list, cargas: list, planta
         if not periodo in periodos[-2:]:
             name_recibo_2 = f'XAD_{empresa_origen}_{operador}_{importacion}_{ingrediente}_{empresa_destino}_{planta}_{periodo+2}'
             var_recibo_2 = variables['XAD'][name_recibo_2]
-            rest = (var_despacho == var_recibo_2,
+            rest = (34000*var_despacho == var_recibo_2,
                     f'Transitos directos {name_var_despacho} y {name_recibo_2}')
             rest_list.append(rest)
 
         if periodo in periodos[-2:]:
             rest_list.append(
-                (var_despacho == 0.0, f'No fuga puerto por {var_despacho} directo'))
+                (var_despacho == 0, f'No fuga puerto por {var_despacho} directo'))
 
         if periodo < 2:
 
@@ -200,7 +201,7 @@ def _tiempo_transitos(restricciones: list, variables: list, cargas: list, planta
 
     rest_list = list()
 
-    for name_var_despacho, var_despacho in variables['XTR'].items():
+    for name_var_despacho, var_despacho in variables['ITR'].items():
         campos = name_var_despacho.split('_')
         empresa_origen = campos[1]
         operador = campos[2]
@@ -213,13 +214,13 @@ def _tiempo_transitos(restricciones: list, variables: list, cargas: list, planta
         if not periodo in periodos[-2:]:
             name_recibo_2 = f'XAR_{empresa_origen}_{operador}_{importacion}_{ingrediente}_{empresa_destino}_{planta}_{periodo+2}'
             var_recibo_2 = variables['XAR'][name_recibo_2]
-            rest = (var_despacho == var_recibo_2,
+            rest = (34000*var_despacho == var_recibo_2,
                     f'Transitos bodega {name_var_despacho} y {name_recibo_2}')
             rest_list.append(rest)
 
         if periodo in periodos[-2:]:
             rest_list.append(
-                (var_despacho == 0.0, f'No fuga puerto por {var_despacho} bodega'))
+                (var_despacho == 0, f'No fuga puerto por {var_despacho} bodega'))
 
         if periodo < 2:
 
@@ -330,8 +331,8 @@ def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coefi
                     left_expresion.append(ci_facc*xiu_var)
 
             # Esta restriccion esta generando problemas
-            rest.append((pu.lpSum(left_expresion) <= capacidad_maxima,
-                        f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
+            # rest.append((pu.lpSum(left_expresion) <= capacidad_maxima,
+            #            f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
 
     restricciones['Capacidad plantas'] = rest
 
@@ -381,8 +382,8 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                               plantas=plantas,
                               safety_stock=safety_stock)
 
-    _capacidad_camiones(restricciones=restricciones,
-                        variables=variables)
+    #_capacidad_camiones(restricciones=restricciones,
+    #                    variables=variables)
 
     # _asignacion_unidades_almacenamiento(
     #    restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes)

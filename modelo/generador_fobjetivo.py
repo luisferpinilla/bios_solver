@@ -43,13 +43,13 @@ def _costo_operacion_portuaria(variables: dict, costos_despacho_directo: dict, c
 
         fobj.append(cb_value*var)
 
-    for name, var in variables['XTD'].items():
+    for name, var in variables['ITD'].items():
 
         operador = name.split('_')[2]
         ingrediente = name.split('_')[4]
 
         cd_name = f'CD_{operador}_{ingrediente}'
-        cd_value = costos_despacho_directo[cd_name]
+        cd_value = 34000*costos_despacho_directo[cd_name]
 
         fobj.append(cd_value*var)
 
@@ -77,11 +77,11 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
 
                 empresa_destino = planta.split('_')[0]
 
-                xtr_name = f'XTR_{carga}_{planta}_{periodo}'
-                xtr_var = variables['XTR'][xtr_name]
+                #xtr_name = f'XTR_{carga}_{planta}_{periodo}'
+                #xtr_var = variables['XTR'][xtr_name]
 
-                xtd_name = f'XTD_{carga}_{planta}_{periodo}'
-                xtd_var = variables['XTD'][xtd_name]
+                #xtd_name = f'XTD_{carga}_{planta}_{periodo}'
+                #xtd_var = variables['XTD'][xtd_name]
 
                 itr_name = f'ITR_{carga}_{planta}_{periodo}'
                 itr_var = variables['ITR'][itr_name]
@@ -100,8 +100,8 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
 
                 ct_coef_value += ct_coef_value*(periodo/10)
 
-                fobj.append(ct_coef_value*xtr_var)
-                fobj.append(ct_coef_value*xtd_var)
+                fobj.append(34000*ct_coef_value*itr_var)
+                fobj.append(34000*ct_coef_value*itd_var)
 
                 cf_coef_name = f'CF_{operador}_{planta}_{ingrediente}'
 

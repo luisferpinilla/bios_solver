@@ -93,9 +93,10 @@ def _procesar_variables_transporte(df_dict: dict, variables: dict, conjuntos: di
 
     fechas = __obtener_map_fechas(conjuntos=conjuntos)
 
-    xdt_df = __procesar_listado_variables(variables['XTD'], campos)
+    xdt_df = __procesar_listado_variables(variables['ITD'], campos)
     xdt_df['fecha despacho'] = xdt_df['periodo'].map(fechas)
     xdt_df.drop(columns=['tipo'], inplace=True)
+    xdt_df['value'] = 34000*xdt_df['value']
     xdt_df['value'] = xdt_df['value'].apply(lambda x: round(x, 0))
     xdt_df = xdt_df[xdt_df['value'] > 0]
     xdt_df.rename(columns={'value': 'kilos_despachados'}, inplace=True)
@@ -104,9 +105,10 @@ def _procesar_variables_transporte(df_dict: dict, variables: dict, conjuntos: di
     itd_df.drop(columns=['tipo'], inplace=True)
     itd_df.rename(columns={'value': 'camiones_despachados'}, inplace=True)
 
-    xtr_df = __procesar_listado_variables(variables['XTR'], campos)
+    xtr_df = __procesar_listado_variables(variables['ITR'], campos)
     xtr_df['fecha despacho'] = xtr_df['periodo'].map(fechas)
     xtr_df.drop(columns=['tipo'], inplace=True)
+    xtr_df['value'] = 34000*xtr_df['value']
     xtr_df['value'] = xtr_df['value'].apply(lambda x: round(x, 0))
     xtr_df = xtr_df[xtr_df['value'] > 0]
     xtr_df.rename(columns={'value': 'kilos_despachados'}, inplace=True)
@@ -160,7 +162,7 @@ def _procesar_variables_alacenamiento_puerto(df_dict: dict, variables: dict, con
 
     xip_df['variable'] = 'Inventario al final del día'
 
-    variable_dict = variables['XTR']
+    variable_dict = variables['ITR']
 
     xtr_df = __procesar_listado_variables(variable_dict=variable_dict,
                                           campos=['tipo',
@@ -171,7 +173,7 @@ def _procesar_variables_alacenamiento_puerto(df_dict: dict, variables: dict, con
                                                   'empresa_destino',
                                                   'planta',
                                                   'periodo'])
-
+    xtr_df['value'] = 34000*xtr_df['value']
     xtr_df.rename(columns={'empresa_origen': 'empresa'}, inplace=True)
     xtr_df.drop(columns=['empresa_destino', 'planta'], inplace=True)
     xtr_df['fecha'] = xtr_df['periodo'].map(fechas)
@@ -540,9 +542,11 @@ def _procesar_costos_portuarios(df_dict: dict, variables: dict, parametros: dict
     campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
               'ingrediente', 'empresa_destino', 'planta', 'periodo']
 
-    variable_dict = variables['XTD']
+    variable_dict = variables['ITD']
 
     despachos_df = __procesar_listado_variables(variable_dict, campos)
+    
+    despachos_df['value'] = 34000*despachos_df['value']
 
     despachos_df.drop(columns=['tipo'], inplace=True)
 
@@ -569,9 +573,11 @@ def _procesar_costos_transporte(df_dict: dict, variables: dict, parametros: dict
     campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
               'ingrediente', 'empresa_destino', 'planta', 'periodo']
 
-    variable_dict = variables['XTD']
+    variable_dict = variables['ITD']
 
     directo_df = __procesar_listado_variables(variable_dict, campos)
+    
+    directo_df['value'] = 34000*directo_df['value']
 
     directo_df.drop(columns=['tipo'], inplace=True)
 
@@ -584,9 +590,11 @@ def _procesar_costos_transporte(df_dict: dict, variables: dict, parametros: dict
     campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
               'ingrediente', 'empresa_destino', 'planta', 'periodo']
 
-    variable_dict = variables['XTR']
+    variable_dict = variables['ITR']
 
     bodega_df = __procesar_listado_variables(variable_dict, campos)
+    
+    bodega_df['value'] = 34000*bodega_df['value']
 
     bodega_df.drop(columns=['tipo'], inplace=True)
 
