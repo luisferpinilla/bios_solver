@@ -227,7 +227,7 @@ class Validador():
             
         if len(unidades)>0:
             self.cantidad_errores +=1
-            self.validaciones['Capacidad en Unidades de Almacenamiento'] = f"Error, las siguientes unidades {unidades} tienen valores de capacidad sobre la cantidad de inventario"
+            self.validaciones['Capacidad en Unidades de Almacenamiento'] = f"Error, las siguientes unidades {unidades} tienen valores erróneos sobre la capacidad de almacenamiento"
         else:
             self.validaciones['Capacidad en Unidades de Almacenamiento'] = "OK, las capacidades estan sobre las cantidades de inventario"
         
