@@ -51,7 +51,7 @@ El sistema que se pretende modelar ha sido descrito por el personal de Grupo BIO
 
 Las expresions matemáticas son construidas usando variables, conjuntos y parámetros, que serán descritos a continuación.
 
-## Variables, diccioanrios, parámetros y conjuntos
+## Conjuntos, parámetros y variables
 
 ### Sets:
 
@@ -227,15 +227,21 @@ $$ \sum_{l \in j}{\sum_{l \in E }\sum_{t}{CF_{lm} \cdot XTI_{lm}^{t}}}$$
 
 ### Costos por Penalización
 
-Los costos por penalización son elementos matemáticos empleados para tratar con restricciones blandas, de modo que es posible para el solucionador permitir que ciertas restricciones no se cumplan y se garantice la factibilidad del la solución. 
+Los costos por penalización son elementos matemáticos empleados para tratar con restricciones blandas, de modo que es posible para el solucionador permitir que ciertas restricciones no se cumplan y se garantice la factibilidad del la solución.
 
-a continuación, se describen las restricciones que por la naturaleza del negocio podrán no cumplirse: 
+Para efectos de hacer operativo el funcionamiento de las penalizaciones, vamos a definir un número 'grande' con respecto al cual se priorizarán estos aspectos.
+
+$$ BigM = 100000 $$
+
+A continuación, se describen las restricciones que por la naturaleza del negocio podrán no cumplirse: 
 
 #### Costo de no respetar un inventario de seguridad de un ingrediente en una planta
 
 El solucionador del modelo intentará en todo momento garantizar que todas las plantas mantengan el nivel de inventario sobre el nivel de seguridad. Sin embargo, cuando un ingrediente esta escaso, como primera contingencia se permitirá que el nivel de ingredientes baje por debajo de dicho nivel. El usuario será alertado de esta situación para el momento cuando se prevee que ocurrirá
 
 $$ \sum_{i}{\sum_{k}{\sum_{t}{CS_{ik}^{t} \cdot BSS_{ik}^{t}}}} $$
+
+
 
 #### Costo de Backorder en planta
 
@@ -296,3 +302,12 @@ graph LR;
 
 $$ XIU_{m}^{t} = XIU_{m}^{t-1} + TR + \sum_{lm}{34000 \cdot ITD_{lm}^{t-TT}} + \sum_{l}{34000 \cdot ITR_{lm}^{t-TT}} - XDM_{km}^{t} \hspace{1cm} \forall{\mathbb{t>1}}$$
 
+### Capacidad de almacenamiento en planta
+
+El inventario de producto en la planta $l$ al final del periodo $t$ debe ser menor a la capacidad señalada:
+
+$$ {XIP_{l}^{t}} \leq CA_{mi} \hspace{2cm} \forall l \in L, t \in T  $$
+
+La suma de las prorciones 
+
+$$ \sum_{l}{\frac{XIP_{l}^{t}}{CA_{mi}}} \leq 1 $$
