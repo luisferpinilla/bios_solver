@@ -113,15 +113,25 @@ $CA_{m}^{i}$ : Capacidad de almacenamiento de la unidad $m$ en toneladas del ing
 
 $II_{m}^{i}$ : Inventario inicial del ingrediente $i$ en la unidad $m$, teniendo en cuenta que $m \in K$
 
-$DM_{ki}^{t}$: Demanda del ingrediente $i$ en la planta $k$ durante el día $t$.
-
-$CK_{ik}^{t}$ : Costo del backorder del ingrediente $i$  en la planta $k$ durante el día $t$.
+$DM_{ki}^{t}$: Demanda o consumo proyectado del ingrediente $i$ en la planta $k$ durante el día $t$.
 
 $SS_{ik}^{t}$ : Inventario de seguridad a tener del ingrediente $i$ en la planta $k$ al final del día $t$.
 
-$CS_{ik}^{t}$ : Costo de no satisfacer el inventario de seguridad para el ingrediente $i$ en la planta $k$ durante el día $t$.
+$TR_{im}^{t}$ : Cantidad en tránsito programada para llegar a la unidad de almacenamiento $m$ durante el día $t$
 
-$TR_{im}^{t}$ : Cantidad en tránsito programada para llegar a la unidad de almacenamiento $m$ durante el día $t$,
+#### Parámetros base para penalización
+
+Para efectos de hacer operativo el funcionamiento de las penalizaciones, vamos a definir un número 'grande' con respecto al cual se priorizarán estos aspectos.
+
+$$ BigM = 100000 $$
+
+$CK_{ik}^{t}$ : Costo del backorder del ingrediente $i$  en la planta $k$ durante el día $t$. Esta relacionado con BigM al 100%
+
+$CS_{ik}^{t}$ : Costo de no satisfacer el inventario de seguridad para el ingrediente $i$ en la planta $k$ durante el día $t$. Esta relacionado con BigM al 50%
+
+$CL_{ik}^{t}$ : Costo de no satisfacer el inventario objetivo del ingrediente $i$ en la planta $k$ durante el día $t$. Esta relacionado con BigM al 25%.
+
+$CX_{ik}^{t}$ : Costo de no alcanzar la capacidad máxima del ingrediente $i$ en la planta $k$ durante el día $t$. Esta relacionado con BigM al 5%
 
 ### Variables
 
@@ -160,7 +170,11 @@ $XIU_{mi}^{t}$ : Cantidad de ingrediente $i$ almacenado en la unidad de almacena
 
 $XBK_{ik}^{t}$: Cantidad de backorder del ingrediente $i$ en planta $k$ luego de no cumplir la demanda  del día $t$.
 
-$BSS_{ik}^{t}$ : Binaria, si se cumple que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté sobre el nivel de seguridad $SS_{ik}^{t}$
+$BSS_{ik}^{t}$ : Binaria, si se cumple que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté por encima del nivel de seguridad $SS_{ik}^{t}$
+
+$BLV_{ik}^{t}$ : Binaria, si se cumple que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté por encima del nivel objetivo $CL_{ik}^{t}$
+
+$BMX_{ik}^{t}$ : Binaria, si se cumple que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté al nivel máximo de capacidad $CX_{ik}^{t}$
 
 ## Función Objetivo:
 
@@ -180,17 +194,16 @@ graph LR;
     id1{bif} --CD*ITR--> id4[Planta]
 ```
 
-#### Costo por descargar el barco directamente sobre un camión
+#### Costo de operación porturaria por descargar el barco directamente sobre un camión
 
 Este costo se adicionará al valor pagado al flete hasta la planta
 
 $$ \sum_{l \in j}\sum_{m \in E}{34000\cdot CD \cdot ITD_{lm}^{t}} \forall t \in T$$ 
 
-#### Costo por descargar el barco y llevar el producto a bodega en puerto 
+#### Costo de operación porturaria por descargar el barco y llevar el producto a bodega en puerto 
 
 $$ \sum_{l \in j}\sum_{m \in E}{PA \cdot XPL_{lm}^{t}} \forall t \in T$$
 
-### Costos por almacenamiento
 
 #### Almacenamiento en puerto por corte de Facturación:
 
@@ -229,19 +242,7 @@ $$ \sum_{l \in j}{\sum_{l \in E }\sum_{t}{CF_{lm} \cdot XTI_{lm}^{t}}}$$
 
 Los costos por penalización son elementos matemáticos empleados para tratar con restricciones blandas, de modo que es posible para el solucionador permitir que ciertas restricciones no se cumplan y se garantice la factibilidad del la solución.
 
-Para efectos de hacer operativo el funcionamiento de las penalizaciones, vamos a definir un número 'grande' con respecto al cual se priorizarán estos aspectos.
-
-$$ BigM = 100000 $$
-
 A continuación, se describen las restricciones que por la naturaleza del negocio podrán no cumplirse: 
-
-#### Costo de no respetar un inventario de seguridad de un ingrediente en una planta
-
-El solucionador del modelo intentará en todo momento garantizar que todas las plantas mantengan el nivel de inventario sobre el nivel de seguridad. Sin embargo, cuando un ingrediente esta escaso, como primera contingencia se permitirá que el nivel de ingredientes baje por debajo de dicho nivel. El usuario será alertado de esta situación para el momento cuando se prevee que ocurrirá
-
-$$ \sum_{i}{\sum_{k}{\sum_{t}{CS_{ik}^{t} \cdot BSS_{ik}^{t}}}} $$
-
-
 
 #### Costo de Backorder en planta
 
@@ -249,11 +250,25 @@ Cuando el inventario en planta en todas las unidades de almacenamiento no llega 
 
 $$ \sum_{i}{\sum_{k}{\sum_{t}{CK_{ik}^{t} \cdot XBK_{ik}^{t}}}} $$
 
+#### Costo de no respetar un inventario de seguridad de un ingrediente en una planta
+
+El solucionador del modelo intentará en todo momento garantizar que todas las plantas mantengan el nivel de inventario sobre el nivel de seguridad. Sin embargo, cuando un ingrediente esta escaso, como primera contingencia se permitirá que el nivel de ingredientes baje por debajo de dicho nivel. El usuario será alertado de esta situación para el momento cuando se prevee que ocurrirá
+
+$$ \sum_{i}{\sum_{k}{\sum_{t}{CS_{ik}^{t} \cdot BSS_{ik}^{t}}}} $$
+
+#### Costo de no respetar el inventario objetivo de un ingrediente en una planta
+
+El solucionador del modelo intentará en todo momento y luego evitar el backorder o no respetar los inventarios de seguridad, mantener el inventario al final del día sobre el nivel objetivo
+
+$$ \sum_{i}{\sum_{k}{\sum_{t}{CL_{ik}^{t} \cdot BSS_{ik}^{t}}}} $$
+
+#### Costo de no alcanzar el inventario máximo de un ingrediente en una planta
+
+El solucionador del modelo intentará como última prioridad mantener el inventario al final del día sobre el cerca del máximo.
+
+$$ \sum_{i}{\sum_{k}{\sum_{t}{CX_{ik}^{t} \cdot BSS_{ik}^{t}}}} $$
+
 ## Restricciones
-
-#### Mantenimiento del nivel de seguridad de igredientes en plantas
-
-$$ \sum_{m \in i}^{t}{XIU_{m}^{t}} \geq SS_{ki}^{t} \cdot (1-BSS_{ik}^{t}) $$
 
 ### Balances de masa de inventarios
 
@@ -308,6 +323,24 @@ El inventario de producto en la planta $l$ al final del periodo $t$ debe ser men
 
 $$ {XIP_{l}^{t}} \leq CA_{mi} \hspace{2cm} \forall l \in L, t \in T  $$
 
-La suma de las prorciones 
+La suma de las prorciones de capacidad usada por planta deben ser inferiores al 100% de la capacidad disponible para cada ingrediente
 
 $$ \sum_{l}{\frac{XIP_{l}^{t}}{CA_{mi}}} \leq 1 $$
+
+#### Mantenimiento del nivel de seguridad de igredientes en plantas
+
+El inventario al final del día para todo ingrediente en toda planta debe quedar sobre el nivel de seguridad definido, salvo que este valor sea imposible de alcanzar
+
+$$ \sum_{m \in i}^{t}{XIU_{m}^{t}} \geq SS_{ki}^{t} \cdot (1-BSS_{ik}^{t}) $$
+
+#### Alcance del nivel objetivo de inventario en planta
+
+El inventario al final del día para todo ingrediente en toda planta debe quedar sobre el nivel de seguridad definido, salvo que este valor sea imposible de alcanzar por problemas de abastecimiento en otras plantas
+
+$$ \sum_{m \in i}^{t}{XIU_{m}^{t}} \geq CL_{ki}^{t} \cdot (1-BLV_{ik}^{t}) $$
+
+#### Alcance del nivel objetivo de inventario en planta
+
+El inventario al final del día para todo ingrediente en toda planta debe quedar sobre el nivel de seguridad definido, salvo que este valor sea imposible de alcanzar por problemas de abastecimiento en otras plantas
+
+$$ \sum_{m \in i}^{t}{XIU_{m}^{t}} \geq CX_{ki}^{t} \cdot (1-BMX_{ik}^{t}) $$

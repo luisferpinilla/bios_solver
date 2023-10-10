@@ -300,7 +300,7 @@ def _capacidad_almacenamiento_planta(restricciones: list, variables: dict, coefi
                 if ci_value > 0:
                     # evitar que el valor sea cero y convertirlo
                     ci_facc = capacidad_maxima/(ci_value)
-                    left_expresion.append(ci_facc*xiu_var)
+                    # left_expresion.append(ci_facc*xiu_var)
 
             # Esta restriccion esta generando problemas
             # rest.append((pu.lpSum(left_expresion) <= capacidad_maxima,

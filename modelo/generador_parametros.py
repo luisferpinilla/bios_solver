@@ -501,28 +501,21 @@ def __safety_stock_planta(parametros: dict, conjuntos: dict, file: str):
     parametros['safety_stock'] = param_dict
 
 
-def __costo_asignacion_ingrediantes_ua(parametros: dict, file: str):
-
-    # $CI_{im}^{t}$ : Costo de asignar el ingrediente $i$ a la unidad de almacenamiento $m$ durante el periodo $t$. Si la unidad de almacenamiento no puede contener el ingrediente, este costo será $infinito$.
-    pass
-
-
-def __costo_insatisfaccion_ss(parametros: dict, file: str):
-    # $CS_{ik}^{t}$ : Costo de no satisfacer el inventario de seguridad para el ingrediente $i$ en la planta $k$ durante el día $t$.
-    # problema.parametros['costo_no_safety_stock'] = {f'CS_{k}':1000000 for k in ss_df.index}
-    pass
-
-
-def __costo_insatisfaccion_demanda(parametros: dict, file: str):
+def __costo_insatisfaccion_demanda(parametros: dict):
     # $CD_{ik}^{t}$ : Costo de no satisfacer la demanda del ingrediente $i$  en la planta $k$ durante el día $t$.
     # problema.parametros['costo_no_demanda'] = {f'CD_{k}':10000000 for k in ss_df.index}
     pass
 
 
-def __costo_backorder_planta(parametros: dict, file: str):
-    # $CK_{ik}^{t}$ : Costo del backorder del ingrediente $i$  en la planta $k$ durante el día $t$.
-    # problema.parametros['costo_backorder'] = {f'CK_{k}':10000 for k in ss_df.index}
+def __costo_insatisfaccion_ss(parametros: dict):
+    # $CS_{ik}^{t}$ : Costo de no satisfacer el inventario de seguridad para el ingrediente $i$ en la planta $k$ durante el día $t$.
+    # problema.parametros['costo_no_safety_stock'] = {f'CS_{k}':1000000 for k in ss_df.index}
     pass
+
+
+def __costo_penalizacion_inventario_objetivo(parametros_dict):
+    pass
+    
 
 
 def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: str) -> dict:
@@ -553,14 +546,6 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
 
     __safety_stock_planta(parametros=parametros,
                           conjuntos=conjuntos, file=file)
-
-    __costo_asignacion_ingrediantes_ua(parametros=parametros, file=file)
-
-    __costo_insatisfaccion_ss(parametros=parametros, file=file)
-
-    __costo_insatisfaccion_demanda(parametros=parametros, file=file)
-
-    __costo_backorder_planta(parametros=parametros, file=file)
 
     __costo_operacion_puerto(parametros=parametros,
                              conjuntos=conjuntos, file=file)
