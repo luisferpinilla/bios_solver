@@ -217,7 +217,7 @@ graph LR;
 
 $$\sum_{l \in j}{\sum_{t \in T}{CC_{l}^{t} \cdot XIP_{l}^{t}}}$$
 
-### Costos por transporte
+### Costos por transporte terrestre
 
 ```mermaid
 graph LR;
@@ -236,7 +236,13 @@ $$ \sum_{l \in j}{\sum_{m \in k}{\sum_{t}{34000 \cdot CV_{lm}(ITR_{lm}^{t} + ITD
 
 Aunque las negociaciones están dadas por toneada transportada de manera terrestre entre el origen y destino, existe la posibilidad que en el futuro se decida agregar algun costo fijo asociado al despacho por camión.
 
-$$ \sum_{l \in j}{\sum_{l \in E }\sum_{t}{CF_{lm} \cdot XTI_{lm}^{t}}}$$
+$$ \sum_{l \in j}{\sum_{l \in E }\sum_{t}{CF_{lm}(ITR_{lm}^{t} + ITD_{lm}^{t})}}$$
+
+#### Costo por venta intercompañia
+
+Es el costo causado cuando una compañia vende a la otra la carga que tiene en puerto. Se ha definido como un porcentaje sobre el valor de la carga
+
+$$ \sum_{l \in j}{\sum_{m \in k}{\sum_{t}{34000 \cdot CW_{lm} \cdot CC_{lm} (ITR_{lm}^{t} + ITD_{lm}^{t})}}}$$
 
 ### Costos por Penalización
 

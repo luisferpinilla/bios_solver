@@ -56,7 +56,7 @@ def _costo_operacion_portuaria(variables: dict, costos_despacho_directo: dict, c
     return fobj
 
 
-def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_transporte_fijos: dict, costo_intercompany: dict, cargas: list, plantas: list, periodos: list):
+def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_transporte_fijos: dict, costo_intercompany: dict, costo_carga: dict, cargas: list, plantas: list, periodos: list):
     # $CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
     # $XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
 
@@ -77,11 +77,11 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
 
                 empresa_destino = planta.split('_')[0]
 
-                #xtr_name = f'XTR_{carga}_{planta}_{periodo}'
-                #xtr_var = variables['XTR'][xtr_name]
+                # xtr_name = f'XTR_{carga}_{planta}_{periodo}'
+                # xtr_var = variables['XTR'][xtr_name]
 
-                #xtd_name = f'XTD_{carga}_{planta}_{periodo}'
-                #xtd_var = variables['XTD'][xtd_name]
+                # xtd_name = f'XTD_{carga}_{planta}_{periodo}'
+                # xtd_var = variables['XTD'][xtd_name]
 
                 itr_name = f'ITR_{carga}_{planta}_{periodo}'
                 itr_var = variables['ITR'][itr_name]
@@ -94,8 +94,11 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
                 cv_coef_name = f'CV_{operador}_{planta}_{ingrediente}'
                 # Costo intercompany
                 ci_iter_name = f"CW_{empresa_origen}_{empresa_destino}"
+                # Valor de la carga
+                cc_name = f"VC_{empresa_origen}_{operador}_{importacion}_{ingrediente}"
+                cc_value = costo_carga[cc_name]
 
-                ct_coef_value = costo_transporte_variable[cv_coef_name] * (
+                ct_coef_value = costo_transporte_variable[cv_coef_name] + cc_value*(
                     1 + costo_intercompany[ci_iter_name])
 
                 ct_coef_value += ct_coef_value*(periodo/10)
@@ -142,6 +145,7 @@ def _costo_bakorder(variables: dict):
 
 def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
 
+    costo_carga = parametros['valor_cif']
     costos_almacenamiento = parametros['costos_almacenamiento']
     costos_despacho_directo = parametros['costos_operacion_directo']
     costo_envio_bodega = parametros['costos_operacion_bodega']
@@ -168,6 +172,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
                            costo_transporte_variable=costo_transporte_variable,
                            costo_transporte_fijos=costo_transporte_fijos,
                            costo_intercompany=costo_intercompany,
+                           costo_carga=costo_carga,
                            cargas=cargas,
                            plantas=plantas,
                            periodos=periodos)

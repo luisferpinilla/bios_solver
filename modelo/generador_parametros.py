@@ -115,6 +115,46 @@ def __llegadas_a_puerto(parametros: dict, conjuntos: dict, file: str):
     parametros['llegadas_cargas'] = ar_dict
 
 
+def __generar_costos_cif_cargas(parametros: dict, conjuntos: dict, file=str):
+    
+
+    transitos_a_puerto_df = pd.read_excel(file, sheet_name='tto_puerto')
+    inventarios_puerto_df = pd.read_excel(file, sheet_name='inventario_puerto')
+
+    campos = ['empresa', 'operador',  'imp-motonave', 'ingrediente']
+
+    for campo in campos:
+        inventarios_puerto_df[campo] = inventarios_puerto_df[campo].apply(
+            __remover_underscores)
+        transitos_a_puerto_df[campo] = transitos_a_puerto_df[campo].apply(
+            __remover_underscores)
+
+    transitos_a_puerto_df['key'] = transitos_a_puerto_df.apply(
+        lambda field: '_'.join([field[x] for x in campos]), axis=1)
+    inventarios_puerto_df['key'] = inventarios_puerto_df.apply(
+        lambda field: '_'.join([field[x] for x in campos]), axis=1)
+    
+    transitos_a_puerto_df.rename(columns={'valor_kg':'valor_cif'}, inplace=True)
+    
+    inventarios_puerto_df.rename(columns={'valor_cif_kg':'valor_cif'}, inplace=True)
+
+    df = pd.concat([transitos_a_puerto_df, inventarios_puerto_df])
+    
+    df.set_index('key', drop=True, inplace=True)
+    
+    cif_dict = dict()
+
+    for carga in conjuntos['cargas']:
+        par_name = f'VC_{carga}'
+        if carga in df.index:
+            cif_dict[par_name] = df.loc[carga]['valor_cif']
+        else:
+            print('no har valor para',carga)
+            cif_dict[par_name] = 0.0
+
+    parametros['valor_cif'] = cif_dict
+
+
 def __costo_almacenamiento_puerto(parametros: dict, conjuntos: dict, file: str):
 
     # $CC_{l}^{t}$ : Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $J$.
@@ -523,6 +563,8 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
     __inventario_inicial_puerto(parametros=parametros, file=file)
 
     __llegadas_a_puerto(parametros=parametros, conjuntos=conjuntos, file=file)
+
+    __generar_costos_cif_cargas(parametros=parametros, conjuntos=conjuntos, file=file)
 
     __costo_almacenamiento_puerto(
         parametros=parametros, conjuntos=conjuntos, file=file)

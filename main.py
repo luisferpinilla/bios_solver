@@ -3,7 +3,7 @@ from modelo.reporte import Reporte
 
 # if __name__ == '__main__':
 
-file = '0_model_5oct (2).xlsm'
+file = '0_model_21sept-2_rev.xlsm'
 
 problema = Problema(excel_file_path=file)
 
