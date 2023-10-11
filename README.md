@@ -129,7 +129,11 @@ $CK_{ik}^{t}$ : Costo del backorder del ingrediente $i$  en la planta $k$ durant
 
 $CS_{ik}^{t}$ : Costo de no satisfacer el inventario de seguridad para el ingrediente $i$ en la planta $k$ durante el día $t$. Esta relacionado con BigM al 50%
 
-$CL_{ik}^{t}$ : Costo de no satisfacer el inventario objetivo del ingrediente $i$ en la planta $k$ durante el día $t$. Esta relacionado con BigM al 25%.
+$CL_{ik}^{t}$ : Costo de no satisfacer el inventario objetivo del ingrediente $i$ en la planta $k$ durante el día $t$. Esta relacionado con BigM al 25%. 
+
+Por definición, el inventario objetivo estará dado por la siguiente expresión:
+
+Inventario Objetivo = (Inventario en puertos + Transito hacia planta + inventario en planta)/Consumo Promedio Ingrediente
 
 $CX_{ik}^{t}$ : Costo de no alcanzar la capacidad máxima del ingrediente $i$ en la planta $k$ durante el día $t$. Esta relacionado con BigM al 5%
 
