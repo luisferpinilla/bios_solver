@@ -29,6 +29,7 @@ def __inventario_inicial_puerto(parametros: dict, file: str):
     inventarios_puerto_df['key'] = inventarios_puerto_df.apply(
         lambda field: '_'.join([field[x] for x in campos]), axis=1)
 
+
     parametros['inventario_inicial_cargas'] = {
         f"IP_{inventarios_puerto_df.iloc[fila]['key']}": inventarios_puerto_df.iloc[fila]['cantidad_kg'] for fila in range(inventarios_puerto_df.shape[0])}
 
@@ -468,11 +469,15 @@ def __consumo_proyectado(parametros: dict, conjuntos: dict, file: str, usecols: 
                       drop=True, inplace=True)
 
     mean_df['mean'] = mean_df.apply(np.mean, axis=1)
-
+    
     mean_df = mean_df.reset_index()
+    
+    mean_df['key'] = mean_df['planta'] + "_" + mean_df['ingrediente']
 
-    mean_dict = {
-        f"{mean_df.loc[r]['planta']}_{mean_df.loc[r]['ingrediente']}": mean_df.loc[r]['mean'] for r in mean_df.index}
+    mean_df.set_index('key', drop=True, inplace=True)
+
+    # mean_dict = {
+    #    f"{mean_df.loc[r]['planta']}_{mean_df.loc[r]['ingrediente']}": mean_df.loc[r]['mean'] for r in mean_df.index}
 
     demanda_df = demanda_df.melt(
         id_vars=['empresa', 'ingrediente', 'planta'], var_name='fecha', value_name='consumo')
@@ -495,10 +500,22 @@ def __consumo_proyectado(parametros: dict, conjuntos: dict, file: str, usecols: 
 
     demanda_df.set_index('key', drop=True, inplace=True)
 
+    mean_dict = dict()
+
     demanda_dict = dict()
 
     for planta in conjuntos['plantas']:
         for ingrediente in conjuntos['ingredientes']:
+            
+            par_name = f"{planta.split('_')[1]}_{ingrediente}"
+            
+            if par_name in mean_df.index:
+                par_value = mean_df.loc[par_name]['mean']
+            else:
+                par_value = 0.0
+            
+            mean_dict[par_name] = par_value            
+            
             for periodo in conjuntos['periodos']:
 
                 par_name = f'DM_{planta}_{ingrediente}_{periodo}'
@@ -555,7 +572,52 @@ def __costo_insatisfaccion_ss(parametros: dict):
 
 def __costo_penalizacion_inventario_objetivo(parametros_dict):
     pass
+
+
+def __calcular_dio_general(parametros:dict, conjuntos:dict)->dict:
     
+    dio_dict = dict()
+    inventario_total_dict = dict()
+    consumo_total_dict = dict()
+    
+    for ingrediente in conjuntos['ingredientes']:
+        
+        inventario_total_dict[ingrediente] = 0.0
+        consumo_total_dict[ingrediente] = 0.0
+        
+        for planta in conjuntos['plantas']:
+            
+            par_name = f"{planta.split('_')[1]}_{ingrediente}"
+            consumo_total_dict[ingrediente] += parametros['Consumo_promedio'][par_name]
+            
+            par_name = f'II_{planta}_{ingrediente}'
+            inventario_total_dict[ingrediente] += parametros['inventario_inicial_ua'][par_name]
+            
+            
+            for periodo in conjuntos['periodos']:
+
+                par_name = f'TT_{planta}_{ingrediente}_{periodo}'
+                inventario_total_dict[ingrediente] += parametros['transitos_a_plantas'][par_name]
+                
+            
+    for carga in conjuntos['cargas']:
+            
+        par_name = f'IP_{carga}'
+        
+        if par_name in parametros['inventario_inicial_cargas'].keys():
+            inventario_total_dict[ingrediente] += parametros['inventario_inicial_cargas'][par_name]
+    
+        
+    for ingrediente in conjuntos['ingredientes']:    
+        
+        if ingrediente in consumo_total_dict.keys():
+            
+            dio_dict[ingrediente] = 720.0
+            
+            if consumo_total_dict[ingrediente] > 0:
+                dio_dict[ingrediente] = inventario_total_dict[ingrediente] / consumo_total_dict[ingrediente]
+            
+    dio_dict[ingrediente] =  dio_dict    
 
 
 def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: str) -> dict:
@@ -591,3 +653,5 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
 
     __costo_operacion_puerto(parametros=parametros,
                              conjuntos=conjuntos, file=file)
+    
+    __calcular_dio_general(parametros=parametros, conjuntos=conjuntos)
