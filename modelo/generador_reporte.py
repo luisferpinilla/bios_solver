@@ -545,7 +545,7 @@ def _procesar_costos_portuarios(df_dict: dict, variables: dict, parametros: dict
     variable_dict = variables['ITD']
 
     despachos_df = __procesar_listado_variables(variable_dict, campos)
-    
+
     despachos_df['value'] = 34000*despachos_df['value']
 
     despachos_df.drop(columns=['tipo'], inplace=True)
@@ -576,7 +576,7 @@ def _procesar_costos_transporte(df_dict: dict, variables: dict, parametros: dict
     variable_dict = variables['ITD']
 
     directo_df = __procesar_listado_variables(variable_dict, campos)
-    
+
     directo_df['value'] = 34000*directo_df['value']
 
     directo_df.drop(columns=['tipo'], inplace=True)
@@ -593,7 +593,7 @@ def _procesar_costos_transporte(df_dict: dict, variables: dict, parametros: dict
     variable_dict = variables['ITR']
 
     bodega_df = __procesar_listado_variables(variable_dict, campos)
-    
+
     bodega_df['value'] = 34000*bodega_df['value']
 
     bodega_df.drop(columns=['tipo'], inplace=True)
@@ -676,7 +676,7 @@ def generar_reporte(variables: dict, parametros: dict, conjuntos: dict):
     return df_dict
 
 
-def guardar_reporte(df_dict: dict):
+def guardar_reporte_xlsx(df_dict: dict):
 
     with pd.ExcelWriter(path='reporte.xlsx') as writer:
         for name, dataframe in df_dict.items():
