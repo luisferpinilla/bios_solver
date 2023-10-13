@@ -77,40 +77,31 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
 
                 empresa_destino = planta.split('_')[0]
 
-                # xtr_name = f'XTR_{carga}_{planta}_{periodo}'
-                # xtr_var = variables['XTR'][xtr_name]
-
-                # xtd_name = f'XTD_{carga}_{planta}_{periodo}'
-                # xtd_var = variables['XTD'][xtd_name]
-
                 itr_name = f'ITR_{carga}_{planta}_{periodo}'
                 itr_var = variables['ITR'][itr_name]
 
                 itd_name = f'ITD_{carga}_{planta}_{periodo}'
                 itd_var = variables['ITD'][itd_name]
 
-                # Totalizar costos intercompany por kilo y variables
                 # Costo variables por transporte entre operdor y planta
                 cv_coef_name = f'CV_{operador}_{planta}_{ingrediente}'
-                # Costo intercompany
-                ci_iter_name = f"CW_{empresa_origen}_{empresa_destino}"
-                # Valor de la carga
-                cc_name = f"VC_{empresa_origen}_{operador}_{importacion}_{ingrediente}"
-                cc_value = costo_carga[cc_name]
+                cv_coef_val = costo_transporte_variable[cv_coef_name]
+                fobj.append(34000*cv_coef_val*itr_var)
+                fobj.append(34000*cv_coef_val*itd_var)
 
-                ct_coef_value = costo_transporte_variable[cv_coef_name] + cc_value*(
-                    1 + costo_intercompany[ci_iter_name])
-
-                ct_coef_value += ct_coef_value*(periodo/10)
-
-                fobj.append(34000*ct_coef_value*itr_var)
-                fobj.append(34000*ct_coef_value*itd_var)
-
+                # Costo fijos por transporte entre operador y planta
                 cf_coef_name = f'CF_{operador}_{planta}_{ingrediente}'
-
                 cf_coef_value = costo_transporte_fijos[cf_coef_name]
                 fobj.append(cf_coef_value*itr_var)
                 fobj.append(cf_coef_value*itd_var)
+
+                # Costo intercompany y valor de la carga
+                ci_iter_name = f"CW_{empresa_origen}_{empresa_destino}"
+                ci_iter_val = costo_intercompany[ci_iter_name]
+                vc_name = f"VC_{empresa_origen}_{operador}_{importacion}_{ingrediente}"
+                vc_value = costo_carga[vc_name]
+                fobj.append(34000*vc_value*ci_iter_val*itr_var)
+                fobj.append(34000*vc_value*ci_iter_val*itd_var)
 
     return fobj
 
