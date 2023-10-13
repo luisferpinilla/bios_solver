@@ -111,7 +111,7 @@ def _costo_safety_stock(variables: dict):
     print('fob: Agregando costos de penalidad por Safety Stock')
 
     fobj = list()
-    costo_bss = 1000
+    costo_bss = 10000
     for name, var in variables['BSS'].items():
         periodo = int(name.split('_')[4])
         fobj.append((costo_bss-periodo*10)*var)
