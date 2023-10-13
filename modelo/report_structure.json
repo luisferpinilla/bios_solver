@@ -127,7 +127,7 @@
             "tipo",
             "empresa",
             "operador",
-            "importación",
+            "importacion",
             "ingrediente",
             "periodo"
         ],
@@ -258,5 +258,17 @@
         ],
         "output_name": "safety_stock",
         "sheet_name": "safety_stock"
+    },
+    "valor_cif": {
+        "type": "parameter",
+        "fields": [
+            "tipo",
+            "empresa",
+            "operador",
+            "importacion",
+            "ingrediente"
+        ],
+        "output_name": "valor_cif",
+        "sheet_name": "valor_cif"
     }
 }
