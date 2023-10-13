@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+from modelo.reporte import Reporte
 
 st.set_page_config(layout="wide")
 
@@ -21,26 +22,45 @@ else:
 
     problema = st.session_state['problema']
 
-    solucion = problema.generar_reporte()
+    reporte = Reporte(problema=problema)
+
+    df = reporte.obtener_fact_inventario_puerto()
 
     st.write('## Inventarios en Puerto al final del día')
 
-    df = solucion['Inventario en Puerto']
+    ingrediente_column, operador_column, importacion_column = st.columns(3)
 
-    df = df.reset_index()
+    with ingrediente_column:
 
-    df = df.sort_values(
-        ['empresa', 'ingrediente', 'operador', 'importacion', 'variable'])
+        ingrediente_list = ['Todos'] + list(df['ingrediente'].unique())
 
-    ingrediente_list = ['Todos'] + list(df['ingrediente'].unique())
+        ingrediente = st.selectbox(
+            label='Ingredientes', options=ingrediente_list)
 
-    ingrediente = st.selectbox(label='Ingredientes', options=ingrediente_list)
+        if ingrediente != 'Todos':
+            df = df[df['ingrediente'] == ingrediente]
 
-    if ingrediente != 'Todos':
-        df = df[df['ingrediente'] == ingrediente]
+    with operador_column:
 
-    df = df.set_index(['empresa', 'ingrediente', 'operador',
-                      'importacion', 'variable']).fillna(0.0)
+        operador_list = ['Todos'] + list(df['operador'].unique())
+
+        operador = st.selectbox(label='Operador', options=operador_list)
+
+        if operador != 'Todos':
+            df = df[df['operador'] == operador]
+
+    with importacion_column:
+
+        importacion_list = ['Todos'] + list(df['importacion'].unique())
+
+        importacion = st.selectbox(
+            label='Importacion', options=importacion_list)
+
+        if importacion != 'Todos':
+            df = df[df['importacion'] == importacion]
+
+    df.set_index(['empresa', 'operador', 'importacion',
+                 'ingrediente', 'item'], inplace=True)
 
     st.write(df)
 

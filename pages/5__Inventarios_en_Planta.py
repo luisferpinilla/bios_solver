@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-
-st.set_page_config(layout="wide")
+from modelo.reporte import Reporte
 
 
 @st.cache_data
@@ -10,6 +9,8 @@ def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv(sep=';', decimal=',').encode('utf-8')
 
+
+st.set_page_config(layout="wide")
 
 st.write('# Inventarios en Planta')
 
@@ -21,11 +22,13 @@ else:
 
     problema = st.session_state['problema']
 
-    solucion = problema.generar_reporte()
+    reporte = Reporte(problema=problema)
 
-    df = solucion['Almacenamiento en Planta']
+    df = reporte.obtener_fact_inventario_planta()
 
     st.write('## Inventarios en Planta')
+
+    # st.write(df)
 
     col1, col2 = st.columns(2)
 
