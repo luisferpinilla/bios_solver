@@ -21,12 +21,15 @@ problema.generar_target()
 
 problema.gen_constrains()
 
-problema.solve(tlimit=60)
+problema.solve(tlimit=30)
 
 reporte = Reporte(problema=problema)
 
-solucion = problema.generar_reporte()
+# df_dict = reporte.obtener_dataframes(filename='reporte.xlsx')
+
+# solucion = problema.generar_reporte()
+
 
 # reporte.guardar_excel(filename='solucion.xlsx')
 
-# problema.imprimir_modelo_lp('model.lp')
+problema.imprimir_modelo_lp('model.lp')
