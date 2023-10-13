@@ -5,23 +5,12 @@ import streamlit as st
 st.set_page_config(layout="wide")
 
 st.title('Visualizador BIOS')
+# label='Seleccione un motor de solución', options=['coin', 'glpk'])
 
-col2, col3 = st.columns(2)
-
-# with col1:
-#    motor_solucion = st.radio(
-#        label='Seleccione un motor de solución', options=['coin', 'glpk'])
-
-with col2:
-    tmax = st.slider(label='Tiempo máximo de trabajo en minutos',
-                     min_value=5, max_value=19, value=10)
-
-with col3:
-    uploaded_file = st.file_uploader("Choose a file")
-
-st.session_state['upload_file'] = uploaded_file
+uploaded_file = st.file_uploader("Choose a file")
 
 file = uploaded_file
+
 
 if file is None:
 
@@ -29,70 +18,87 @@ if file is None:
 
 else:
 
-    validador = Validador(file=file)
+    with st.form('Configure los siguientes parámetros'):
 
-    validador.ejecutar_validaciones()
+        tmax = st.slider(label='Tiempo máximo de trabajo en minutos',
+                         min_value=5, max_value=19, value=10)
 
-    with st.expander(label="Resultado de validaciones", expanded=validador.cantidad_errores > 0):
+        st.session_state['upload_file'] = uploaded_file
 
-        for k, v in validador.validaciones.items():
+        validador = Validador(file=file)
 
-            if "OK" in v:
-                st.success(f'{k}: {v}', icon="✅")
-            else:
-                st.error(f'{k}: {v}', icon="🚨")
+        validador.ejecutar_validaciones()
 
-    st.button(label='callback')
+        with st.expander(label="Resultado de validaciones", expanded=validador.cantidad_errores > 0):
 
-    if validador.cantidad_errores == 0:
+            for k, v in validador.validaciones.items():
 
-        problema = Problema(excel_file_path=file)
+                if "OK" in v:
+                    st.success(f'{k}: {v}', icon="✅")
+                else:
+                    st.error(f'{k}: {v}', icon="🚨")
 
-        progress_bar = st.progress(value=0, text='Generando conjuntos')
+        if validador.cantidad_errores == 0:
 
-        problema.generar_sets()
+            submitted = st.form_submit_button("Ejecutar Modelo")
 
-        progress_bar.progress(value=5, text='Generando lista de parámetros')
+            if submitted:
 
-        problema.generar_parameters()
+                problema = Problema(excel_file_path=file)
 
-        progress_bar.progress(value=20, text='Generando lista de variables')
+                progress_bar = st.progress(value=0, text='Generando conjuntos')
 
-        problema.generar_vars()
+                problema.generar_sets()
 
-        progress_bar.progress(
-            value=40, text='Construyendo lista de restricciones')
+                progress_bar.progress(
+                    value=5, text='Generando lista de parámetros')
 
-        problema.gen_constrains()
+                problema.generar_parameters()
 
-        progress_bar.progress(value=50, text='Construyendo función objetivo')
+                progress_bar.progress(
+                    value=20, text='Generando lista de variables')
 
-        problema.generar_target()
+                problema.generar_vars()
 
-        progress_bar.progress(
-            value=70, text='Ejecutando el soluccionador del modelo')
+                progress_bar.progress(
+                    value=40, text='Construyendo lista de restricciones')
 
-        # problema.solve(engine='coin', tlimit=60 * tmax)
-        problema.solve(tlimit=tmax*60)
+                problema.gen_constrains()
 
-        if problema.estatus == 'Infeasible':
-            st.error('El solucionador reporta Infactibilidad')
+                progress_bar.progress(
+                    value=50, text='Construyendo función objetivo')
 
-        progress_bar.progress(value=90, text='Escribiendo modelo LP')
+                problema.generar_target()
 
-        # problema.imprimir_modelo_lp('model.lp')
+                progress_bar.progress(
+                    value=70, text='Ejecutando el soluccionador del modelo')
 
-        # problema.guardar_reporte()
+                # problema.solve(engine='coin', tlimit=60 * tmax)
+                problema.solve(tlimit=tmax*60)
 
-        progress_bar.progress(
-            value=96, text='Cargando parámetros del problema')
+                if problema.estatus == 'Infeasible':
+                    st.error('El solucionador reporta Infactibilidad')
 
-        st.session_state['problema'] = problema
+                progress_bar.progress(value=90, text='Escribiendo modelo LP')
 
-        progress_bar.progress(value=97, text='Variables de estatus')
+                # problema.imprimir_modelo_lp('model.lp')
 
-        st.session_state['solucion_status'] = problema.estatus
+                # problema.guardar_reporte()
 
-        progress_bar.progress(value=100, text='Modelo ejecutado completamente')
+                progress_bar.progress(
+                    value=96, text='Cargando parámetros del problema')
 
-        st.write(problema.estatus)
+                st.session_state['problema'] = problema
+
+                progress_bar.progress(value=97, text='Variables de estatus')
+
+                st.session_state['solucion_status'] = problema.estatus
+
+                progress_bar.progress(
+                    value=100, text='Modelo ejecutado completamente')
+
+                st.write(problema.estatus)
+
+        else:
+            st.warning(
+                body='Debe Resolver las validaciones antes de poder ejecutar el Solucionador del Modelo')
