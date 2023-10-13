@@ -1,0 +1,262 @@
+{
+    "XPL": {
+        "type": "variable",
+        "fields": [
+            "tipo",
+            "empresa",
+            "operador",
+            "importacion",
+            "ingrediente",
+            "periodo"
+        ],
+        "output_name": "kg",
+        "sheet_name": "entradas_bodega_puerto"
+    },
+    "ITD": {
+        "type": "variable",
+        "fields": [
+            "tipo",
+            "empresa_origen",
+            "operador",
+            "importacion",
+            "ingrediente",
+            "empresa_destino",
+            "planta",
+            "periodo"
+        ],
+        "output_name": "cantidad_camiones",
+        "sheet_name": "despacho_directo"
+    },
+    "ITR": {
+        "type": "variable",
+        "fields": [
+            "tipo",
+            "empresa_origen",
+            "operador",
+            "importacion",
+            "ingrediente",
+            "empresa_destino",
+            "planta",
+            "periodo"
+        ],
+        "output_name": "cantidad_camiones",
+        "sheet_name": "despacho_bodega"
+    },
+    "XAR": {
+        "type": "variable",
+        "fields": [
+            "tipo",
+            "empresa_origen",
+            "operador",
+            "importacion",
+            "ingrediente",
+            "empresa_destino",
+            "planta",
+            "periodo"
+        ],
+        "output_name": "kg",
+        "sheet_name": "llegadas_bodega_puerto"
+    },
+    "XAD": {
+        "type": "variable",
+        "fields": [
+            "tipo",
+            "empresa_origen",
+            "operador",
+            "importacion",
+            "ingrediente",
+            "empresa_destino",
+            "planta",
+            "periodo"
+        ],
+        "output_name": "kg",
+        "sheet_name": "llegadas_directas"
+    },
+    "XIP": {
+        "type": "variable",
+        "fields": [
+            "tipo",
+            "empresa",
+            "operador",
+            "importacion",
+            "ingrediente",
+            "periodo"
+        ],
+        "output_name": "kg",
+        "sheet_name": "inventario_puerto"
+    },
+    "XIU": {
+        "type": "variable",
+        "fields": [
+            "tipo",
+            "empresa",
+            "planta",
+            "ingrediente",
+            "periodo"
+        ],
+        "output_name": "kg",
+        "sheet_name": "inventario_planta"
+    },
+    "BSS": {
+        "type": "variable",
+        "fields": [
+            "tipo",
+            "empresa",
+            "planta",
+            "ingrediente",
+            "periodo"
+        ],
+        "output_name": "alarma_safety_stock",
+        "sheet_name": "alarma_safety_stock"
+    },
+    "XBK": {
+        "type": "variable",
+        "fields": [
+            "tipo",
+            "empresa",
+            "planta",
+            "ingrediente",
+            "periodo"
+        ],
+        "output_name": "kg",
+        "sheet_name": "Backorder"
+    },
+    "llegadas_cargas": {
+        "type": "parameter",
+        "fields": [
+            "tipo",
+            "empresa",
+            "operador",
+            "importación",
+            "ingrediente",
+            "periodo"
+        ],
+        "output_name": "kg",
+        "sheet_name": "Llegadas_a_puerto"
+    },
+    "costo_venta_intercompany": {
+        "type": "parameter",
+        "fields": [
+            "tipo",
+            "empresa_origen",
+            "empresa_destino"
+        ],
+        "output_name": "porcentaje_intercompany",
+        "sheet_name": "costo_intercompany"
+    },
+    "costos_operacion_bodega": {
+        "type": "parameter",
+        "fields": [
+            "tipo",
+            "operador",
+            "ingrediente"
+        ],
+        "output_name": "costo_por_kg",
+        "sheet_name": "costo_oportuaria_bodegaje"
+    },
+    "costos_operacion_directo": {
+        "type": "parameter",
+        "fields": [
+            "tipo",
+            "operador",
+            "ingrediente"
+        ],
+        "output_name": "costo_por_kg",
+        "sheet_name": "cost_oportuaria_directo"
+    },
+    "fletes_variables": {
+        "type": "parameter",
+        "fields": [
+            "tipo",
+            "operador",
+            "empresa",
+            "planta",
+            "ingrediente"
+        ],
+        "output_name": "costo_por_kg",
+        "sheet_name": "flete_variable"
+    },
+    "fletes_fijos": {
+        "type": "parameter",
+        "fields": [
+            "tipo",
+            "operador",
+            "empresa",
+            "planta",
+            "ingrediente"
+        ],
+        "output_name": "costo_por_camion",
+        "sheet_name": "flete_fijo"
+    },
+    "consumo_proyectado": {
+        "type": "parameter",
+        "fields": [
+            "tipo",
+            "empresa",
+            "planta",
+            "ingrediente",
+            "periodo"
+        ],
+        "output_name": "kg",
+        "sheet_name": "consumo_proyectado"
+    },
+    "costos_almacenamiento": {
+        "type": "parameter",
+        "fields": [
+            "tipo",
+            "empresa",
+            "operador",
+            "importacion",
+            "ingrediente",
+            "periodo"
+        ],
+        "output_name": "costo_por_kg",
+        "sheet_name": "costo_almacenamiento_puerto"
+    },
+    "inventario_inicial_ua": {
+        "type": "parameter",
+        "fields": [
+            "tipo",
+            "empresa",
+            "planta",
+            "ingrediente"
+        ],
+        "output_name": "kg",
+        "sheet_name": "inv_inicial_planta"
+    },
+    "inventario_inicial_cargas": {
+        "type": "parameter",
+        "fields": [
+            "tipo",
+            "empresa",
+            "operador",
+            "importacion",
+            "ingrediente"
+        ],
+        "output_name": "kg",
+        "sheet_name": "inv_inicial_cargas"
+    },
+    "transitos_a_plantas": {
+        "type": "parameter",
+        "fields": [
+            "tipo",
+            "empresa",
+            "planta",
+            "ingrediente",
+            "periodo"
+        ],
+        "output_name": "kg",
+        "sheet_name": "transito_a_planta"
+    },
+    "safety_stock": {
+        "type": "parameter",
+        "fields": [
+            "tipo",
+            "empresa",
+            "planta",
+            "ingrediente"
+        ],
+        "output_name": "safety_stock",
+        "sheet_name": "safety_stock"
+    }
+}
