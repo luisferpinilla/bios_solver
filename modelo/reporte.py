@@ -1,11 +1,14 @@
 from modelo.problema import Problema
 import pandas as pd
 import pulp as pu
+import json
+from tqdm import tqdm
 
 
 class Reporte():
     def __init__(self, problema: Problema) -> None:
         self.problema = problema
+        self.df_dict = self.obtener_dataframes()
 
     def __convertir_a_dataframe(self, data: dict, campos: list, value_name='value') -> pd.DataFrame:
 
@@ -15,7 +18,7 @@ class Reporte():
         # copiar data en el formato requerido por la estructura
         for key, value in data.items():
             data_dict['key'].append(key)
-            
+
             if type(value) == pu.LpVariable:
                 data_dict['value'].append(value.varValue)
             else:
@@ -35,147 +38,202 @@ class Reporte():
 
         return df[campos + [value_name]]
 
+    def obtener_dataframes(self) -> dict:
+
+        with open('./modelo/report_structure.json') as file:
+            data = json.load(file)
+
+        df_dict = dict()
+
+        for k, v in tqdm(data.items()):
+
+            campos = v['fields']
+            if v['type'] == 'variable':
+                data = self.problema.variables[k]
+            else:
+                data = self.problema.parametros[k]
+            df = self.__convertir_a_dataframe(
+                data=data,
+                campos=campos,
+                value_name=v['output_name'])
+
+            df_dict[v['sheet_name']] = df
+
+        # Guardar peridos
+        periodos_dict = dict()
+        periodos_dict['id_periodo'] = list()
+        periodos_dict['value'] = list()
+
+        fechas_dict = {f: self.problema.conjuntos['fechas'][f] for f in range(
+            len(self.problema.conjuntos['fechas']))}
+
+        for k, v in fechas_dict.items():
+            periodos_dict['id_periodo'].append(k)
+            periodos_dict['value'].append(v)
+
+        df = pd.DataFrame(periodos_dict)
+        df_dict['calendario'] = df
+
+        return df_dict
+
     def guardar_excel(self, filename: str):
 
         with pd.ExcelWriter(path=filename) as writer:
-            
-            # Variables
 
-            campos = ['tipo', 'empresa', 'operador', 'importacion', 'ingrediente', 'periodo']
-            data = self.problema.variables['XPL']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Kg_Almacenados_puerto')
-            df.to_excel(
-                writer, sheet_name='Almacenamiento_puerto', index=False)
+            for sheet_name, dataframe in tqdm(self.self.df_dict.items()):
 
-            campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
-                      'ingrediente', 'emrpesa_destino', 'planta', 'periodo']
-            data = self.problema.variables['XTD']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Kg_despachados_directo')
-            df.to_excel(writer, sheet_name='Despachos_directos', index=False)
+                dataframe.to_excel(writer, sheet_name=sheet_name, index=False)
 
-            campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
-                      'ingrediente', 'emrpesa_destino', 'planta', 'periodo']
-            data = self.problema.variables['XTR']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Kg_despachados_bodega')
-            df.to_excel(writer, sheet_name='Despachos_bodega', index=False)
+    def obtener_modelo_dimensional(self) -> dict:
+        # Leer inventario de planta
+        inventario_planta_df = self.df_dict['inventario_planta'].copy()
+        print(inventario_planta_df.shape)
+        inventario_planta_df.rename(
+            columns={'kg': 'inventario_al_cierre_kg'}, inplace=True)
+        inventario_planta_df.drop(columns=['tipo'], inplace=True)
 
-            campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
-                      'ingrediente', 'emrpesa_destino', 'planta', 'periodo']
-            data = self.problema.variables['ITD']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Cantidad_camiones_directo')
-            df.to_excel(writer, sheet_name='Camiones_despachados_directo', index=False)
+        # Obtener el inventario
+        inventario_inicial_planta_df = self.df_dict['inv_inicial_planta'].copy(
+        )
+        inventario_inicial_planta_df.rename(
+            columns={'kg': 'inventario_al_cierre_kg'}, inplace=True)
+        inventario_inicial_planta_df.drop(columns=['tipo'], inplace=True)
+        inventario_inicial_planta_df['periodo'] = '-1'
 
-            campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
-                      'ingrediente', 'emrpesa_destino', 'planta', 'periodo']
-            data = self.problema.variables['ITR']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Cantidad_camiones_bodega')
-            df.to_excel(writer, sheet_name='Camiones_despachados_bodega', index=False)
-            
+        # Concatenar el inventario en la fact inventario planta
+        fact_inventario_planta = pd.concat(
+            [inventario_inicial_planta_df, inventario_planta_df])
 
-            campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
-                      'ingrediente', 'emrpesa_destino', 'planta', 'periodo']
-            data = self.problema.variables['XAR']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Kg_recibidos_bodega')
-            df.to_excel(
-                writer, sheet_name='llegadas_desde_bodega', index=False)
+        # Totalizar los transitos
+        transitos_planta_df = self.df_dict['transito_a_planta']
+        print(transitos_planta_df.shape)
+        transitos_planta_df = transitos_planta_df[transitos_planta_df['kg'] > 0]
+        transitos_planta_df = transitos_planta_df.groupby(
+            ['empresa', 'planta', 'ingrediente', 'periodo'])[['kg']].sum()
+        transitos_planta_df.reset_index(inplace=True)
+        transitos_planta_df.rename(
+            columns={'kg': 'transitos_kg', 'empresa': 'empresa'}, inplace=True)
 
-            campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
-                      'ingrediente', 'emrpesa_destino', 'planta', 'periodo']
-            data = self.problema.variables['XAD']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Kg_recibidos_directo')
-            df.to_excel(writer, sheet_name='Llegadas_directas', index=False)
-            
-            campos = ['tipo', 'empresa', 'operador', 'importacion', 'ingrediente', 'periodo']
-            data = self.problema.variables['XIP']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Kilos_al_cierre')
-            df.to_excel(writer, sheet_name='Inventario_puerto', index=False)
-            
-  
-            campos = ['tipo', 'empresa', 'planta', 'ingrediente', 'periodo']
-            data = self.problema.variables['XIU']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Kilos_al_cierre')
-            df.to_excel(writer, sheet_name='Inventario_plantas', index=False)
-            
-            campos = ['tipo', 'empresa', 'planta', 'ingrediente', 'periodo']
-            data = self.problema.variables['BSS']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Alarma_SafetyStock')
-            df.to_excel(writer, sheet_name='SafeyStock', index=False)  
-            
-            campos = ['tipo', 'empresa', 'planta', 'ingrediente', 'periodo']
-            data = self.problema.variables['XBK']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Kilos_Backorder')
-            df.to_excel(writer, sheet_name='Backorder_plantas', index=False)
-            
-            # Parametros
-            campos = ['tipo', 'empresa', 'operador', 'importación', 'ingrediente', 'periodo']
-            data = self.problema.parametros['llegadas_cargas']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Kilos_llegando_puerto')
-            df.to_excel(writer, sheet_name='Llegadas_puerto', index=False)
+        # Totalizar las llegadas directas a la planta
+        llegadas_directas_planta_df = self.df_dict['llegadas_directas'].copy()
+        print(llegadas_directas_planta_df.shape)
+        llegadas_directas_planta_df = llegadas_directas_planta_df[
+            llegadas_directas_planta_df['kg'] > 0]
+        llegadas_directas_planta_df = llegadas_directas_planta_df.groupby(
+            ['empresa_destino', 'planta', 'ingrediente', 'periodo'])[['kg']].sum()
+        llegadas_directas_planta_df.reset_index(inplace=True)
+        llegadas_directas_planta_df.rename(
+            columns={'kg': 'llegadas_directas_kg', 'empresa_destino': 'empresa'}, inplace=True)
 
-            campos = ['tipo', 'empresa_origen', 'empresa_destino']
-            data = self.problema.parametros['costo_venta_intercompany']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Porcentaje_Intercompany')
-            df.to_excel(writer, sheet_name='costo_venta_intercompany', index=False)  
-            
-            campos = ['tipo', 'operador', 'ingrediente']
-            data = self.problema.parametros['costos_operacion_bodega']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Costo_OP_almacenamiento')
-            df.to_excel(writer, sheet_name='costos_operacion_bodega', index=False)            
-            
-            campos = ['tipo', 'operador', 'ingrediente']
-            data = self.problema.parametros['costos_operacion_directo']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Costo_OP_DespachoDirecto')
-            df.to_excel(writer, sheet_name='costos_operacion_directo', index=False)            
-            
-            # Costos de fletes
-            campos = ['tipo', 'operador', 'empresa', 'planta', 'ingrediente']
-            data = self.problema.parametros['fletes_variables']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Flete_variable_Kg')
-            df.to_excel(writer, sheet_name='fletes_variables', index=False) 
-            
-            campos = ['tipo', 'operador', 'empresa', 'planta', 'ingrediente']
-            data = self.problema.parametros['fletes_fijos']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='Flete_fijo_camion')
-            df.to_excel(writer, sheet_name='fletes_fijos', index=False) 
-            
-            campos = ['tipo', 'empresa', 'planta', 'ingrediente', 'periodo']
-            data = self.problema.parametros['consumo_proyectado']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='consumo_proyectado')
-            df.to_excel(writer, sheet_name='consumo_proyectado', index=False) 
-            
-            campos = ['tipo', 'empresa', 'operador', 'importacion', 'ingrediente', 'periodo']
-            data = self.problema.parametros['costos_almacenamiento']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='costos_almacenamiento_cierre')
-            df.to_excel(writer, sheet_name='Costos_almacenamiento_puerto', index=False) 
-                   
-            campos = ['tipo', 'empresa', 'planta', 'ingrediente']
-            data = self.problema.parametros['inventario_inicial_ua']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='inventario_inicial_planta')
-            df.to_excel(writer, sheet_name='inventario_inicial_planta', index=False) 
-            
-            campos = ['tipo', 'empresa', 'operador', 'importacion', 'ingrediente']
-            data = self.problema.parametros['inventario_inicial_cargas']
-            df = self.__convertir_a_dataframe(
-                data=data, campos=campos, value_name='inventario_inicial_puerto')
-            df.to_excel(writer, sheet_name='inventario_inicial_puerto', index=False)
-            
+        # Totalizar las llegadas por bodega puerto a la planta
+        llegadas_por_bodega_planta_df = self.df_dict['llegadas_bodega_puerto'].copy(
+        )
+        print(llegadas_por_bodega_planta_df.shape)
+        llegadas_por_bodega_planta_df = llegadas_por_bodega_planta_df[
+            llegadas_por_bodega_planta_df['kg'] > 0]
+        llegadas_por_bodega_planta_df = llegadas_por_bodega_planta_df.groupby(
+            ['empresa_destino', 'planta', 'ingrediente', 'periodo'])[['kg']].sum()
+        llegadas_por_bodega_planta_df.reset_index(inplace=True)
+        llegadas_por_bodega_planta_df.rename(
+            columns={'kg': 'llegadas_por_bodega_kg', 'empresa_destino': 'empresa'}, inplace=True)
+
+        # Obtener el consumo proyectado
+        consumo_proyectado_df = self.df_dict['consumo_proyectado'].copy()
+        print(consumo_proyectado_df.shape)
+        consumo_proyectado_df.drop(columns=['tipo'], inplace=True)
+        consumo_proyectado_df.rename(
+            columns={'kg': 'consumo_kg'}, inplace=True)
+
+        # Safety Stock
+        safety_stock_df = self.df_dict['safety_stock'].copy()
+        safety_stock_df.drop(columns=['tipo'], inplace=True)
+
+        # Alarma por safety Stock
+        alarma_ss_df = self.df_dict['alarma_safety_stock'].copy()
+        alarma_ss_df.drop(columns=['tipo'], inplace=True)
+
+        # Agregar los transitos a Fact inventarios planta
+        print('fact antes del join llegadas directas',
+              fact_inventario_planta.shape)
+        fact_inventario_planta = pd.merge(left=fact_inventario_planta,
+                                          right=transitos_planta_df,
+                                          left_on=['empresa', 'planta',
+                                                   'ingrediente', 'periodo'],
+                                          right_on=['empresa', 'planta',
+                                                    'ingrediente', 'periodo'],
+                                          how='left').fillna(0.0)
+        print('fact antes del join', fact_inventario_planta.shape)
+
+        # Agregar las llegadas directas a Fact inventarios planta
+        print('fact antes del join llegadas directas',
+              fact_inventario_planta.shape)
+        fact_inventario_planta = pd.merge(left=fact_inventario_planta,
+                                          right=llegadas_directas_planta_df,
+                                          left_on=['empresa', 'planta',
+                                                   'ingrediente', 'periodo'],
+                                          right_on=['empresa', 'planta',
+                                                    'ingrediente', 'periodo'],
+                                          how='left').fillna(0.0)
+        print('fact antes del join', fact_inventario_planta.shape)
+
+        # Agregar las llegadas por bodega a Fact inventarios planta
+        print('fact antes del join llegadas por puerto',
+              fact_inventario_planta.shape)
+        fact_inventario_planta = pd.merge(left=fact_inventario_planta,
+                                          right=llegadas_por_bodega_planta_df,
+                                          left_on=['empresa', 'planta',
+                                                   'ingrediente', 'periodo'],
+                                          right_on=['empresa', 'planta',
+                                                    'ingrediente', 'periodo'],
+                                          how='left').fillna(0.0)
+        print('fact antes del join', fact_inventario_planta.shape)
+
+        # Agregar el consumo proyectado a Fact inventarios planta
+        print('fact antes del join llegadas por puerto',
+              fact_inventario_planta.shape)
+        fact_inventario_planta = pd.merge(left=fact_inventario_planta,
+                                          right=consumo_proyectado_df,
+                                          left_on=['empresa', 'planta',
+                                                   'ingrediente', 'periodo'],
+                                          right_on=['empresa', 'planta',
+                                                    'ingrediente', 'periodo'],
+                                          how='left').fillna(0.0)
+        print('fact antes del join', fact_inventario_planta.shape)
+
+        # Agregar Safey Stock a Fact inventarios planta
+        print('fact antes del join llegadas por puerto',
+              fact_inventario_planta.shape)
+        fact_inventario_planta = pd.merge(left=fact_inventario_planta,
+                                          right=safety_stock_df,
+                                          left_on=['empresa',
+                                                   'planta', 'ingrediente'],
+                                          right_on=['empresa',
+                                                    'planta', 'ingrediente'],
+                                          how='left').fillna(0.0)
+        print('fact antes del join', fact_inventario_planta.shape)
+
+        # Agregar alarma de Safey Stock a Fact inventarios planta
+        print('fact antes del join llegadas por puerto',
+              fact_inventario_planta.shape)
+        fact_inventario_planta = pd.merge(left=fact_inventario_planta,
+                                          right=alarma_ss_df,
+                                          left_on=['empresa', 'planta',
+                                                   'ingrediente', 'periodo'],
+                                          right_on=['empresa', 'planta',
+                                                    'ingrediente', 'periodo'],
+                                          how='left').fillna(0.0)
+        print('fact antes del join', fact_inventario_planta.shape)
+
+        fact_inventario_planta = pd.melt(frame=fact_inventario_planta,
+                                         id_vars=['empresa', 'planta',
+                                                  'ingrediente', 'periodo'],
+                                         value_vars=['inventario_al_cierre_kg',
+                                                     'transitos_kg', 'llegadas_directas_kg',
+                                                     'llegadas_por_bodega_kg', 'consumo_kg', 'safety_stock',
+                                                     'alarma_safety_stock'],
+                                         value_name='kg', var_name='item')
+        fact_inventario_planta = fact_inventario_planta.pivot_table(values='kg',
+                                                                    index=[
+                                                                        'empresa', 'planta', 'ingrediente', 'item'],
+                                                                    columns='periodo',
+                                                                    aggfunc="sum").reset_index()
