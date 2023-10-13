@@ -3,7 +3,7 @@ from modelo.generador_parametros import generar_parametros
 from modelo.generador_variables import generar_variables
 from modelo.generador_restricciones import generar_restricciones
 from modelo.generador_fobjetivo import generar_fob
-from modelo.generador_reporte import generar_reporte, guardar_reporte
+from modelo.generador_reporte import generar_reporte, guardar_reporte_xlsx
 import pulp as pu
 
 
@@ -80,28 +80,28 @@ class Problema():
                 # print('agregando restriccion', name, rest)
                 self.solver += rest
 
-
         print('ejecutando solver')
         if engine == 'glpk':
-            if gap==0.0:
+            if gap == 0.0:
                 engine = pu.GLPK_CMD(timeLimit=tlimit)
             else:
-                engine = pu.GLPK_CMD(timeLimit=tlimit, options=['--mipgap', str(gap), '--check'])
-            
+                engine = pu.GLPK_CMD(timeLimit=tlimit, options=[
+                                     '--mipgap', str(gap), '--check'])
+
             self.solver.solve(solver=engine)
-            
+
         else:
-            if gap==0.0:
+            if gap == 0.0:
                 engine = pu.PULP_CBC_CMD(
                     timeLimit=tlimit)
             else:
-                engine = pu.PULP_CBC_CMD(gapRel=gap,timeLimit=tlimit)
-            
+                engine = pu.PULP_CBC_CMD(
+                    gapRel=gap, timeLimit=tlimit)
+
             self.solver.solve(solver=engine)
-            
-        print('solver ejecutado')    
+
+        print('solver ejecutado')
         self.estatus = pu.LpStatus[self.solver.status]
-        
 
         if gen_lp_file:
             self.solver.writeLP(filename='model.lp')
@@ -118,7 +118,7 @@ class Problema():
 
         reporte = self.generar_reporte()
 
-        guardar_reporte(df_dict=reporte)
+        guardar_reporte_xlsx(df_dict=reporte)
 
     def imprimir_modelo_lp(self, file_output: str):
 
