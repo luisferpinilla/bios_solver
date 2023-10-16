@@ -120,16 +120,24 @@ def _costo_safety_stock(variables: dict):
     return fobj
 
 
-def _costo_bakorder(variables: dict):
+def _costo_bakorder(conjuntos:dict, variables: dict, penalizacion:dict):
 
     print('fob: Agregando costos de penalidad por backorder')
 
     fobj = list()
-    costo_xbk = 10000
-    for name, var in variables['XBK'].items():
-        periodo = int(name.split('_')[4])
-        fobj.append((costo_xbk - periodo*10)*var)
-        # fobj.append(costo_xbk*var)
+    
+    for planta in conjuntos['plantas']:
+        for ingrediente in conjuntos['ingredientes']:
+            for periodo in conjuntos['periodos']:
+                
+                xbk_name = f'XBK_{planta}_{ingrediente}_{periodo}'
+                xbk_var = variables['XBK'][xbk_name]
+                
+                big_name = f'PD_{planta}_{ingrediente}_{periodo}'
+                big_value = penalizacion[big_name]
+    
+                fobj.append((big_value - int(periodo)*10)*xbk_var)
+    
 
     return fobj
 
@@ -146,6 +154,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     periodos = conjuntos['periodos']
     cargas = conjuntos['cargas']
     plantas = conjuntos['plantas']
+    penalizacion_backorder = parametros['penalizacion_backorder']
 
     # Almacenamiento en puerto por corte de Facturación:
     cap = _costos_almacenamiento_puerto(variables=variables,
@@ -172,7 +181,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     css = _costo_safety_stock(variables)
 
     # Costo del backorder
-    cbk = _costo_bakorder(variables)
+    cbk = _costo_bakorder(conjuntos=conjuntos, variables=variables, penalizacion=penalizacion_backorder)
 
     ctotal = cap + cop + ct + css + cbk
 

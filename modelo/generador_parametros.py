@@ -558,19 +558,28 @@ def __safety_stock_planta(parametros: dict, conjuntos: dict, file: str):
     parametros['safety_stock'] = param_dict
 
 
-def __costo_insatisfaccion_demanda(parametros: dict):
-    # $CD_{ik}^{t}$ : Costo de no satisfacer la demanda del ingrediente $i$  en la planta $k$ durante el día $t$.
-    # problema.parametros['costo_no_demanda'] = {f'CD_{k}':10000000 for k in ss_df.index}
-    pass
+def __costo_penalizacion_insatisfaccion_demanda(conjuntos:dict, parametros: dict, bigM:float):
+    
+    penalizacion = dict()
+    
+    for periodo in conjuntos['periodos']:
+        for ingrediente in conjuntos['ingredientes']:
+            for planta in conjuntos['plantas']:
+                par_name = f'PD_{planta}_{ingrediente}_{periodo}'
+                par_value = bigM
+                
+                penalizacion[par_name] = par_value
+                
+    parametros['penalizacion_backorder'] = penalizacion
 
 
-def __costo_insatisfaccion_ss(parametros: dict):
+def __costo_penalizacion_insatisfaccion_ss(parametros: dict, bigM:float):
     # $CS_{ik}^{t}$ : Costo de no satisfacer el inventario de seguridad para el ingrediente $i$ en la planta $k$ durante el día $t$.
     # problema.parametros['costo_no_safety_stock'] = {f'CS_{k}':1000000 for k in ss_df.index}
     pass
 
 
-def __costo_penalizacion_inventario_objetivo(parametros_dict):
+def __costo_penalizacion_inventario_objetivo(parametros:dict, bigM:float):
     pass
 
 
@@ -654,4 +663,10 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
     __costo_operacion_puerto(parametros=parametros,
                              conjuntos=conjuntos, file=file)
     
-    __calcular_dio_general(parametros=parametros, conjuntos=conjuntos)
+    #__calcular_dio_general(parametros=parametros, conjuntos=conjuntos)
+    
+    __costo_penalizacion_insatisfaccion_demanda(conjuntos=conjuntos, parametros=parametros, bigM=1000000)
+    
+    __costo_penalizacion_insatisfaccion_ss(parametros=parametros, bigM=1000000)
+    
+    __costo_penalizacion_inventario_objetivo(parametros=parametros, bigM=1000000)
