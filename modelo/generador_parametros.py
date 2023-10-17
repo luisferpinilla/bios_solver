@@ -34,6 +34,25 @@ def __inventario_inicial_puerto(parametros: dict, file: str):
         f"IP_{inventarios_puerto_df.iloc[fila]['key']}": inventarios_puerto_df.iloc[fila]['cantidad_kg'] for fila in range(inventarios_puerto_df.shape[0])}
 
 
+def __generar_plantas_empresas(parametros:dict, file: str):
+    
+
+    plantas_df = pd.read_excel(file, sheet_name='plantas')
+
+    plantas_df['planta'] = plantas_df['planta'].apply(__remover_underscores)
+
+    plantas_df['empresa'] = plantas_df['empresa'].apply(__remover_underscores)
+
+    empresas_dict = dict()
+    
+    for i in plantas_df.index:
+        par_planta = plantas_df.loc[i]['planta']
+        par_empresa = plantas_df.loc[i]['empresa']
+        empresas_dict[par_planta] = par_empresa
+
+    parametros['empresas_plantas'] = empresas_dict
+
+
 def __llegadas_a_puerto(parametros: dict, conjuntos: dict, file: str):
 
     # $AR_{l}^{t}$ : Cantidad de material que va a llegar a la carga $l$ durante el día $t$, sabiendo que: $material \in I$ y $carga \in J$.
@@ -394,9 +413,11 @@ def __inventario_planta(parametros: dict, conjuntos: dict, file: str):
     inventario_planta_df = pd.read_excel(
         file, sheet_name='unidades_almacenamiento', usecols='B:F')
 
+    inventario_planta_df['empresa'] = inventario_planta_df['planta'].map(parametros['empresas_plantas'])
+
     inventario_planta_df = inventario_planta_df[inventario_planta_df['ingrediente_actual'].isin(
         conjuntos['ingredientes'])]
-
+    
     inventario_planta_df = inventario_planta_df.groupby(
         campos)[['cantidad_actual']].sum().reset_index()
 
@@ -557,6 +578,23 @@ def __safety_stock_planta(parametros: dict, conjuntos: dict, file: str):
 
     parametros['safety_stock'] = param_dict
 
+def __costo_penalizacion_capacidad_maxima(conjuntos:dict, parametros:dict, bigM:float):
+
+    param_dict = dict()
+
+    for planta in conjuntos['plantas']:
+        for ingrediente in conjuntos['ingredientes']:
+            for periodo in conjuntos['periodos']:
+
+                par_name = f'AX_{planta}_{ingrediente}_{periodo}'
+                par_value = bigM
+
+                param_dict[par_name] = par_value
+
+    parametros['costo_penalizacion_capacidad_maxima'] = param_dict
+
+
+
 
 def __costo_penalizacion_insatisfaccion_demanda(conjuntos:dict, parametros: dict, bigM:float):
     
@@ -631,6 +669,9 @@ def __calcular_dio_general(parametros:dict, conjuntos:dict)->dict:
 
 def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: str) -> dict:
 
+    
+    __generar_plantas_empresas(parametros=parametros, file=file)
+
     __inventario_inicial_puerto(parametros=parametros, file=file)
 
     __llegadas_a_puerto(parametros=parametros, conjuntos=conjuntos, file=file)
@@ -664,9 +705,13 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
                              conjuntos=conjuntos, file=file)
     
     #__calcular_dio_general(parametros=parametros, conjuntos=conjuntos)
+
+    BigM = 1000000
+
+    __costo_penalizacion_capacidad_maxima(conjuntos=conjuntos, parametros=parametros, bigM=BigM)
     
-    __costo_penalizacion_insatisfaccion_demanda(conjuntos=conjuntos, parametros=parametros, bigM=1000000)
+    __costo_penalizacion_insatisfaccion_demanda(conjuntos=conjuntos, parametros=parametros, bigM=BigM)
     
-    __costo_penalizacion_insatisfaccion_ss(parametros=parametros, bigM=1000000)
+    __costo_penalizacion_insatisfaccion_ss(parametros=parametros, bigM=BigM)
     
-    __costo_penalizacion_inventario_objetivo(parametros=parametros, bigM=1000000)
+    __costo_penalizacion_inventario_objetivo(parametros=parametros, bigM=BigM)

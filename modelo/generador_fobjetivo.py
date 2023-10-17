@@ -130,13 +130,13 @@ def _costo_exceder_capacidad_almacenamiento(conjuntos:dict, variables:dict, pena
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
                 
-                xbk_name = f'XBK_{planta}_{ingrediente}_{periodo}'
-                xbk_var = variables['XBK'][xbk_name]
+                bal_name = f'BAL_{planta}_{ingrediente}_{periodo}'
+                bal_var = variables['BAL'][bal_name]
                 
-                big_name = f'MA_{planta}_{ingrediente}_{periodo}'
+                big_name = f'AX_{planta}_{ingrediente}_{periodo}'
                 big_value = penalizacion_exceder_almacenamiento[big_name]
     
-                fobj.append((big_value - int(periodo)*10)*xbk_var)
+                fobj.append((big_value - int(periodo)*10)*bal_var)
                 
     return fobj
     
@@ -178,7 +178,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     cargas = conjuntos['cargas']
     plantas = conjuntos['plantas']
     penalizacion_backorder = parametros['penalizacion_backorder']
-    penalizacion_exceder_almacenamiento = parametros['penalizacion_cap_max_almacenamiento']
+    penalizacion_exceder_almacenamiento = parametros['costo_penalizacion_capacidad_maxima']
 
     # Almacenamiento en puerto por corte de Facturación:
     cap = _costos_almacenamiento_puerto(variables=variables,
