@@ -273,7 +273,7 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, plantas: lis
 def _capacidad_almacenamiento_planta(restricciones: list, 
                                      variables: dict, 
                                      coeficientes_capacidad: dict, 
-                                     costo_penalizacion_capacidad_planta:dict, 
+                                     BigM:float, 
                                      plantas: list, 
                                      ingredientes: list, 
                                      max_cap: dict, 
@@ -301,14 +301,11 @@ def _capacidad_almacenamiento_planta(restricciones: list,
                 bal_name = f'BAL_{planta}_{ingrediente}_{periodo}'
                 bal_var = variables['BAL'][bal_name]
 
-                ax_name = f'AX_{planta}_{ingrediente}_{periodo}'
-                ax_value = costo_penalizacion_capacidad_planta[ax_name]
-
                 ci_name = f'CI_{planta}_{ingrediente}'
                 ci_value = coeficientes_capacidad[ci_name]
 
                 rest.append(
-                    (xiu_var <= ci_value + ax_value*bal_var, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
+                    (xiu_var <= ci_value + BigM*bal_var, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
 
                 if ci_value > 0:
                     # evitar que el valor sea cero y convertirlo
@@ -336,7 +333,7 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
     inventario_inicial_ua = parametros['inventario_inicial_ua']
     safety_stock = parametros['safety_stock']
     max_cap = parametros['capacidad_almacenamiento_maxima']
-    costo_penalizacion_capacidad_planta = parametros['costo_penalizacion_capacidad_maxima']
+    # costo_penalizacion_capacidad_planta = parametros['costo_penalizacion_capacidad_maxima']
 
     _balance_masa_bif(restricciones=restricciones,
                       variables=variables,
@@ -355,7 +352,7 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
     _capacidad_almacenamiento_planta(restricciones=restricciones,
                                      variables=variables,
                                      coeficientes_capacidad=capacidad_plantas,
-                                     costo_penalizacion_capacidad_planta=costo_penalizacion_capacidad_planta,
+                                     BigM=10000000,
                                      max_cap=max_cap,
                                      plantas=plantas,
                                      ingredientes=ingredientes,

@@ -142,7 +142,7 @@ def _costo_bakorder(conjuntos:dict, variables: dict, bigM:float):
                 xbk_name = f'XBK_{planta}_{ingrediente}_{periodo}'
                 xbk_var = variables['XBK'][xbk_name]
     
-                fobj.append((bigM - int(periodo)*10)*xbk_var)
+                fobj.append((bigM/100 - int(periodo)*10)*xbk_var)
     
 
     return fobj
@@ -182,7 +182,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     # penalizacion_backorder = parametros['penalizacion_backorder']
     # penalizacion_exceder_almacenamiento = parametros['costo_penalizacion_capacidad_maxima']
 
-    bigM = 1000000
+    bigM = 100000000
 
     # Almacenamiento en puerto por corte de Facturación:
     cap = _costos_almacenamiento_puerto(variables=variables,
@@ -216,8 +216,8 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
 
     # Costo de exceder las capacidades máximas de almacenamiento
     cal = _costo_exceder_capacidad_almacenamiento(conjuntos=conjuntos, 
-                                                  variables=variables,
-                                                  bigM=bigM)
+                                                  variables=variables, 
+                                                  BigM=bigM)
 
     ctotal = cap + cop + ct + css + cal + cbk
 
