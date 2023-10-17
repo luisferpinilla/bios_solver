@@ -230,8 +230,20 @@ class Validador():
             self.validaciones['Capacidad en Unidades de Almacenamiento'] = f"Error, las siguientes unidades {unidades} tienen valores erróneos sobre la capacidad de almacenamiento"
         else:
             self.validaciones['Capacidad en Unidades de Almacenamiento'] = "OK, las capacidades estan sobre las cantidades de inventario"
+
+    def _validar_no_duplicados_consumos(self):
+
+        df = pd.read_excel(io=self.file, sheet_name='consumo_proyectado')
+
+        df = df.groupby(['empresa', 'planta', 'ingrediente'])[['key']].count().reset_index()
         
+        df = df[df['key']>1]
         
+        if df.shape[0]>0:
+            self.cantidad_errores += 1
+            self.validaciones['Conteos en consumos proyectados'] = "Error, la pestaña de consumos proyectados tiene valores duplicados en cuanto a ingrediente y planta"
+        else:
+            self.validaciones['Conteos en consumos proyectados'] = "OK, Consumos proyectaos sin duplicados"
 
     def ejecutar_validaciones(self):
 
@@ -252,3 +264,5 @@ class Validador():
         self._validar_safety_stock()
 
         self._validar_no_exceder_capacidad_almacenamiento()
+        
+        self._validar_no_duplicados_consumos()
