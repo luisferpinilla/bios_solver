@@ -120,6 +120,29 @@ def _costo_safety_stock(variables: dict):
     return fobj
 
 
+def _costo_exceder_capacidad_almacenamiento(conjuntos:dict, variables:dict, penalizacion_exceder_almacenamiento:dict):
+    
+    print('fobj: Agregando costo de penalidad por exceder capacidad almacenamiento')
+    
+    fobj = list()
+
+    for planta in conjuntos['plantas']:
+        for ingrediente in conjuntos['ingredientes']:
+            for periodo in conjuntos['periodos']:
+                
+                xbk_name = f'XBK_{planta}_{ingrediente}_{periodo}'
+                xbk_var = variables['XBK'][xbk_name]
+                
+                big_name = f'MA_{planta}_{ingrediente}_{periodo}'
+                big_value = penalizacion_exceder_almacenamiento[big_name]
+    
+                fobj.append((big_value - int(periodo)*10)*xbk_var)
+                
+    return fobj
+    
+
+
+
 def _costo_bakorder(conjuntos:dict, variables: dict, penalizacion:dict):
 
     print('fob: Agregando costos de penalidad por backorder')
@@ -155,6 +178,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     cargas = conjuntos['cargas']
     plantas = conjuntos['plantas']
     penalizacion_backorder = parametros['penalizacion_backorder']
+    penalizacion_exceder_almacenamiento = parametros['penalizacion_cap_max_almacenamiento']
 
     # Almacenamiento en puerto por corte de Facturación:
     cap = _costos_almacenamiento_puerto(variables=variables,
@@ -177,13 +201,20 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
                            plantas=plantas,
                            periodos=periodos)
 
+    # Costo del backorder
+    cbk = _costo_bakorder(conjuntos=conjuntos, 
+                          variables=variables, 
+                          penalizacion=penalizacion_backorder)
+    
     # Costo de no respetar un inventario de seguridad de un ingrediente en una planta
     css = _costo_safety_stock(variables)
 
-    # Costo del backorder
-    cbk = _costo_bakorder(conjuntos=conjuntos, variables=variables, penalizacion=penalizacion_backorder)
+    # Costo de exceder las capacidades máximas de almacenamiento
+    cal = _costo_exceder_capacidad_almacenamiento(conjuntos=conjuntos, 
+                                                  variables=variables,
+                                                  penalizacion_exceder_almacenamiento= penalizacion_exceder_almacenamiento)
 
-    ctotal = cap + cop + ct + css + cbk
+    ctotal = cap + cop + ct + css + cal + cbk
 
     for term in ctotal:
         fob.append(term)
