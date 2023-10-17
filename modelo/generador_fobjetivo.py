@@ -109,7 +109,7 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
 
 
 
-def _costo_exceder_capacidad_almacenamiento(conjuntos:dict, variables:dict, penalizacion_exceder_almacenamiento:dict):
+def _costo_exceder_capacidad_almacenamiento(conjuntos:dict, variables:dict, BigM:float):
     
     print('fobj: Agregando costo de penalidad por exceder capacidad almacenamiento')
     
@@ -121,18 +121,15 @@ def _costo_exceder_capacidad_almacenamiento(conjuntos:dict, variables:dict, pena
                 
                 bal_name = f'BAL_{planta}_{ingrediente}_{periodo}'
                 bal_var = variables['BAL'][bal_name]
-                
-                big_name = f'AX_{planta}_{ingrediente}_{periodo}'
-                big_value = penalizacion_exceder_almacenamiento[big_name]
-    
-                fobj.append((big_value - int(periodo)*10)*bal_var)
+            
+                fobj.append((2*BigM - int(periodo)*10)*bal_var)
                 
     return fobj
     
 
 
 
-def _costo_bakorder(conjuntos:dict, variables: dict, penalizacion:dict):
+def _costo_bakorder(conjuntos:dict, variables: dict, bigM:float):
 
     print('fob: Agregando costos de penalidad por backorder')
 
@@ -144,11 +141,8 @@ def _costo_bakorder(conjuntos:dict, variables: dict, penalizacion:dict):
                 
                 xbk_name = f'XBK_{planta}_{ingrediente}_{periodo}'
                 xbk_var = variables['XBK'][xbk_name]
-                
-                big_name = f'PD_{planta}_{ingrediente}_{periodo}'
-                big_value = penalizacion[big_name]
     
-                fobj.append((big_value - int(periodo)*10)*xbk_var)
+                fobj.append((bigM - int(periodo)*10)*xbk_var)
     
 
     return fobj
@@ -185,8 +179,10 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     periodos = conjuntos['periodos']
     cargas = conjuntos['cargas']
     plantas = conjuntos['plantas']
-    penalizacion_backorder = parametros['penalizacion_backorder']
-    penalizacion_exceder_almacenamiento = parametros['costo_penalizacion_capacidad_maxima']
+    # penalizacion_backorder = parametros['penalizacion_backorder']
+    # penalizacion_exceder_almacenamiento = parametros['costo_penalizacion_capacidad_maxima']
+
+    bigM = 1000000
 
     # Almacenamiento en puerto por corte de Facturación:
     cap = _costos_almacenamiento_puerto(variables=variables,
@@ -213,7 +209,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     # Costo del backorder
     cbk = _costo_bakorder(conjuntos=conjuntos, 
                           variables=variables, 
-                          penalizacion=penalizacion_backorder)
+                          bigM=bigM)
     
     # Costo de no respetar un inventario de seguridad de un ingrediente en una planta
     css = _costo_safety_stock(conjuntos=conjuntos, variables=variables, bigM=1000000)
@@ -221,7 +217,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     # Costo de exceder las capacidades máximas de almacenamiento
     cal = _costo_exceder_capacidad_almacenamiento(conjuntos=conjuntos, 
                                                   variables=variables,
-                                                  penalizacion_exceder_almacenamiento= penalizacion_exceder_almacenamiento)
+                                                  bigM=bigM)
 
     ctotal = cap + cop + ct + css + cal + cbk
 

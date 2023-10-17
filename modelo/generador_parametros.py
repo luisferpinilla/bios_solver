@@ -578,6 +578,7 @@ def __safety_stock_planta(parametros: dict, conjuntos: dict, file: str):
 
     parametros['safety_stock'] = param_dict
 
+'''
 def __costo_penalizacion_capacidad_maxima(conjuntos:dict, parametros:dict, bigM:float):
 
     param_dict = dict()
@@ -592,8 +593,6 @@ def __costo_penalizacion_capacidad_maxima(conjuntos:dict, parametros:dict, bigM:
                 param_dict[par_name] = par_value
 
     parametros['costo_penalizacion_capacidad_maxima'] = param_dict
-
-
 
 
 def __costo_penalizacion_insatisfaccion_demanda(conjuntos:dict, parametros: dict, bigM:float):
@@ -619,7 +618,7 @@ def __costo_penalizacion_insatisfaccion_ss(parametros: dict, bigM:float):
 
 def __costo_penalizacion_inventario_objetivo(parametros:dict, bigM:float):
     pass
-
+'''
 
 def __calcular_dio_general(parametros:dict, conjuntos:dict)->dict:
     
@@ -706,12 +705,10 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
     
     #__calcular_dio_general(parametros=parametros, conjuntos=conjuntos)
 
-    BigM = 1000000
-
-    __costo_penalizacion_capacidad_maxima(conjuntos=conjuntos, parametros=parametros, bigM=BigM)
+    #__costo_penalizacion_capacidad_maxima(conjuntos=conjuntos, parametros=parametros, bigM=BigM)
     
-    __costo_penalizacion_insatisfaccion_demanda(conjuntos=conjuntos, parametros=parametros, bigM=BigM)
+    #__costo_penalizacion_insatisfaccion_demanda(conjuntos=conjuntos, parametros=parametros, bigM=BigM)
     
-    __costo_penalizacion_insatisfaccion_ss(parametros=parametros, bigM=BigM)
+    #__costo_penalizacion_insatisfaccion_ss(parametros=parametros, bigM=BigM)
     
-    __costo_penalizacion_inventario_objetivo(parametros=parametros, bigM=BigM)
+    #__costo_penalizacion_inventario_objetivo(parametros=parametros, bigM=BigM)
