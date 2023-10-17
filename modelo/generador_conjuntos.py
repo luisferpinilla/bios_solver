@@ -84,7 +84,7 @@ def _generar_plantas(file: str):
 
     return plantas_df['key'].to_list()
 
-
+'''
 def _generar_unidades_almacenamiento(file: str):
     
     print('sets: unidades de almacenamiento')
@@ -95,7 +95,7 @@ def _generar_unidades_almacenamiento(file: str):
     unidades = unidades_df['key'].to_list()
 
     return unidades
-
+'''
 
 def _generar_cargas_en_puerto(file=str):
     
@@ -148,8 +148,8 @@ def generar_conjuntos(problema: dict, file: str, usecols: str) -> dict:
     problema['plantas'] = _generar_plantas(file=file)
 
     # Unidades de almacenamiento
-    problema['unidades_almacenamiento'] = _generar_unidades_almacenamiento(
-        file=file)
+    # problema['unidades_almacenamiento'] = _generar_unidades_almacenamiento(
+    #    file=file)
 
     # Cargas
     problema['cargas'] = _generar_cargas_en_puerto(file=file)
