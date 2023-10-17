@@ -1,4 +1,4 @@
-def _costos_almacenamiento_puerto(variables: dict, costos_almacenamiento: dict, cargas: list, periodos: int):
+def _costos_almacenamiento_puerto(variables: dict, costos_almacenamiento: dict, valor_cif:dict, cargas: list, periodos: int):
 
     # $CC_{l}^{t}$ : Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $J$.
     # XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo} : Cantidad de la carga $l$ en puerto al final del periodo $t$
@@ -9,14 +9,16 @@ def _costos_almacenamiento_puerto(variables: dict, costos_almacenamiento: dict, 
     for carga in cargas:
         for periodo in periodos:
 
-            var_name = f'XIP_{carga}_{periodo}'
-            var = variables['XIP'][var_name]
+            xip_name = f'XIP_{carga}_{periodo}'
+            xip = variables['XIP'][xip_name]
 
-            coef_name = f'CC_{carga}_{periodo}'
+            cc_name = f'CC_{carga}_{periodo}'
+            coef_value = costos_almacenamiento[cc_name]
 
-            coef_value = costos_almacenamiento[coef_name]
+            cif_name = f'VC_{carga}'
+            cif_value = valor_cif[cif_name]
 
-            fobj.append(coef_value*var)
+            fobj.append(coef_value*cif_value*xip)
 
     return fobj
 
@@ -173,7 +175,7 @@ def _costo_safety_stock(conjuntos:dict, variables: dict, bigM:float):
 
 def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
 
-    costo_carga = parametros['valor_cif']
+    valor_cif_carga = parametros['valor_cif']
     costos_almacenamiento = parametros['costos_almacenamiento']
     costos_despacho_directo = parametros['costos_operacion_directo']
     costo_envio_bodega = parametros['costos_operacion_bodega']
@@ -189,6 +191,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     # Almacenamiento en puerto por corte de Facturación:
     cap = _costos_almacenamiento_puerto(variables=variables,
                                         costos_almacenamiento=costos_almacenamiento,
+                                        valor_cif=valor_cif_carga,
                                         cargas=cargas,
                                         periodos=periodos)
 
@@ -202,7 +205,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
                            costo_transporte_variable=costo_transporte_variable,
                            costo_transporte_fijos=costo_transporte_fijos,
                            costo_intercompany=costo_intercompany,
-                           costo_carga=costo_carga,
+                           costo_carga=valor_cif_carga,
                            cargas=cargas,
                            plantas=plantas,
                            periodos=periodos)
