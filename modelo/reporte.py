@@ -80,7 +80,7 @@ class Reporte():
 
         with pd.ExcelWriter(path=filename) as writer:
 
-            for sheet_name, dataframe in tqdm(self.self.df_dict.items()):
+            for sheet_name, dataframe in tqdm(self.df_dict.items()):
 
                 dataframe.to_excel(writer, sheet_name=sheet_name, index=False)
 
