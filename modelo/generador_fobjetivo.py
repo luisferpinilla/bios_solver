@@ -106,19 +106,6 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
     return fobj
 
 
-def _costo_safety_stock(variables: dict):
-
-    print('fob: Agregando costos de penalidad por Safety Stock')
-
-    fobj = list()
-    costo_bss = 10000
-    for name, var in variables['BSS'].items():
-        periodo = int(name.split('_')[4])
-        fobj.append((costo_bss-periodo*10)*var)
-        # fobj.append(costo_bss*var)
-
-    return fobj
-
 
 def _costo_exceder_capacidad_almacenamiento(conjuntos:dict, variables:dict, penalizacion_exceder_almacenamiento:dict):
     
@@ -165,6 +152,25 @@ def _costo_bakorder(conjuntos:dict, variables: dict, penalizacion:dict):
     return fobj
 
 
+def _costo_safety_stock(conjuntos:dict, variables: dict, bigM:float):
+
+    print('fob: Agregando costos de penalidad por Safety Stock')
+
+    fobj = list()
+    
+    for planta in conjuntos['plantas']:
+        for ingrediente in conjuntos['ingredientes']:
+            for periodo in conjuntos['periodos']:
+                
+                bbs_name = f'BSS_{planta}_{ingrediente}_{periodo}'
+                bbs_var = variables['BSS'][bbs_name]
+                
+                fobj.append((bigM/2-periodo*10)*bbs_var)
+
+
+    return fobj
+
+
 def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
 
     costo_carga = parametros['valor_cif']
@@ -207,7 +213,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
                           penalizacion=penalizacion_backorder)
     
     # Costo de no respetar un inventario de seguridad de un ingrediente en una planta
-    css = _costo_safety_stock(variables)
+    css = _costo_safety_stock(conjuntos=conjuntos, variables=variables, bigM=1000000)
 
     # Costo de exceder las capacidades máximas de almacenamiento
     cal = _costo_exceder_capacidad_almacenamiento(conjuntos=conjuntos, 
