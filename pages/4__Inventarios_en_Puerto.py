@@ -18,7 +18,7 @@ if not 'problema' in st.session_state.keys():
     st.write('Go to Main page and load a file')
 else:
 
-    st.button(label='callback')
+    # st.button(label='callback')
 
     problema = st.session_state['problema']
 
@@ -28,7 +28,7 @@ else:
 
     st.write('## Inventarios en Puerto al final del día')
 
-    ingrediente_column, operador_column, importacion_column = st.columns(3)
+    ingrediente_column, operador_column, importacion_column  = st.columns(3)
 
     with ingrediente_column:
 
@@ -58,6 +58,15 @@ else:
 
         if importacion != 'Todos':
             df = df[df['importacion'] == importacion]
+
+    with st.expander(label='Item Selector'):
+
+        item_list = list(df['item'].unique())
+
+        item = st.multiselect(label='Item', options=item_list, default=item_list)
+
+        if item != 'Todos':
+            df = df[df['item'].isin(item)]
 
     df.set_index(['empresa', 'operador', 'importacion',
                  'ingrediente', 'item'], inplace=True)
