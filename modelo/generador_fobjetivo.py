@@ -167,6 +167,25 @@ def _costo_safety_stock(conjuntos:dict, variables: dict, bigM:float):
     return fobj
 
 
+def _costo_inventario_objetivo(conjuntos:dict, variables: dict, bigM:float):
+
+    print('fob: Agregando costos de penalidad por Safety Stock')
+
+    fobj = list()
+    
+    for planta in conjuntos['plantas']:
+        for ingrediente in conjuntos['ingredientes']:
+            for periodo in conjuntos['periodos']:
+                
+                btg_name = f'BTG_{planta}_{ingrediente}_{periodo}'
+                btg_var = variables['BTG'][btg_name]
+                
+                fobj.append((bigM/4-periodo*10)*btg_var)
+
+
+    return fobj
+
+
 def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
 
     valor_cif_carga = parametros['valor_cif']
@@ -213,13 +232,15 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     
     # Costo de no respetar un inventario de seguridad de un ingrediente en una planta
     css = _costo_safety_stock(conjuntos=conjuntos, variables=variables, bigM=1000000)
+    
+    ctg = _costo_inventario_objetivo(conjuntos=conjuntos, variables=variables, bigM=1000000)
 
     # Costo de exceder las capacidades máximas de almacenamiento
     cal = _costo_exceder_capacidad_almacenamiento(conjuntos=conjuntos, 
                                                   variables=variables, 
                                                   BigM=bigM)
 
-    ctotal = cap + cop + ct + css + cal + cbk
+    ctotal = cap + cop + ct + css + cal + cbk + ctg
 
     for term in ctotal:
         fob.append(term)

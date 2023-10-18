@@ -270,6 +270,50 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, plantas: lis
     restricciones['Safety stock en planta'] = rest_list
 
 
+def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: list, ingredientes: list, periodos: list, dio: dict, consumo_promedio:dict):
+
+    print('rest: mantnimiento de safety stock en planta')
+
+    # XIU >= consumoPromedio*dio * (1-BTG)
+    # XIU >= consumoPromedio*dio - consumoPromedio*dio*BTG
+    # XIU + consumoPromedio*dio*BTG >= consumoPromedio*dio
+
+    rest_list = list()
+
+    for ingrediente in ingredientes:
+        for planta in plantas:
+            for periodo in periodos:
+
+                left_expesion = list()
+
+                # XIU
+                xiu_name = f'XIU_{planta}_{ingrediente}_{periodo}'
+                xiu_var = variables['XIU'][xiu_name]
+                left_expesion.append(xiu_var)
+
+                # dio
+                dio_name = f'{ingrediente}'
+                dio_value = dio[dio_name]
+
+                # Consumo promedio
+                con_name = f"{planta.split('_')[1]}_{ingrediente}"
+                con_value = consumo_promedio[con_name]
+
+                # consumoPromedio*dio*BTG
+                btg_name = f'BTG_{planta}_{ingrediente}_{periodo}'
+                btg_var = variables['BTG'][btg_name]
+                left_expesion.append(dio_value*con_value*btg_var)
+
+                rest = (pu.lpSum(left_expesion) >= dio_value*con_value,
+                        f'inventario objetivo {ingrediente} en {planta} en {periodo}')
+
+                rest_list.append(rest)
+
+    restricciones['Safety stock en planta'] = rest_list
+
+
+
+
 def _capacidad_almacenamiento_planta(restricciones: list, 
                                      variables: dict, 
                                      coeficientes_capacidad: dict, 
@@ -310,11 +354,12 @@ def _capacidad_almacenamiento_planta(restricciones: list,
                 if ci_value > 0:
                     # evitar que el valor sea cero y convertirlo
                     ci_facc = capacidad_maxima/(ci_value)
-                    # left_expresion.append(ci_facc*xiu_var)
+                    left_expresion.append(ci_facc*xiu_var)
 
-            # Esta restriccion esta generando problemas
-            # rest.append((pu.lpSum(left_expresion) <= capacidad_maxima,
-            #            f'Capacidad usada con {ingrediente} en {planta} durante {periodo}'))
+            #if len(left_expresion)>0:
+                # Esta restriccion esta generando problemas
+                # rest.append((pu.lpSum(left_expresion) <= capacidad_maxima + 1000000*bal_var,
+                #              f'Capacidad usada total en {planta} durante {periodo}'))
 
     restricciones['Capacidad plantas'] = rest
 
@@ -324,6 +369,7 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
     periodos = conjuntos['periodos']
     plantas = conjuntos['plantas']
     consumo_proyectado = parametros['consumo_proyectado']
+    consumo_promedio = parametros['Consumo_promedio']
     ingredientes = conjuntos['ingredientes']
     inventario_inicial_cargas = parametros['inventario_inicial_cargas']
     llegadas = parametros['llegadas_cargas']
@@ -333,6 +379,7 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
     inventario_inicial_ua = parametros['inventario_inicial_ua']
     safety_stock = parametros['safety_stock']
     max_cap = parametros['capacidad_almacenamiento_maxima']
+    dio = parametros['dio_objetivo']
     # costo_penalizacion_capacidad_planta = parametros['costo_penalizacion_capacidad_maxima']
 
     _balance_masa_bif(restricciones=restricciones,
@@ -365,8 +412,13 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                               plantas=plantas,
                               safety_stock=safety_stock)
 
-    # _asignacion_unidades_almacenamiento(
-    #    restricciones=restricciones, variables=variables, unidades=unidades, ingredientes=ingredientes)
+    _inventario_objetivo_plantas(restricciones=restricciones,
+                                 variables=variables,
+                                 plantas=plantas,
+                                 ingredientes=ingredientes,
+                                 periodos=periodos,
+                                 dio=dio,
+                                 consumo_promedio=consumo_promedio)
 
     _tiempo_transitos(restricciones=restricciones,
                       variables=variables,

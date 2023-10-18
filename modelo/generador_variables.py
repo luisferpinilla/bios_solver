@@ -85,6 +85,7 @@ def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, p
     variables['BSS'] = dict()
     variables['XBK'] = dict()
     variables['BAL'] = dict()
+    variables['BTG'] = dict()
 
     for planta in plantas:
         for ingrediente in ingredientes:
@@ -110,6 +111,11 @@ def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, p
                 bal_var = pu.LpVariable(
                     name=bal_name, lowBound=0.0, cat=pu.LpContinuous)
                 variables['BAL'][bal_name] = bal_var
+                
+                btg_name = f'BTG_{planta}_{ingrediente}_{periodo}'
+                btg_var = pu.LpVariable(
+                    name=btg_name, lowBound=0.0, cat=pu.LpContinuous)
+                variables['BTG'][btg_name] = btg_var
 
 
 def generar_variables(conjuntos: dict, variables: dict) -> dict:

@@ -577,6 +577,8 @@ def __safety_stock_planta(parametros: dict, conjuntos: dict, file: str):
                 param_dict[f'SS_{planta}_{ingrediente}'] = 0.0
 
     parametros['safety_stock'] = param_dict
+    
+
 
 '''
 def __costo_penalizacion_capacidad_maxima(conjuntos:dict, parametros:dict, bigM:float):
@@ -620,50 +622,21 @@ def __costo_penalizacion_inventario_objetivo(parametros:dict, bigM:float):
     pass
 '''
 
-def __calcular_dio_general(parametros:dict, conjuntos:dict)->dict:
+def __calcular_dio_general(parametros:dict, file:str)->dict:
     
     dio_dict = dict()
-    inventario_total_dict = dict()
-    consumo_total_dict = dict()
     
-    for ingrediente in conjuntos['ingredientes']:
-        
-        inventario_total_dict[ingrediente] = 0.0
-        consumo_total_dict[ingrediente] = 0.0
-        
-        for planta in conjuntos['plantas']:
-            
-            par_name = f"{planta.split('_')[1]}_{ingrediente}"
-            consumo_total_dict[ingrediente] += parametros['Consumo_promedio'][par_name]
-            
-            par_name = f'II_{planta}_{ingrediente}'
-            inventario_total_dict[ingrediente] += parametros['inventario_inicial_ua'][par_name]
-            
-            
-            for periodo in conjuntos['periodos']:
+    df = pd.read_excel(file, sheet_name='DIO')[['ingrediente', 'DIO_General']]
+    
+    df.set_index('ingrediente', drop=True, inplace=True)
 
-                par_name = f'TT_{planta}_{ingrediente}_{periodo}'
-                inventario_total_dict[ingrediente] += parametros['transitos_a_plantas'][par_name]
-                
-            
-    for carga in conjuntos['cargas']:
-            
-        par_name = f'IP_{carga}'
-        
-        if par_name in parametros['inventario_inicial_cargas'].keys():
-            inventario_total_dict[ingrediente] += parametros['inventario_inicial_cargas'][par_name]
+    for ingrediente in df.index:
+        dio_dict[ingrediente] = df.loc[ingrediente]['DIO_General']
+
     
-        
-    for ingrediente in conjuntos['ingredientes']:    
-        
-        if ingrediente in consumo_total_dict.keys():
-            
-            dio_dict[ingrediente] = 720.0
-            
-            if consumo_total_dict[ingrediente] > 0:
-                dio_dict[ingrediente] = inventario_total_dict[ingrediente] / consumo_total_dict[ingrediente]
-            
-    dio_dict[ingrediente] =  dio_dict    
+    parametros['dio_objetivo']= dio_dict        
+       
+    
 
 
 def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: str) -> dict:
@@ -703,7 +676,7 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
     __costo_operacion_puerto(parametros=parametros,
                              conjuntos=conjuntos, file=file)
     
-    #__calcular_dio_general(parametros=parametros, conjuntos=conjuntos)
+    __calcular_dio_general(parametros=parametros, file=file)
 
     #__costo_penalizacion_capacidad_maxima(conjuntos=conjuntos, parametros=parametros, bigM=BigM)
     
