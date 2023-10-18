@@ -200,6 +200,9 @@ class Reporte():
                                           right_on=['empresa', 'planta',
                                                     'ingrediente', 'periodo'],
                                           how='left').fillna(0.0)
+        
+         # calcular DIO
+        fact_inventario_planta['DIO'] = fact_inventario_planta['inventario_al_cierre_kg']/fact_inventario_planta['consumo_kg']
 
         fact_inventario_planta = pd.melt(frame=fact_inventario_planta,
                                          id_vars=['empresa', 'planta',
@@ -207,13 +210,15 @@ class Reporte():
                                          value_vars=['inventario_al_cierre_kg',
                                                      'transitos_kg', 'llegadas_directas_kg',
                                                      'llegadas_por_bodega_kg', 'consumo_kg', 'safety_stock',
-                                                     'alarma_safety_stock'],
+                                                     'alarma_safety_stock', 'DIO'],
                                          value_name='kg', var_name='item')
         fact_inventario_planta['periodo'] = fact_inventario_planta['periodo'].astype(
             int)
 
         fact_inventario_planta['kg'] = fact_inventario_planta['kg'].apply(
             lambda x: round(x, 0))
+        
+       
 
         fact_inventario_planta = fact_inventario_planta.pivot_table(values='kg',
                                                                     index=[
@@ -505,6 +510,7 @@ class Reporte():
             int)
         fact_inventario_puerto['kg'] = fact_inventario_puerto['kg'].apply(
             lambda x: round(x, 0))
+            
         fact_inventario_puerto = fact_inventario_puerto.pivot_table(values='kg',
                                                                     index=[
                                                                         'empresa', 'operador', 'importacion', 'ingrediente', 'item'],
