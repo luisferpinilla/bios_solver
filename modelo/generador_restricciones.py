@@ -312,8 +312,6 @@ def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: 
     restricciones['Safety stock en planta'] = rest_list
 
 
-
-
 def _capacidad_almacenamiento_planta(restricciones: list, 
                                      variables: dict, 
                                      coeficientes_capacidad: dict, 
@@ -405,12 +403,12 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                                      ingredientes=ingredientes,
                                      periodos=periodos)
 
-    _mantenimiento_ss_plantas(restricciones=restricciones,
-                              variables=variables,
-                              ingredientes=ingredientes,
-                              periodos=periodos,
-                              plantas=plantas,
-                              safety_stock=safety_stock)
+    #_mantenimiento_ss_plantas(restricciones=restricciones,
+    #                          variables=variables,
+    #                          ingredientes=ingredientes,
+    #                          periodos=periodos,
+    #                          plantas=plantas,
+    #                          safety_stock=safety_stock)
 
     _inventario_objetivo_plantas(restricciones=restricciones,
                                  variables=variables,
@@ -436,5 +434,4 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                          periodos=periodos,
                          consumo=consumo_proyectado)
 
-    # _satisfaccion_demanda_plantas(restricciones=restricciones, variables=variables, plantas=plantas,
-    #                              ingredientes=ingredientes, unidades=unidades, consumo_proyectado=consumo_proyectado, periodos=periodos)
+ 
