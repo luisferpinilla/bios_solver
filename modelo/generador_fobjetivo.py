@@ -87,7 +87,7 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
 
                 # Costo variables por transporte entre operdor y planta
                 cv_coef_name = f'CV_{operador}_{planta}_{ingrediente}'
-                cv_coef_val = costo_transporte_variable[cv_coef_name]
+                cv_coef_val = costo_transporte_variable[cv_coef_name]+int(periodo)
                 fobj.append(34000*cv_coef_val*itr_var)
                 fobj.append(34000*cv_coef_val*itd_var)
 
@@ -180,7 +180,7 @@ def _costo_inventario_objetivo(conjuntos:dict, variables: dict, bigM:float):
                 btg_name = f'BTG_{planta}_{ingrediente}_{periodo}'
                 btg_var = variables['BTG'][btg_name]
                 
-                fobj.append((bigM/4-periodo*10)*btg_var)
+                fobj.append((bigM/3-periodo*10)*btg_var)
 
 
     return fobj
@@ -240,7 +240,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
                                                   variables=variables, 
                                                   BigM=bigM)
 
-    ctotal = cap + cop + ct + css + cal + cbk + ctg
+    ctotal = cap + cop + ct  + cal + ctg + cbk#+ css  
 
     for term in ctotal:
         fob.append(term)
