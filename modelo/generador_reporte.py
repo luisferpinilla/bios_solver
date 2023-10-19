@@ -215,7 +215,7 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, co
     inventario_df.rename(columns={'value': 'inventario'}, inplace=True)
 
     # Leer y procesar backorder
-    variable_dict = variables['XBK']
+    variable_dict = variables['SBK']
 
     backorder_df = __procesar_listado_variables(variable_dict, campos)
 

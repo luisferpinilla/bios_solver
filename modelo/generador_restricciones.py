@@ -267,7 +267,7 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, plantas: lis
 
 def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: list, ingredientes: list, periodos: list, dio: dict, consumo_promedio:dict):
 
-    print('rest: mantnimiento de safety stock en planta')
+    print('rest: superar inventario objetivo en planta')
 
     # XIU + SIO >= consumoPromedio*dio
 
@@ -289,7 +289,7 @@ def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: 
                 con_name = f"{planta.split('_')[1]}_{ingrediente}"
                 con_value = consumo_promedio[con_name]
 
-                # consumoPromedio*dio*BTG
+                # Lo que falta para llegar a inventario objetivo
                 sio_name = f'SIO_{planta}_{ingrediente}_{periodo}'
                 sio_var = variables['SIO'][sio_name]
 
@@ -298,7 +298,7 @@ def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: 
 
                 rest_list.append(rest)
 
-    restricciones['Safety stock en planta'] = rest_list
+    restricciones['Inventario Objetivo en planta'] = rest_list
 
 
 def _capacidad_almacenamiento_planta(restricciones: list, 
@@ -348,7 +348,7 @@ def _capacidad_almacenamiento_planta(restricciones: list,
                 # rest.append((pu.lpSum(left_expresion) <= capacidad_maxima + 1000000*bal_var,
                 #              f'Capacidad usada total en {planta} durante {periodo}'))
 
-    restricciones['Capacidad plantas'] = rest
+    restricciones['Capacidad almacenamiento plantas'] = rest
 
 
 def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict, variables: dict):

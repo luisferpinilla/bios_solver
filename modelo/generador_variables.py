@@ -20,7 +20,7 @@ def _despacho_directo(variables: dict, periodos: list,  cargas: list, plantas: l
 
                 xad_name = f'XAD_{carga}_{planta}_{periodo}'
                 xad_var = pu.LpVariable(
-                    name=xad_name, lowBound=0.0, cat=pu.LpContinuous)
+                    name=xad_name, lowBound=0.0, upBound=34000*max_trucks, cat=pu.LpContinuous)
                 variables['XAD'][xad_name] = xad_var
 
                 itd_name = f'ITD_{carga}_{planta}_{periodo}'
@@ -36,7 +36,7 @@ def _decargue_barco_a_puerto(variables: dict, cargas: list, periodos: list):
         for periodo in periodos:
             xpl_name = f'XPL_{carga}_{periodo}'
             xpl_var = pu.LpVariable(
-                name=xpl_name, lowBound=0.0, cat=pu.LpContinuous)
+                name=xpl_name, lowBound=0.0, upBound=50000001, cat=pu.LpContinuous)
             variables['XPL'][xpl_name] = xpl_var
 
 
@@ -99,7 +99,7 @@ def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, p
 
                 # $SSS_{ik}^{t}$ : Lo que falta para que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté sobre el nivel de seguridad $SS_{ik}^{t}$
                 sss_name = f'SSS_{planta}_{ingrediente}_{periodo}'
-                sss_var = pu.LpVariable(name=sss_name, cat=pu.LpContinuous)
+                sss_var = pu.LpVariable(name=sss_name, lowBound=0.0, cat=pu.LpContinuous)
                 variables['SSS'][sss_name] = sss_var
 
                 # $SBK_{ik}^{t}$ : Lo que falta para cumplir la demanda

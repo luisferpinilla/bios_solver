@@ -122,7 +122,7 @@ def _costo_exceder_capacidad_almacenamiento(conjuntos:dict, variables:dict, BigM
                 sal_name = f'SAL_{planta}_{ingrediente}_{periodo}'
                 sal_var = variables['SAL'][sal_name]
             
-                fobj.append((2*BigM - int(periodo))*sal_var)
+                fobj.append((2*BigM)*sal_var)
                 
     return fobj
     
@@ -139,10 +139,10 @@ def _costo_bakorder(conjuntos:dict, variables: dict, bigM:float):
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
                 
-                xbk_name = f'SBK_{planta}_{ingrediente}_{periodo}'
-                xbk_var = variables['SBK'][xbk_name]
+                sbk_name = f'SBK_{planta}_{ingrediente}_{periodo}'
+                sbk_var = variables['SBK'][sbk_name]
     
-                fobj.append((bigM - int(periodo))*xbk_var)
+                fobj.append((bigM)*sbk_var)
     
 
     return fobj
@@ -161,7 +161,7 @@ def _costo_safety_stock(conjuntos:dict, variables: dict, bigM:float):
                 sss_name = f'SSS_{planta}_{ingrediente}_{periodo}'
                 sss_var = variables['SSS'][sss_name]
                 
-                fobj.append((bigM/2-int(periodo))*sss_var)
+                fobj.append((bigM/2)*sss_var)
 
 
     return fobj
@@ -180,7 +180,7 @@ def _costo_inventario_objetivo(conjuntos:dict, variables: dict, bigM:float):
                 sio_name = f'SIO_{planta}_{ingrediente}_{periodo}'
                 sio_var = variables['SIO'][sio_name]
                 
-                fobj.append((bigM/3-int(periodo))*sio_var)
+                fobj.append((bigM/3)*sio_var)
 
 
     return fobj
@@ -201,7 +201,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     # penalizacion_backorder = parametros['penalizacion_backorder']
     # penalizacion_exceder_almacenamiento = parametros['costo_penalizacion_capacidad_maxima']
 
-    bigM = 10000
+    bigM = 1000
 
     # Almacenamiento en puerto por corte de Facturación:
     cap = _costos_almacenamiento_puerto(variables=variables,

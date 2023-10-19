@@ -74,7 +74,7 @@ else:
                     value=70, text='Ejecutando el soluccionador del modelo')
 
                 # problema.solve(engine='coin', tlimit=60 * tmax)
-                problema.solve(tlimit=tmax*60)
+                problema.solve(tlimit=60*60*3)
 
                 if problema.estatus == 'Infeasible':
                     st.error('El solucionador reporta Infactibilidad')
