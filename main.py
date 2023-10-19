@@ -21,7 +21,7 @@ problema.generar_target()
 
 problema.gen_constrains()
 
-problema.solve(tlimit=60)
+problema.solve(tlimit=60*60*3)
 
 reporte = Reporte(problema=problema)
 
