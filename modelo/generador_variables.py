@@ -85,7 +85,7 @@ def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, p
     variables['SSS'] = dict()
     variables['SBK'] = dict()
     variables['SAL'] = dict()
-    variables['BTG'] = dict()
+    variables['SIO'] = dict()
 
     for planta in plantas:
         for ingrediente in ingredientes:

@@ -90,7 +90,7 @@ def _balance_masa_bodega_puerto(restricciones: list, variables: list, cargas: li
 def _balance_masa_planta(restricciones: list, variables: list, cargas: list, plantas: list, inventario_inicial: dict, transitos_a_planta: dict, ingredientes: list, periodos: list, consumo: list):
 
     print('rest: balance de masa en planta')
-    # XIU = XIUt-1 + TT + SUM(XTR) + SUM(XTD) + XBK - DM
+    # XIU = XIUt-1 + TT + SUM(XTR) + SUM(XTD) + SBK - DM
 
     rest_list = list()
 
@@ -143,9 +143,9 @@ def _balance_masa_planta(restricciones: list, variables: list, cargas: list, pla
                         rigth_expresion.append(xar_var)
 
                 # XBK
-                xdm_name = f'XBK_{planta}_{ingrediente}_{periodo}'
-                xdm_var = variables['XBK'][xdm_name]
-                rigth_expresion.append(xdm_var)
+                sbk_name = f'SBK_{planta}_{ingrediente}_{periodo}'
+                sbk_var = variables['SBK'][sbk_name]
+                rigth_expresion.append(sbk_var)
 
                 # DM
                 dm_name = f'DM_{planta}_{ingrediente}_{periodo}'
@@ -269,9 +269,7 @@ def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: 
 
     print('rest: mantnimiento de safety stock en planta')
 
-    # XIU >= consumoPromedio*dio * (1-BTG)
-    # XIU >= consumoPromedio*dio - consumoPromedio*dio*BTG
-    # XIU + consumoPromedio*dio*BTG >= consumoPromedio*dio
+    # XIU + SIO >= consumoPromedio*dio
 
     rest_list = list()
 
@@ -279,12 +277,9 @@ def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: 
         for planta in plantas:
             for periodo in periodos:
 
-                left_expesion = list()
-
                 # XIU
                 xiu_name = f'XIU_{planta}_{ingrediente}_{periodo}'
                 xiu_var = variables['XIU'][xiu_name]
-                left_expesion.append(xiu_var)
 
                 # dio
                 dio_name = f'{ingrediente}'
@@ -295,11 +290,10 @@ def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: 
                 con_value = consumo_promedio[con_name]
 
                 # consumoPromedio*dio*BTG
-                btg_name = f'BTG_{planta}_{ingrediente}_{periodo}'
-                btg_var = variables['BTG'][btg_name]
-                left_expesion.append(dio_value*con_value*btg_var)
+                sio_name = f'SIO_{planta}_{ingrediente}_{periodo}'
+                sio_var = variables['SIO'][sio_name]
 
-                rest = (pu.lpSum(left_expesion) >= dio_value*con_value,
+                rest = (xiu_var + sio_var >= dio_value*con_value,
                         f'inventario objetivo {ingrediente} en {planta} en {periodo}')
 
                 rest_list.append(rest)

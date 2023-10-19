@@ -177,10 +177,10 @@ def _costo_inventario_objetivo(conjuntos:dict, variables: dict, bigM:float):
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
                 
-                btg_name = f'BTG_{planta}_{ingrediente}_{periodo}'
-                btg_var = variables['BTG'][btg_name]
+                sio_name = f'SIO_{planta}_{ingrediente}_{periodo}'
+                sio_var = variables['SIO'][sio_name]
                 
-                fobj.append((bigM/3-periodo*10)*btg_var)
+                fobj.append((bigM/3-int(periodo))*sio_var)
 
 
     return fobj
