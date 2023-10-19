@@ -84,7 +84,7 @@ def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, p
     variables['XIU'] = dict()
     variables['SSS'] = dict()
     variables['SBK'] = dict()
-    variables['BAL'] = dict()
+    variables['SAL'] = dict()
     variables['BTG'] = dict()
 
     for planta in plantas:
@@ -99,7 +99,7 @@ def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, p
 
                 # $SSS_{ik}^{t}$ : Lo que falta para que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté sobre el nivel de seguridad $SS_{ik}^{t}$
                 sss_name = f'SSS_{planta}_{ingrediente}_{periodo}'
-                sss_var = pu.LpVariable(name=sss_name, cat=pu.LpBinary)
+                sss_var = pu.LpVariable(name=sss_name, cat=pu.LpContinuous)
                 variables['SSS'][sss_name] = sss_var
 
                 # $SBK_{ik}^{t}$ : Lo que falta para cumplir la demanda

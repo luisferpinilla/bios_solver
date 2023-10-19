@@ -335,14 +335,14 @@ def _capacidad_almacenamiento_planta(restricciones: list,
                 xiu_name = f'XIU_{planta}_{ingrediente}_{periodo}'
                 xiu_var = variables['XIU'][xiu_name]
 
-                bal_name = f'BAL_{planta}_{ingrediente}_{periodo}'
-                bal_var = variables['BAL'][bal_name]
+                sal_name = f'SAL_{planta}_{ingrediente}_{periodo}'
+                sal_var = variables['SAL'][sal_name]
 
                 ci_name = f'CI_{planta}_{ingrediente}'
                 ci_value = coeficientes_capacidad[ci_name]
 
                 rest.append(
-                    (xiu_var <= ci_value + BigM*bal_var, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
+                    (xiu_var -sal_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
 
                 if ci_value > 0:
                     # evitar que el valor sea cero y convertirlo
@@ -398,12 +398,12 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                                      ingredientes=ingredientes,
                                      periodos=periodos)
 
-    #_mantenimiento_ss_plantas(restricciones=restricciones,
-    #                          variables=variables,
-    #                          ingredientes=ingredientes,
-    #                          periodos=periodos,
-    #                          plantas=plantas,
-    #                          safety_stock=safety_stock)
+    _mantenimiento_ss_plantas(restricciones=restricciones,
+                              variables=variables,
+                              ingredientes=ingredientes,
+                              periodos=periodos,
+                              plantas=plantas,
+                              safety_stock=safety_stock)
 
     _inventario_objetivo_plantas(restricciones=restricciones,
                                  variables=variables,

@@ -119,10 +119,10 @@ def _costo_exceder_capacidad_almacenamiento(conjuntos:dict, variables:dict, BigM
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
                 
-                bal_name = f'BAL_{planta}_{ingrediente}_{periodo}'
-                bal_var = variables['BAL'][bal_name]
+                sal_name = f'SAL_{planta}_{ingrediente}_{periodo}'
+                sal_var = variables['SAL'][sal_name]
             
-                fobj.append((2*BigM - int(periodo)*10)*bal_var)
+                fobj.append((2*BigM - int(periodo))*sal_var)
                 
     return fobj
     
@@ -142,7 +142,7 @@ def _costo_bakorder(conjuntos:dict, variables: dict, bigM:float):
                 xbk_name = f'SBK_{planta}_{ingrediente}_{periodo}'
                 xbk_var = variables['SBK'][xbk_name]
     
-                fobj.append((bigM/100 - int(periodo)*10)*xbk_var)
+                fobj.append((bigM - int(periodo))*xbk_var)
     
 
     return fobj
@@ -161,7 +161,7 @@ def _costo_safety_stock(conjuntos:dict, variables: dict, bigM:float):
                 sss_name = f'SSS_{planta}_{ingrediente}_{periodo}'
                 sss_var = variables['SSS'][sss_name]
                 
-                fobj.append((bigM/2-periodo*10)*sss_var)
+                fobj.append((bigM/2-int(periodo))*sss_var)
 
 
     return fobj
@@ -201,7 +201,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     # penalizacion_backorder = parametros['penalizacion_backorder']
     # penalizacion_exceder_almacenamiento = parametros['costo_penalizacion_capacidad_maxima']
 
-    bigM = 100000000
+    bigM = 10000
 
     # Almacenamiento en puerto por corte de Facturación:
     cap = _costos_almacenamiento_puerto(variables=variables,
@@ -240,7 +240,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
                                                   variables=variables, 
                                                   BigM=bigM)
 
-    ctotal = cap + cop + ct  + cal + ctg + cbk#+ css  
+    ctotal = cap + cop + ct  + cal + ctg + cbk + css  
 
     for term in ctotal:
         fob.append(term)
