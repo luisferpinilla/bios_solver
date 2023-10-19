@@ -139,8 +139,8 @@ def _costo_bakorder(conjuntos:dict, variables: dict, bigM:float):
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
                 
-                xbk_name = f'XBK_{planta}_{ingrediente}_{periodo}'
-                xbk_var = variables['XBK'][xbk_name]
+                xbk_name = f'SBK_{planta}_{ingrediente}_{periodo}'
+                xbk_var = variables['SBK'][xbk_name]
     
                 fobj.append((bigM/100 - int(periodo)*10)*xbk_var)
     

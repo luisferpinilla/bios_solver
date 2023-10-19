@@ -82,8 +82,8 @@ def _almacenamiento_puerto(variables: list, cargas: list, periodos: list):
 def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, periodos: list):
 
     variables['XIU'] = dict()
-    variables['BSS'] = dict()
-    variables['XBK'] = dict()
+    variables['SSS'] = dict()
+    variables['SBK'] = dict()
     variables['BAL'] = dict()
     variables['BTG'] = dict()
 
