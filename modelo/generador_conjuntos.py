@@ -84,23 +84,10 @@ def _generar_plantas(file: str):
 
     return plantas_df['key'].to_list()
 
-'''
-def _generar_unidades_almacenamiento(file: str):
-    
-    print('sets: unidades de almacenamiento')
-
-    unidades_df = pd.read_excel(
-        file, sheet_name='unidades_almacenamiento')
-
-    unidades = unidades_df['key'].to_list()
-
-    return unidades
-'''
 
 def _generar_cargas_en_puerto(file=str):
     
     print('sets: cargas')
-    
 
     transitos_a_puerto_df = pd.read_excel(file, sheet_name='tto_puerto')
     inventarios_puerto_df = pd.read_excel(file, sheet_name='inventario_puerto')
@@ -146,10 +133,6 @@ def generar_conjuntos(problema: dict, file: str, usecols: str) -> dict:
 
     # plantas
     problema['plantas'] = _generar_plantas(file=file)
-
-    # Unidades de almacenamiento
-    # problema['unidades_almacenamiento'] = _generar_unidades_almacenamiento(
-    #    file=file)
 
     # Cargas
     problema['cargas'] = _generar_cargas_en_puerto(file=file)

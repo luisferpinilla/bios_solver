@@ -198,8 +198,6 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     periodos = conjuntos['periodos']
     cargas = conjuntos['cargas']
     plantas = conjuntos['plantas']
-    # penalizacion_backorder = parametros['penalizacion_backorder']
-    # penalizacion_exceder_almacenamiento = parametros['costo_penalizacion_capacidad_maxima']
 
     bigM = 100000000
 
