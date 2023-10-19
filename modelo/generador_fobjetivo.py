@@ -158,10 +158,10 @@ def _costo_safety_stock(conjuntos:dict, variables: dict, bigM:float):
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
                 
-                bbs_name = f'BSS_{planta}_{ingrediente}_{periodo}'
-                bbs_var = variables['BSS'][bbs_name]
+                sss_name = f'SSS_{planta}_{ingrediente}_{periodo}'
+                sss_var = variables['SSS'][sss_name]
                 
-                fobj.append((bigM/2-periodo*10)*bbs_var)
+                fobj.append((bigM/2-periodo*10)*sss_var)
 
 
     return fobj

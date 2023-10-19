@@ -236,9 +236,8 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, plantas: lis
 
     print('rest: mantnimiento de safety stock en planta')
 
-    # XIU >= SS * (1-BSS)
-    # XIU >= SS - SS*BSS
-    # XIU + SS*BSS >= SS
+    # XIU + SSS >= SS
+
 
     rest_list = list()
 
@@ -246,23 +245,19 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, plantas: lis
         for planta in plantas:
             for periodo in periodos:
 
-                left_expesion = list()
-
                 # XIU
                 xiu_name = f'XIU_{planta}_{ingrediente}_{periodo}'
                 xiu_var = variables['XIU'][xiu_name]
-                left_expesion.append(xiu_var)
 
                 # SS
                 ss_name = f'SS_{planta}_{ingrediente}'
                 ss_value = safety_stock[ss_name]
 
-                # BSS
-                bss_name = f'BSS_{planta}_{ingrediente}_{periodo}'
-                bss_var = variables['BSS'][bss_name]
-                left_expesion.append(ss_value*bss_var)
+                # SSS
+                sss_name = f'SSS_{planta}_{ingrediente}_{periodo}'
+                sss_var = variables['SSS'][sss_name]
 
-                rest = (pu.lpSum(left_expesion) >= ss_value,
+                rest = (xiu_var + sss_var >= ss_value,
                         f'safety_stock {ingrediente} en {planta} en {periodo}')
 
                 rest_list.append(rest)
