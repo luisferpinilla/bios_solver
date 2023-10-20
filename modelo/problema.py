@@ -63,7 +63,7 @@ class Problema():
         generar_fob(fob=self.target, parametros=self.parametros,
                     conjuntos=self.conjuntos, variables=self.variables)
 
-    def solve(self, engine='coin', gap=0.0, tlimit=1200, gen_lp_file=False):
+    def solve(self, engine='coin', gap=0.0, tlimit=0.0, gen_lp_file=False):
 
         print('restolviendo el problema')
 
@@ -82,21 +82,30 @@ class Problema():
 
         print('ejecutando solver')
         if engine == 'glpk':
-            if gap == 0.0:
-                engine = pu.GLPK_CMD(timeLimit=tlimit)
+            if tlimit == 0.0:
+                if gap == 0.0:
+                    engine = pu.GLPK_CMD()
+                else:
+                    engine = pu.GLPK_CMD(options=['--mipgap', str(gap), '--check'])
             else:
-                engine = pu.GLPK_CMD(timeLimit=tlimit, options=[
-                                     '--mipgap', str(gap), '--check'])
-
+                if gap == 0.0:
+                    engine = pu.GLPK_CMD(timeLimit=tlimit)
+                else:
+                    engine = pu.GLPK_CMD(timeLimit=tlimit, options=['--mipgap', str(gap), '--check'])
+                
             self.solver.solve(solver=engine)
 
         else:
-            if gap == 0.0:
-                engine = pu.PULP_CBC_CMD(
-                    timeLimit=tlimit)
+            if tlimit == 0.0:
+                if gap == 0.0:
+                    engine = pu.PULP_CBC_CMD()
+                else:
+                    engine = pu.PULP_CBC_CMD(gapRel=gap)
             else:
-                engine = pu.PULP_CBC_CMD(
-                    gapRel=gap, timeLimit=tlimit)
+                if gap == 0.0:
+                    engine = pu.PULP_CBC_CMD(timeLimit=tlimit)
+                else:
+                    engine = pu.PULP_CBC_CMD(gapRel=gap, timeLimit=tlimit)
 
             self.solver.solve(solver=engine)
 
