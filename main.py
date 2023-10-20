@@ -13,17 +13,21 @@ problema.generar_parameters()
 
 problema.generar_vars()
 
-conjuntos = problema.conjuntos
-parametros = problema.parametros
-variables = problema.variables
-
 problema.generar_target()
 
 problema.gen_constrains()
 
-problema.solve(tlimit=60*60*3)
+problema.solve()
 
 reporte = Reporte(problema=problema)
+
+fact_inventario_planta = reporte.obtener_fact_inventario_planta()
+fact_inventario_puerto = reporte.obtener_fact_inventario_puerto()
+
+conjuntos = problema.conjuntos
+parametros = problema.parametros
+variables = problema.variables
+
 
 # df_dict = reporte.obtener_dataframes(filename='reporte.xlsx')
 

@@ -4,7 +4,7 @@ import streamlit as st
 
 st.set_page_config(layout="wide")
 
-st.title('Visualizador BIOS')
+st.title('Visualizador de Despachos - Variables Continuas')
 # label='Seleccione un motor de solución', options=['coin', 'glpk'])
 
 uploaded_file = st.file_uploader("Choose a file")
@@ -21,7 +21,7 @@ else:
     with st.form('Configure los siguientes parámetros'):
 
         tmax = st.slider(label='Tiempo máximo de trabajo en minutos',
-                         min_value=5, max_value=19, value=10)
+                         min_value=1, max_value=60, value=5)
 
         st.session_state['upload_file'] = uploaded_file
 
@@ -74,10 +74,12 @@ else:
                     value=70, text='Ejecutando el soluccionador del modelo')
 
                 # problema.solve(engine='coin', tlimit=60 * tmax)
-                problema.solve(tlimit=60*60*3)
+                problema.solve(engine='coin', tlimit=tmax*60)
 
-                if problema.estatus == 'Infeasible':
-                    st.error('El solucionador reporta Infactibilidad')
+                if problema.estatus != 'Optimal':
+                    st.error(f'El solucionador reporta {problema.estatus}')
+                else:
+                    st.success(problema.estatus)
 
                 progress_bar.progress(value=90, text='Escribiendo modelo LP')
 
@@ -96,8 +98,6 @@ else:
 
                 progress_bar.progress(
                     value=100, text='Modelo ejecutado completamente')
-
-                st.write(problema.estatus)
 
         else:
             st.warning(

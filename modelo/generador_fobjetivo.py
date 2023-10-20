@@ -119,10 +119,10 @@ def _costo_exceder_capacidad_almacenamiento(conjuntos:dict, variables:dict, BigM
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
                 
-                bal_name = f'BAL_{planta}_{ingrediente}_{periodo}'
-                bal_var = variables['BAL'][bal_name]
+                sal_name = f'SAL_{planta}_{ingrediente}_{periodo}'
+                sal_var = variables['SAL'][sal_name]
             
-                fobj.append((2*BigM - int(periodo)*10)*bal_var)
+                fobj.append((2*BigM)*sal_var)
                 
     return fobj
     
@@ -139,10 +139,10 @@ def _costo_bakorder(conjuntos:dict, variables: dict, bigM:float):
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
                 
-                xbk_name = f'XBK_{planta}_{ingrediente}_{periodo}'
-                xbk_var = variables['XBK'][xbk_name]
+                sbk_name = f'SBK_{planta}_{ingrediente}_{periodo}'
+                sbk_var = variables['SBK'][sbk_name]
     
-                fobj.append((bigM/100 - int(periodo)*10)*xbk_var)
+                fobj.append((bigM)*sbk_var)
     
 
     return fobj
@@ -158,10 +158,10 @@ def _costo_safety_stock(conjuntos:dict, variables: dict, bigM:float):
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
                 
-                bbs_name = f'BSS_{planta}_{ingrediente}_{periodo}'
-                bbs_var = variables['BSS'][bbs_name]
+                sss_name = f'SSS_{planta}_{ingrediente}_{periodo}'
+                sss_var = variables['SSS'][sss_name]
                 
-                fobj.append((bigM/2-periodo*10)*bbs_var)
+                fobj.append((bigM/2)*sss_var)
 
 
     return fobj
@@ -177,10 +177,10 @@ def _costo_inventario_objetivo(conjuntos:dict, variables: dict, bigM:float):
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
                 
-                btg_name = f'BTG_{planta}_{ingrediente}_{periodo}'
-                btg_var = variables['BTG'][btg_name]
+                sio_name = f'SIO_{planta}_{ingrediente}_{periodo}'
+                sio_var = variables['SIO'][sio_name]
                 
-                fobj.append((bigM/3-periodo*10)*btg_var)
+                fobj.append((bigM/3)*sio_var)
 
 
     return fobj
@@ -199,7 +199,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     cargas = conjuntos['cargas']
     plantas = conjuntos['plantas']
 
-    bigM = 100000000
+    bigM = 1000
 
     # Almacenamiento en puerto por corte de Facturación:
     cap = _costos_almacenamiento_puerto(variables=variables,
@@ -238,7 +238,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
                                                   variables=variables, 
                                                   BigM=bigM)
 
-    ctotal = cap + cop + ct  + cal + ctg + cbk#+ css  
+    ctotal = cap + cop + ct  + cal + ctg + cbk + css  
 
     for term in ctotal:
         fob.append(term)

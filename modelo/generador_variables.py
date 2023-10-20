@@ -20,7 +20,7 @@ def _despacho_directo(variables: dict, periodos: list,  cargas: list, plantas: l
 
                 xad_name = f'XAD_{carga}_{planta}_{periodo}'
                 xad_var = pu.LpVariable(
-                    name=xad_name, lowBound=0.0, cat=pu.LpContinuous)
+                    name=xad_name, lowBound=0.0, upBound=34000*max_trucks, cat=pu.LpContinuous)
                 variables['XAD'][xad_name] = xad_var
 
                 itd_name = f'ITD_{carga}_{planta}_{periodo}'
@@ -36,7 +36,7 @@ def _decargue_barco_a_puerto(variables: dict, cargas: list, periodos: list):
         for periodo in periodos:
             xpl_name = f'XPL_{carga}_{periodo}'
             xpl_var = pu.LpVariable(
-                name=xpl_name, lowBound=0.0, cat=pu.LpContinuous)
+                name=xpl_name, lowBound=0.0, upBound=50000001, cat=pu.LpContinuous)
             variables['XPL'][xpl_name] = xpl_var
 
 
@@ -82,10 +82,10 @@ def _almacenamiento_puerto(variables: list, cargas: list, periodos: list):
 def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, periodos: list):
 
     variables['XIU'] = dict()
-    variables['BSS'] = dict()
-    variables['XBK'] = dict()
-    variables['BAL'] = dict()
-    variables['BTG'] = dict()
+    variables['SSS'] = dict()
+    variables['SBK'] = dict()
+    variables['SAL'] = dict()
+    variables['SIO'] = dict()
 
     for planta in plantas:
         for ingrediente in ingredientes:
@@ -97,25 +97,28 @@ def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, p
                     name=xiu_name, lowBound=0.0, cat=pu.LpContinuous)
                 variables['XIU'][xiu_name] = xiu_var
 
-                # $BSS_{ik}^{t}$ : Binaria, si se cumple que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté sobre el nivel de seguridad $SS_{ik}^{t}$
-                xbs_name = f'BSS_{planta}_{ingrediente}_{periodo}'
-                xbs_var = pu.LpVariable(name=xbs_name, cat=pu.LpBinary)
-                variables['BSS'][xbs_name] = xbs_var
+                # $SSS_{ik}^{t}$ : Lo que falta para que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté sobre el nivel de seguridad $SS_{ik}^{t}$
+                sss_name = f'SSS_{planta}_{ingrediente}_{periodo}'
+                sss_var = pu.LpVariable(name=sss_name, lowBound=0.0, cat=pu.LpContinuous)
+                variables['SSS'][sss_name] = sss_var
 
-                xbk_name = f'XBK_{planta}_{ingrediente}_{periodo}'
-                xbk_var = pu.LpVariable(
-                    name=xbk_name, lowBound=0.0, cat=pu.LpContinuous)
-                variables['XBK'][xbk_name] = xbk_var
+                # $SBK_{ik}^{t}$ : Lo que falta para cumplir la demanda
+                sbk_name = f'SBK_{planta}_{ingrediente}_{periodo}'
+                sbk_var = pu.LpVariable(
+                    name=sbk_name, lowBound=0.0, cat=pu.LpContinuous)
+                variables['SBK'][sbk_name] = sbk_var
 
-                bal_name = f'BAL_{planta}_{ingrediente}_{periodo}'
-                bal_var = pu.LpVariable(
-                    name=bal_name, lowBound=0.0, cat=pu.LpContinuous)
-                variables['BAL'][bal_name] = bal_var
+                # $SAL_{ik}^{t}$ : Lo que sobra para que el inventario no exceda la capacidad del almacenamiento
+                sal_name = f'SAL_{planta}_{ingrediente}_{periodo}'
+                sal_var = pu.LpVariable(
+                    name=sal_name, lowBound=0.0, cat=pu.LpContinuous)
+                variables['SAL'][sal_name] = sal_var
                 
-                btg_name = f'BTG_{planta}_{ingrediente}_{periodo}'
-                btg_var = pu.LpVariable(
-                    name=btg_name, lowBound=0.0, cat=pu.LpContinuous)
-                variables['BTG'][btg_name] = btg_var
+                # $SIO_{ik}^{t}$ : Lo que falta para cumplir con el inventario objetivo
+                sio_name = f'SIO_{planta}_{ingrediente}_{periodo}'
+                sio_var = pu.LpVariable(
+                    name=sio_name, lowBound=0.0, cat=pu.LpContinuous)
+                variables['SIO'][sio_name] = sio_var
 
 
 def generar_variables(conjuntos: dict, variables: dict) -> dict:

@@ -215,7 +215,7 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, co
     inventario_df.rename(columns={'value': 'inventario'}, inplace=True)
 
     # Leer y procesar backorder
-    variable_dict = variables['XBK']
+    variable_dict = variables['SBK']
 
     backorder_df = __procesar_listado_variables(variable_dict, campos)
 
@@ -227,7 +227,7 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, co
 
     # Leer y procesar Cumplimiento SS
 
-    variable_dict = variables['BSS']
+    variable_dict = variables['SSS']
 
     cumple_SS_df = __procesar_listado_variables(variable_dict, campos)
 
@@ -413,7 +413,7 @@ def _procesar_variables_safety_stock(df_dict: dict, variables: dict):
 
     campos = ['tipo', 'ingrediente', 'empresa', 'planta', 'periodo']
 
-    variable_dict = variables['BSS']
+    variable_dict = variables['SSS']
 
     df = __procesar_listado_variables(variable_dict, campos)
 
@@ -421,7 +421,7 @@ def _procesar_variables_safety_stock(df_dict: dict, variables: dict):
 
     df_dict['Safety stock'] = df
 
-    variable_dict = variables['XBK']
+    variable_dict = variables['SBK']
 
     df = __procesar_listado_variables(variable_dict, campos)
 

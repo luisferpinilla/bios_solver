@@ -97,7 +97,7 @@
         "output_name": "kg",
         "sheet_name": "inventario_planta"
     },
-    "BSS": {
+    "SSS": {
         "type": "variable",
         "fields": [
             "tipo",
@@ -109,7 +109,7 @@
         "output_name": "alarma_safety_stock",
         "sheet_name": "alarma_safety_stock"
     },
-    "XBK": {
+    "SBK": {
         "type": "variable",
         "fields": [
             "tipo",
