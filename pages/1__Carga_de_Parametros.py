@@ -74,7 +74,7 @@ else:
                     value=70, text='Ejecutando el soluccionador del modelo')
 
                 # problema.solve(engine='coin', tlimit=60 * tmax)
-                problema.solve(tlimit=tmax*60)
+                problema.solve(engine='coin', tlimit=tmax*60)
 
                 if problema.estatus != 'Optimal':
                     st.error(f'El solucionador reporta {problema.estatus}')

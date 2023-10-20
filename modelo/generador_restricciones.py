@@ -275,28 +275,28 @@ def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: 
 
     for ingrediente in ingredientes:
         for planta in plantas:
-            for periodo in periodos:
+            periodo = periodos[-1]
 
-                # XIU
-                xiu_name = f'XIU_{planta}_{ingrediente}_{periodo}'
-                xiu_var = variables['XIU'][xiu_name]
+            # XIU
+            xiu_name = f'XIU_{planta}_{ingrediente}_{periodo}'
+            xiu_var = variables['XIU'][xiu_name]
 
-                # dio
-                dio_name = f'{ingrediente}'
-                dio_value = dio[dio_name]
+            # dio
+            dio_name = f'{ingrediente}'
+            dio_value = dio[dio_name]
 
-                # Consumo promedio
-                con_name = f"{planta.split('_')[1]}_{ingrediente}"
-                con_value = consumo_promedio[con_name]
+            # Consumo promedio
+            con_name = f"{planta.split('_')[1]}_{ingrediente}"
+            con_value = consumo_promedio[con_name]
 
-                # Lo que falta para llegar a inventario objetivo
-                sio_name = f'SIO_{planta}_{ingrediente}_{periodo}'
-                sio_var = variables['SIO'][sio_name]
+            # Lo que falta para llegar a inventario objetivo
+            sio_name = f'SIO_{planta}_{ingrediente}_{periodo}'
+            sio_var = variables['SIO'][sio_name]
 
-                rest = (xiu_var + sio_var >= dio_value*con_value,
-                        f'inventario objetivo {ingrediente} en {planta} en {periodo}')
+            rest = (xiu_var + sio_var >= dio_value*con_value,
+                    f'inventario objetivo {ingrediente} en {planta} en {periodo}')
 
-                rest_list.append(rest)
+            rest_list.append(rest)
 
     restricciones['Inventario Objetivo en planta'] = rest_list
 

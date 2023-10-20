@@ -48,7 +48,6 @@ else:
             label='Ingredientes', options=ingredientes_list)
 
         if ingrediente != 'Todos':
-
             df = df[df['ingrediente'] == ingrediente]
 
     df.set_index(['empresa_origen', 'operador', 'ingrediente',
@@ -70,6 +69,8 @@ else:
     with col1:
 
         operadores_list = ['Todos'] + list(df['operador'].unique())
+
+        print(operadores_list)
 
         operador = st.selectbox(label='operador', options=operadores_list)
 
