@@ -21,7 +21,7 @@ else:
     with st.form('Configure los siguientes parámetros'):
 
         tmax = st.slider(label='Tiempo máximo de trabajo en minutos',
-                         min_value=5, max_value=19, value=10)
+                         min_value=10, max_value=60, value=30)
 
         st.session_state['upload_file'] = uploaded_file
 
@@ -74,7 +74,7 @@ else:
                     value=70, text='Ejecutando el soluccionador del modelo')
 
                 # problema.solve(engine='coin', tlimit=60 * tmax)
-                problema.solve(tlimit=60*60*3)
+                problema.solve(tlimit=tmax*60)
 
                 if problema.estatus == 'Infeasible':
                     st.error('El solucionador reporta Infactibilidad')

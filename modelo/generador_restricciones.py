@@ -303,11 +303,10 @@ def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: 
 
 def _capacidad_almacenamiento_planta(restricciones: list, 
                                      variables: dict, 
-                                     coeficientes_capacidad: dict, 
-                                     BigM:float, 
+                                     capacidad_plantas_ingredientes: dict, 
                                      plantas: list, 
                                      ingredientes: list, 
-                                     max_cap: dict, 
+                                     max_cap_almacenamiento_planta: dict, 
                                      periodos: list):
 
     print('rest: capacidad de almacenamiento en planta')
@@ -318,7 +317,7 @@ def _capacidad_almacenamiento_planta(restricciones: list,
 
     for planta in plantas:
 
-        capacidad_maxima = max_cap[f'MX_{planta}']
+        capacidad_maxima = max_cap_almacenamiento_planta[f'MX_{planta}']
 
         for periodo in periodos:
 
@@ -333,10 +332,10 @@ def _capacidad_almacenamiento_planta(restricciones: list,
                 sal_var = variables['SAL'][sal_name]
 
                 ci_name = f'CI_{planta}_{ingrediente}'
-                ci_value = coeficientes_capacidad[ci_name]
+                ci_value = capacidad_plantas_ingredientes[ci_name]
 
                 rest.append(
-                    (xiu_var -sal_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
+                    (xiu_var - sal_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
 
                 if ci_value > 0:
                     # evitar que el valor sea cero y convertirlo
@@ -361,11 +360,12 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
     inventario_inicial_cargas = parametros['inventario_inicial_cargas']
     llegadas = parametros['llegadas_cargas']
     transitos = parametros['transitos_a_plantas']
-    capacidad_plantas = parametros['capacidad_almacenamiento_planta']
+    capacidad_plantas_ingredientes = parametros['capacidad_almacenamiento_planta']
+    max_cap_almacenamiento_planta = parametros['capacidad_almacenamiento_maxima']
     cargas = conjuntos['cargas']
     inventario_inicial_ua = parametros['inventario_inicial_ua']
     safety_stock = parametros['safety_stock']
-    max_cap = parametros['capacidad_almacenamiento_maxima']
+    
     dio = parametros['dio_objetivo']
     # costo_penalizacion_capacidad_planta = parametros['costo_penalizacion_capacidad_maxima']
 
@@ -385,9 +385,8 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
 
     _capacidad_almacenamiento_planta(restricciones=restricciones,
                                      variables=variables,
-                                     coeficientes_capacidad=capacidad_plantas,
-                                     BigM=10000000,
-                                     max_cap=max_cap,
+                                     capacidad_plantas_ingredientes=capacidad_plantas_ingredientes,
+                                     max_cap_almacenamiento_planta=max_cap_almacenamiento_planta,
                                      plantas=plantas,
                                      ingredientes=ingredientes,
                                      periodos=periodos)
