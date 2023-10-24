@@ -138,6 +138,11 @@ class Reporte():
         consumo_proyectado_df.drop(columns=['tipo'], inplace=True)
         consumo_proyectado_df.rename(
             columns={'kg': 'consumo_kg'}, inplace=True)
+        
+        # obtener el backorder
+        backorder_df = self.df_dict['Backorder'].copy()
+        backorder_df.drop(columns=['tipo'], inplace=True)
+        backorder_df.rename(columns={'kg': 'backorder_kg'}, inplace=True)
 
         # Safety Stock
         safety_stock_df = self.df_dict['safety_stock'].copy()
@@ -182,6 +187,15 @@ class Reporte():
                                           right_on=['empresa', 'planta',
                                                     'ingrediente', 'periodo'],
                                           how='left').fillna(0.0)
+        
+        # Agregar el backorder a Fact inventarios planta
+        fact_inventario_planta = pd.merge(left=fact_inventario_planta,
+                                          right=backorder_df,
+                                          left_on=['empresa', 'planta',
+                                                   'ingrediente', 'periodo'],
+                                          right_on=['empresa', 'planta',
+                                                    'ingrediente', 'periodo'],
+                                          how='left').fillna(0.0)
 
         # Agregar Safey Stock a Fact inventarios planta
         fact_inventario_planta = pd.merge(left=fact_inventario_planta,
@@ -209,8 +223,8 @@ class Reporte():
                                                   'ingrediente', 'periodo'],
                                          value_vars=['inventario_al_cierre_kg',
                                                      'transitos_kg', 'llegadas_directas_kg',
-                                                     'llegadas_por_bodega_kg', 'consumo_kg', 'safety_stock',
-                                                     'alarma_safety_stock', 'DIO'],
+                                                     'llegadas_por_bodega_kg', 'consumo_kg', 'backorder_kg', 
+                                                     'safety_stock', 'alarma_safety_stock', 'DIO'],
                                          value_name='kg', var_name='item')
         fact_inventario_planta['periodo'] = fact_inventario_planta['periodo'].astype(
             int)
