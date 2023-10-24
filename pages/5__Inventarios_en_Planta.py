@@ -34,25 +34,34 @@ else:
 
     with col1:
 
-        # ingredientes_list = ['Todos'] + list(df['ingrediente'].unique())
-        ingredientes_list = list(df['ingrediente'].unique())
+        ingredientes_list = ['Todos'] + list(df['ingrediente'].unique())
+        # ingredientes_list = list(df['ingrediente'].unique())
 
         ingrediente = st.selectbox(
             label='Ingredientes', options=ingredientes_list)
 
-        # if ingrediente != 'Todos':
-        df = df[df['ingrediente'] == ingrediente]
+        if ingrediente != 'Todos':
+            df = df[df['ingrediente'] == ingrediente]
 
     with col2:
 
-        # plantas_list = ['Todos'] + list(df['planta'].unique())
-        plantas_list = list(df['planta'].unique())
+        plantas_list = ['Todos'] + list(df['planta'].unique())
+        # plantas_list = list(df['planta'].unique())
 
         planta = st.selectbox(label='Plantas', options=plantas_list)
 
         if planta != 'Todos':
-
             df = df[df['planta'] == planta]
+
+    with st.expander(label='Item Selector'):
+
+        item_list = list(df['item'].unique())
+
+        item = st.multiselect(label='Item', options=item_list, default=item_list)
+
+        if item != 'Todos':
+            df = df[df['item'].isin(item)]
+
 
     df.set_index(['empresa', 'planta', 'ingrediente', 'item'], inplace=True)
 
