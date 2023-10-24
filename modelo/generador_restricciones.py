@@ -335,7 +335,7 @@ def _capacidad_almacenamiento_planta(restricciones: list,
                 ci_name = f'CI_{planta}_{ingrediente}'
                 ci_value = capacidad_plantas_ingredientes[ci_name]
 
-                cp_name = f'{planta}_{ingrediente}'
+                cp_name = f"{planta.split('_')[1]}_{ingrediente}"
                 cp_value = consumo_promedio[cp_name]
 
                 rest.append(
@@ -362,14 +362,14 @@ def _tiempo_administrativo(restricciones:dict, variables:dict, conjuntos:dict, p
         for planta in conjuntos['plantas']:
             for periodo in periodos_restringidos:
 
-                itr_name = f'xtr_{carga}_{planta}_{periodo}'
+                itr_name = f'ITR_{carga}_{planta}_{periodo}'
                 itr_var = variables['ITR'][itr_name]
                 rest = (itr_var == 0.0, f'No despacho directo de {carga} hacia {planta} en {periodo}')
                 rest_list.append(rest)
 
 
-                itd_name = f'itd_{carga}_{planta}_{periodo}'
-                itd_var = variables['ITd'][itd_name]
+                itd_name = f'ITD_{carga}_{planta}_{periodo}'
+                itd_var = variables['ITD'][itd_name]
                 rest = (itd_var == 0.0, f'No despacho indirecto de {carga} hacia {planta} en {periodo}')
                 rest_list.append(rest)
 
