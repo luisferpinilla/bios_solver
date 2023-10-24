@@ -199,7 +199,7 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     cargas = conjuntos['cargas']
     plantas = conjuntos['plantas']
 
-    bigM = 1000
+    bigM = 10000
 
     # Almacenamiento en puerto por corte de Facturación:
     cap = _costos_almacenamiento_puerto(variables=variables,
@@ -229,9 +229,9 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
                           bigM=bigM)
     
     # Costo de no respetar un inventario de seguridad de un ingrediente en una planta
-    css = _costo_safety_stock(conjuntos=conjuntos, variables=variables, bigM=1000000)
+    css = _costo_safety_stock(conjuntos=conjuntos, variables=variables, bigM=bigM)
     
-    ctg = _costo_inventario_objetivo(conjuntos=conjuntos, variables=variables, bigM=1000000)
+    ctg = _costo_inventario_objetivo(conjuntos=conjuntos, variables=variables, bigM=bigM)
 
     # Costo de exceder las capacidades máximas de almacenamiento
     cal = _costo_exceder_capacidad_almacenamiento(conjuntos=conjuntos, 
