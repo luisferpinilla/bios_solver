@@ -304,6 +304,7 @@ def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: 
 def _capacidad_almacenamiento_planta(restricciones: list, 
                                      variables: dict, 
                                      capacidad_plantas_ingredientes: dict, 
+                                     consumo_promedio:dict,
                                      plantas: list, 
                                      ingredientes: list, 
                                      max_cap_almacenamiento_planta: dict, 
@@ -313,7 +314,7 @@ def _capacidad_almacenamiento_planta(restricciones: list,
 
     rest = list()
 
-    # SUM(XPI)<=1.0
+    # xiu - sal <= max(ci - cc,0)
 
     for planta in plantas:
 
@@ -334,8 +335,11 @@ def _capacidad_almacenamiento_planta(restricciones: list,
                 ci_name = f'CI_{planta}_{ingrediente}'
                 ci_value = capacidad_plantas_ingredientes[ci_name]
 
+                cp_name = f'{planta}_{ingrediente}'
+                cp_value = consumo_promedio[cp_name]
+
                 rest.append(
-                    (xiu_var - sal_var <= ci_value, f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
+                    (xiu_var - sal_var <= max(0.0, ci_value - cp_value), f'no sobrepaso de capacidad de {ingrediente} en {planta} durante {periodo}'))
 
                 if ci_value > 0:
                     # evitar que el valor sea cero y convertirlo
@@ -386,6 +390,7 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
     _capacidad_almacenamiento_planta(restricciones=restricciones,
                                      variables=variables,
                                      capacidad_plantas_ingredientes=capacidad_plantas_ingredientes,
+                                     consumo_promedio=consumo_promedio,
                                      max_cap_almacenamiento_planta=max_cap_almacenamiento_planta,
                                      plantas=plantas,
                                      ingredientes=ingredientes,
