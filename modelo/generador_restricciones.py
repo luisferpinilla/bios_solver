@@ -354,6 +354,28 @@ def _capacidad_almacenamiento_planta(restricciones: list,
     restricciones['Capacidad almacenamiento plantas'] = rest
 
 
+def _tiempo_administrativo(restricciones:dict, variables:dict, conjuntos:dict, periodos_restringidos:[0]):
+
+    rest_list = list()
+
+    for carga in conjuntos['cargas']:
+        for planta in conjuntos['plantas']:
+            for periodo in periodos_restringidos:
+
+                itr_name = f'xtr_{carga}_{planta}_{periodo}'
+                itr_var = variables['ITR'][itr_name]
+                rest = (itr_var == 0.0, f'No despacho directo de {carga} hacia {planta} en {periodo}')
+                rest_list.append(rest)
+
+
+                itd_name = f'itd_{carga}_{planta}_{periodo}'
+                itd_var = variables['ITd'][itd_name]
+                rest = (itd_var == 0.0, f'No despacho indirecto de {carga} hacia {planta} en {periodo}')
+                rest_list.append(rest)
+
+    restricciones['No despacho'] = rest_list
+
+
 def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict, variables: dict):
 
     periodos = conjuntos['periodos']
@@ -426,5 +448,10 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                          ingredientes=ingredientes,
                          periodos=periodos,
                          consumo=consumo_proyectado)
+    
+    _tiempo_administrativo(restricciones=restricciones,
+                           variables=variables,
+                           conjuntos=conjuntos,
+                           periodos_restringidos=['0'])
 
  
