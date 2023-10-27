@@ -306,6 +306,37 @@ def __venta_intercompany(parametros: dict, file: str):
         f"CW_{costo_cambio_empresa_df.iloc[x]['origen']}_{costo_cambio_empresa_df.iloc[x]['destino']}": costo_cambio_empresa_df.iloc[x]['value'] for x in range(costo_cambio_empresa_df.shape[0])}
 
 
+def __capacidad_recepcion_ingredientes(parametros:dict, conjuntos:dict, file:str):
+    
+    empresas_plantas = parametros['empresas_plantas']
+    
+    df = pd.read_excel(io=file, sheet_name='Safety_stock')[['planta', 'ingrediente', 'Capacidad_recepcion_kg']]
+    
+    df['empresa'] = df['planta'].map(empresas_plantas)
+    
+    df['key'] = df['empresa'] + '_' + df['planta'] + '_' + df['ingrediente']
+
+    df.drop(columns=['empresa' ,'planta', 'ingrediente'], inplace=True)
+    
+    df.set_index('key', drop=True, inplace=True)
+    
+    
+    capacidad_recepcion_ingredientes_dict = dict()
+    
+    for planta in conjuntos['plantas']:
+        for ingrediente in conjuntos['ingredientes']:
+            
+            name = f'{planta}_{ingrediente}'
+            
+            if name in df.index:
+                capacidad_recepcion_ingredientes_dict[name] = df.loc[name]['Capacidad_recepcion_kg']
+            else:
+                capacidad_recepcion_ingredientes_dict[name] = 0
+            
+    
+    parametros['capacidad_recepcion_ingredientes'] = capacidad_recepcion_ingredientes_dict
+
+
 def __tiempo_transporte(parametros: dict, conjuntos: dict, file: str):
 
     # $TT_{jk}$ : tiempo en días para transportar la carga desde el puerto $j$ hacia la planta $k$.
@@ -615,6 +646,10 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
     __venta_intercompany(parametros=parametros, file=file)
 
     __tiempo_transporte(parametros=parametros, conjuntos=conjuntos, file=file)
+
+
+    __capacidad_recepcion_ingredientes(parametros=parametros, conjuntos=conjuntos, file=file)
+
 
     __capacidad_almacenamiento_planta(
         parametros=parametros, conjuntos=conjuntos, file=file)
