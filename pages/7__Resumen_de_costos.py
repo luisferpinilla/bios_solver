@@ -23,7 +23,7 @@ else:
 
         solucion = problema.generar_reporte()
 
-        problema.guardar_reporte()
+        # problema.guardar_reporte()
 
         ca_df = solucion['costo_almacenamiento']
 
