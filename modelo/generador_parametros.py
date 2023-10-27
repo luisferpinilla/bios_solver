@@ -647,12 +647,9 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
 
     __tiempo_transporte(parametros=parametros, conjuntos=conjuntos, file=file)
 
-
     __capacidad_recepcion_ingredientes(parametros=parametros, conjuntos=conjuntos, file=file)
 
-
-    __capacidad_almacenamiento_planta(
-        parametros=parametros, conjuntos=conjuntos, file=file)
+    __capacidad_almacenamiento_planta(parametros=parametros, conjuntos=conjuntos, file=file)
 
     __transitos_a_plantas(parametros=parametros,
                           conjuntos=conjuntos, file=file)
