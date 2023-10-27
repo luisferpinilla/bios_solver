@@ -270,5 +270,13 @@
         ],
         "output_name": "valor_cif",
         "sheet_name": "valor_cif"
+    },
+    "dio_objetivo": {
+        "type": "parameter",
+        "fields": [
+            "ingrediente"
+        ],
+        "output_name": "inventario_objetivo",
+        "sheet_name": "inventario_objetivo"
     }
 }

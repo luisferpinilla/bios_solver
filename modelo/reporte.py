@@ -151,6 +151,11 @@ class Reporte():
         # Alarma por safety Stock
         alarma_ss_df = self.df_dict['alarma_safety_stock'].copy()
         alarma_ss_df.drop(columns=['tipo'], inplace=True)
+        
+        # inventario Objetivo
+        inv_objetivo_df = self.df_dict['inventario_objetivo'].copy()
+        inv_objetivo_df = inv_objetivo_df[inv_objetivo_df['ingrediente'].isin(self.problema.conjuntos['ingredientes'])]
+        
 
         # Agregar los transitos a Fact inventarios planta
         fact_inventario_planta = pd.merge(left=fact_inventario_planta,
@@ -215,8 +220,20 @@ class Reporte():
                                                     'ingrediente', 'periodo'],
                                           how='left').fillna(0.0)
         
+        # Agregar objetivo de inventario inventarios planta
+        fact_inventario_planta = pd.merge(left=fact_inventario_planta,
+                                          right=inv_objetivo_df,
+                                          left_on=['ingrediente'],
+                                          right_on=['ingrediente'],
+                                          how='left').fillna(0.0)        
+        
+        
          # calcular DIO
         fact_inventario_planta['DIO'] = fact_inventario_planta['inventario_al_cierre_kg']/fact_inventario_planta['consumo_kg']
+
+        # calcular Inventario_Objetivo
+        fact_inventario_planta['Target'] = fact_inventario_planta['consumo_kg']*fact_inventario_planta['inventario_objetivo']
+
 
         fact_inventario_planta = pd.melt(frame=fact_inventario_planta,
                                          id_vars=['empresa', 'planta',
@@ -224,8 +241,10 @@ class Reporte():
                                          value_vars=['inventario_al_cierre_kg',
                                                      'transitos_kg', 'llegadas_directas_kg',
                                                      'llegadas_por_bodega_kg', 'consumo_kg', 'backorder_kg', 
-                                                     'safety_stock', 'alarma_safety_stock', 'DIO'],
+                                                     'safety_stock', 'alarma_safety_stock', 'inventario_objetivo', 'DIO', 'Target'],
                                          value_name='kg', var_name='item')
+        
+        
         fact_inventario_planta['periodo'] = fact_inventario_planta['periodo'].astype(
             int)
 
