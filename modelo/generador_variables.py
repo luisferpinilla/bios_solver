@@ -85,7 +85,7 @@ def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, p
     variables['SSS'] = dict()
     variables['SBK'] = dict()
     variables['SAL'] = dict()
-    variables['SIO'] = dict()
+    # variables['SIO'] = dict()
 
     for planta in plantas:
         for ingrediente in ingredientes:
@@ -115,10 +115,10 @@ def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, p
                 variables['SAL'][sal_name] = sal_var
                 
                 # $SIO_{ik}^{t}$ : Lo que falta para cumplir con el inventario objetivo
-                sio_name = f'SIO_{planta}_{ingrediente}_{periodo}'
-                sio_var = pu.LpVariable(
-                    name=sio_name, lowBound=0.0, cat=pu.LpContinuous)
-                variables['SIO'][sio_name] = sio_var
+                # sio_name = f'SIO_{planta}_{ingrediente}_{periodo}'
+                # sio_var = pu.LpVariable(
+                #     name=sio_name, lowBound=0.0, cat=pu.LpContinuous)
+                # variables['SIO'][sio_name] = sio_var
 
 
 def generar_variables(conjuntos: dict, variables: dict) -> dict:
