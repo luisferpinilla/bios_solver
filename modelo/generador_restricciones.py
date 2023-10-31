@@ -507,6 +507,15 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                                               variables=variables,
                                               max_cap_almacenamiento_planta=max_cap_almacenamiento_planta,
                                               capacidad_plantas_ingredientes=capacidad_plantas_ingredientes)
+    
+    _inventario_objetivo_plantas(restricciones=restricciones,
+                                 variables=variables,
+                                 plantas=plantas,
+                                 ingredientes=ingredientes,
+                                 periodos=periodos,
+                                 dio=dio,
+                                 consumo_promedio=consumo_promedio)    
+    
     '''
 
     _mantenimiento_ss_plantas(restricciones=restricciones,
@@ -517,19 +526,12 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                               safety_stock=safety_stock)
     
 
-    _inventario_objetivo_plantas(restricciones=restricciones,
-                                 variables=variables,
-                                 plantas=plantas,
-                                 ingredientes=ingredientes,
-                                 periodos=periodos,
-                                 dio=dio,
-                                 consumo_promedio=consumo_promedio)
-
     _tiempo_transitos(restricciones=restricciones,
                       variables=variables,
                       cargas=cargas,
                       plantas=plantas,
                       periodos=periodos)
+
 
     _balance_masa_planta(restricciones=restricciones,
                          variables=variables,
@@ -540,6 +542,7 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                          ingredientes=ingredientes,
                          periodos=periodos,
                          consumo=consumo_proyectado)
+ 
     
     _tiempo_administrativo(restricciones=restricciones,
                            variables=variables,
