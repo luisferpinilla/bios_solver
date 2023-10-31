@@ -6,7 +6,7 @@ Created on Wed Oct 25 15:56:03 2023
 @author: luispinilla
 """
 
-import pandas as pds
+import pandas as pd
 import numpy as np
 from datetime import datetime
 
