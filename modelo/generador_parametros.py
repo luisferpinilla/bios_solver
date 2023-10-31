@@ -379,36 +379,24 @@ def __capacidad_almacenamiento_planta(parametros: dict, conjuntos: dict, file: s
     )
 
     # Eliminar columna de suma recién creada
-    inventario_planta_df.drop(columns=['Suma'], inplace=True)
-    
-    # Calcular Capacidad Maxima
-    
-    max_df = inventario_planta_df.groupby(['empresa', 'planta'])[conjuntos['ingredientes']].sum()
-    
-    max_df['capacidad_max'] = max_df.apply(np.max, axis=1)
-    
-    max_dict= dict()
-    
-    for planta in conjuntos['plantas']:
-        
-        par_name = f'MX_{planta}'
-        par_value = max_df.loc[(planta.split('_')[0],planta.split('_')[1])]['capacidad_max']
-        
-        max_dict[par_name] = par_value
-    
+    inventario_planta_df.drop(columns=['Suma'], inplace=True)    
 
     # Traer la capacidad por ingrediente
     
-    capacidad_df = inventario_planta_df.melt(id_vars=['empresa', 'planta'],
-                                             value_vars=conjuntos['ingredientes'],
-                                             var_name='ingrediente',
-                                             value_name='capacidad').rename(columns={'key': 'unidad_almacenamiento'})
+    #capacidad_df = inventario_planta_df.melt(id_vars=['empresa', 'planta'],
+    #                                         value_vars=conjuntos['ingredientes'],
+    #                                         var_name='ingrediente',
+    #                                         value_name='capacidad').rename(columns={'key': 'unidad_almacenamiento'})
+    
+    capacidad_df = inventario_planta_df.groupby(['empresa', 'planta', 'ingrediente_actual'])[conjuntos['ingredientes']].sum().reset_index()
 
-    capacidad_df = capacidad_df.groupby(['empresa', 'planta', 'ingrediente'])[
-        ['capacidad']].sum().reset_index()
+    capacidad_df['capacidad'] = capacidad_df.apply(lambda x: x[x['ingrediente_actual']], axis=1)
+    
+    capacidad_df.drop(columns=conjuntos['ingredientes'], inplace=True)
+    
+    capacidad_df.rename(columns={'ingrediente_actual':'ingrediente'}, inplace=True)
 
-    capacidad_df['key'] = 'CI_' + capacidad_df['empresa'] + "_" + \
-        capacidad_df['planta'] + "_" + capacidad_df['ingrediente']
+    capacidad_df['key'] = 'CI_' + capacidad_df['empresa'] + "_" + capacidad_df['planta'] + "_" + capacidad_df['ingrediente']
         
     capacidad_df.set_index('key', drop=True, inplace=True)
 
@@ -431,8 +419,6 @@ def __capacidad_almacenamiento_planta(parametros: dict, conjuntos: dict, file: s
 
 
     parametros['capacidad_almacenamiento_planta'] = capacidad_dict
-    
-    parametros['capacidad_almacenamiento_maxima'] = max_dict
 
 
 def __inventario_planta(parametros: dict, conjuntos: dict, file: str):

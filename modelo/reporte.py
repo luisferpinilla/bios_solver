@@ -155,6 +155,13 @@ class Reporte():
         # inventario Objetivo
         inv_objetivo_df = self.df_dict['inventario_objetivo'].copy()
         inv_objetivo_df = inv_objetivo_df[inv_objetivo_df['ingrediente'].isin(self.problema.conjuntos['ingredientes'])]
+
+        # capacidad inventario
+        cap_inventario_df = self.df_dict['capacidad_almacenamiento'].copy()
+        cap_inventario_df.drop(columns='tipo', inplace=True)
+        
+        
+
         
 
         # Agregar los transitos a Fact inventarios planta
@@ -226,7 +233,12 @@ class Reporte():
                                           left_on=['ingrediente'],
                                           right_on=['ingrediente'],
                                           how='left').fillna(0.0)        
-        
+        # Agregar capacidad de inventario inventarios planta
+        fact_inventario_planta = pd.merge(left=fact_inventario_planta,
+                                          right=cap_inventario_df,
+                                          left_on=['empresa', 'planta','ingrediente'],
+                                          right_on=['empresa', 'planta','ingrediente'],
+                                          how='left').fillna(0.0)         
         
          # calcular DIO
         fact_inventario_planta['DIO'] = fact_inventario_planta['inventario_al_cierre_kg']/fact_inventario_planta['consumo_kg']
@@ -241,7 +253,8 @@ class Reporte():
                                          value_vars=['inventario_al_cierre_kg',
                                                      'transitos_kg', 'llegadas_directas_kg',
                                                      'llegadas_por_bodega_kg', 'consumo_kg', 'backorder_kg', 
-                                                     'safety_stock', 'alarma_safety_stock', 'inventario_objetivo', 'DIO', 'Target'],
+                                                     'safety_stock', 'alarma_safety_stock', 'inventario_objetivo', 
+                                                     'DIO', 'Target', 'capacidad_almacenamiento'],
                                          value_name='kg', var_name='item')
         
         

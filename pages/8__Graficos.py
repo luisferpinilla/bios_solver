@@ -23,6 +23,7 @@ def dibujar_inventario_planta(df:pd.DataFrame):
     consumo_proyectado = list(df[df['item']=='consumo_kg'].drop(columns=filtros).iloc[0])
     safety_stock = list(df[df['item']=='safety_stock'].drop(columns=filtros).iloc[0])
     target = list(df[df['item']=='Target'].drop(columns=filtros).iloc[0])
+    capacidad = list(df[df['item']=='capacidad_almacenamiento'].drop(columns=filtros).iloc[0])
     
     fig, ax = plt.subplots(figsize=(12, 4))
 
@@ -31,13 +32,14 @@ def dibujar_inventario_planta(df:pd.DataFrame):
     ax.set_xlabel('Fecha')
     ax.set_ylabel('Kg')
 
-    ax.plot(names, target, label='Inventario Objetivo')
-    ax.plot(names, inventario_al_cierre, label='Inventario al cierre')
-    ax.plot(names, consumo_proyectado, label='Consumo Proyectado')
-    ax.plot(names, safety_stock, color='red', linestyle='dashed', label='Inventario de seguridad')
+    # ax.plot(names, target, label='Inventario Objetivo')
+    ax.plot(names, capacidad, label='Capacidad', color='blue', linestyle='dashed')
+    ax.plot(names, inventario_al_cierre, label='Inventario', color='green')
+    ax.plot(names, consumo_proyectado, label='Consumo', color='black')
+    ax.plot(names, safety_stock, color='red', linestyle='dashed', label='SS')
     ax.bar(names, llegadas_directas_kg, color='blue', width=1, label='Llegadas directas')
     ax.bar(names, llegadas_por_bodega_kg, color='orange', width=1, label='Llegadas indirectas')
-    ax.bar(names, transitos_a_bodega, color='red', width=1, label='Llegadas programadas')
+    ax.bar(names, transitos_a_bodega, color='purple', width=1, label='Llegadas programadas')
 
     fig.autofmt_xdate()
 
@@ -59,6 +61,7 @@ def dibujar_inventario_puerto(df:pd.DataFrame):
     df = df.reset_index().groupby(['ingrediente', 'item'])[['Previo'] + fechas].sum().reset_index()
 
     # Values of each group
+    
     # despachos_directas_kg = list(df[df['item']=='kilos_despachados_directo'].drop(columns=['ingrediente', 'item']).iloc[0])
     despachos_desde_bodega_kg = list(df[df['item']=='kilos_despachados_bodega'].drop(columns=['ingrediente', 'item']).iloc[0])
     inventario_al_cierre = list(df[df['item']=='inventario_al_cierre_kg'].drop(columns=['ingrediente', 'item']).iloc[0])
@@ -123,10 +126,11 @@ else:
 
         st.markdown('## Inventario en puertos')        
         df2 = puerto_df[puerto_df['ingrediente']==ingrediente]
-        fig2 = dibujar_inventario_puerto(df2)
-        st.pyplot(fig2)
-
-        st.write(puerto_df)
+        if df2.shape[0]>0:
+            fig2 = dibujar_inventario_puerto(df2)
+            st.pyplot(fig2)
+        else:
+            st.write('No data')
 
     
 
