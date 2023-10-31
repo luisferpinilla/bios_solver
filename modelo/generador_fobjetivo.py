@@ -161,7 +161,7 @@ def _costo_safety_stock(conjuntos:dict, variables: dict, bigM:float):
                 sss_name = f'SSS_{planta}_{ingrediente}_{periodo}'
                 sss_var = variables['SSS'][sss_name]
                 
-                fobj.append((bigM/2)*sss_var)
+                fobj.append((bigM/4)*sss_var)
 
 
     return fobj

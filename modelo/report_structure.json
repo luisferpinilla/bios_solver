@@ -278,5 +278,16 @@
         ],
         "output_name": "inventario_objetivo",
         "sheet_name": "inventario_objetivo"
+    },
+    "capacidad_almacenamiento_planta": {
+        "type": "parameter",
+        "fields": [
+            "tipo",
+            "empresa",
+            "planta",
+            "ingrediente"
+        ],
+        "output_name": "capacidad_almacenamiento",
+        "sheet_name": "capacidad_almacenamiento"
     }
 }
