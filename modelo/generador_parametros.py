@@ -183,11 +183,13 @@ def __costo_almacenamiento_puerto(parametros: dict, conjuntos: dict, file: str):
         file, sheet_name='costos_almacenamiento_cargas', usecols='B:G')
 
     campos = ['empresa', 'operador-puerto', 'imp-motonave', 'ingrediente']
+    
+    ultima_fecha = conjuntos['fechas'][-1]
 
     for campo in campos:
         cc_df[campo] = cc_df[campo].apply(__remover_underscores)
 
-    cc_df = cc_df[cc_df['fecha_corte'].isin(conjuntos['fechas'])].copy()
+    cc_df['fecha_corte'] = cc_df['fecha_corte'].apply(lambda x: x if x <= ultima_fecha else ultima_fecha)
 
     fechas_dict = {conjuntos['fechas'][x]: x for x in range(len(conjuntos['fechas']))}
 
