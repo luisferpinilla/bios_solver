@@ -608,10 +608,43 @@ def __calcular_dio_general(parametros:dict, file:str)->dict:
         dio_dict[ingrediente] = df.loc[ingrediente]['DIO_General']
 
     
-    parametros['dio_objetivo']= dio_dict        
-       
-    
+    parametros['dio_objetivo']= dio_dict    
 
+
+def __fechas_iniciales_cargas(parametros:dict, conjuntos:dict):
+    
+    initial_dates_inventory_dict = dict()
+    
+    for carga in conjuntos['cargas']:
+        
+        # Verificar si la tiene inventario desde el momento 0
+        par_name = f'IP_{carga}'
+        
+        if par_name in parametros['inventario_inicial_cargas'].keys():
+            
+            initial_dates_inventory_dict[carga] = 100
+            
+        else:
+            
+            # determinar desde qué periodo se debe crear las variables de almacenamiento y despacho
+            
+            for periodo in conjuntos['periodos']:
+                
+                par_name = f'AR_{carga}_{periodo}'
+                
+                par_value = parametros['llegadas_cargas'][par_name]
+                
+                if par_value > 0:
+                    
+                    initial_dates_inventory_dict[carga] = periodo
+                    
+                    break
+                
+                
+                
+    parametros['periodos_atencion_cargas'] = initial_dates_inventory_dict
+    
+    
 
 def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: str) -> dict:
 
@@ -652,3 +685,6 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
                              conjuntos=conjuntos, file=file)
     
     __calcular_dio_general(parametros=parametros, file=file)
+    
+    
+    __fechas_iniciales_cargas(parametros=parametros, conjuntos=conjuntos)

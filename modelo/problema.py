@@ -47,7 +47,8 @@ class Problema():
 
         print('generando variables')
 
-        generar_variables(conjuntos=self.conjuntos, variables=self.variables)
+        generar_variables(conjuntos=self.conjuntos, parametros=self.parametros, 
+                          variables=self.variables)
 
     def gen_constrains(self):
 
