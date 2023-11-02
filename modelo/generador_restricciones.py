@@ -328,9 +328,12 @@ def _capacidad_recepcion_ingredientes_planta(restricciones:dict,
                     if c_ingrediente == ingrediente:
                     
                         itd_name = f'ITD_{carga}_{planta}_{periodo}'
-                        itd_var = variables['ITD'][itd_name]         
+                        itd_var = variables['ITD'][itd_name]
+
+                        itr_name = f'ITR_{carga}_{planta}_{periodo}' 
+                        itr_var = variables['ITR'][itr_name]      
                         
-                        left_expesion.append(34000*itd_var)
+                        left_expesion.append(34000*itd_var + 34000*itr_var)
                 
                 rest = (pu.lpSum(left_expesion)<=cap_value, f'capacidad_recepcion en {planta} de {ingrediente} en {periodo}')
                     
