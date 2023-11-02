@@ -1,5 +1,6 @@
 from modelo.problema import Problema
 from modelo.reporte import Reporte
+from modelo.visor_parametros import visor_parametros
 
 # if __name__ == '__main__':
 
@@ -16,6 +17,8 @@ problema.generar_vars()
 problema.generar_target()
 
 problema.gen_constrains()
+
+df = visor_parametros(conjuntos=problema.conjuntos, parametros=problema.parametros)
 
 problema.solve(tlimit=300)
 
