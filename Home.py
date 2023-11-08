@@ -2,10 +2,13 @@ from modelo.problema import Problema
 from modelo.validador import Validador
 import streamlit as st
 
-st.set_page_config(layout="wide")
+st.set_page_config(
+    page_title="BIOS",
+    page_icon="👋",
+    layout="wide"
+)
 
-st.title('Visualizador de Despachos - Variables Continuas')
-# label='Seleccione un motor de solución', options=['coin', 'glpk'])
+st.write("# Bienvenido al Optimizador Logístico de Materias Primas Importadas")
 
 uploaded_file = st.file_uploader("Choose a file")
 
