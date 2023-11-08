@@ -289,5 +289,15 @@
         ],
         "output_name": "capacidad_almacenamiento",
         "sheet_name": "capacidad_almacenamiento"
+    },
+    "capacidad_recepcion_ingredientes": {
+        "type": "parameter",
+        "fields": [
+            "empresa",
+            "planta",
+            "ingrediente"
+        ],
+        "output_name": "capacidad_recepcion",
+        "sheet_name": "capacidad_recepcion"
     }
 }

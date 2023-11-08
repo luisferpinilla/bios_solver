@@ -22,8 +22,8 @@ def dibujar_inventario_planta(df:pd.DataFrame):
     transitos_a_bodega = list(df[df['item']=='transitos_kg'].drop(columns=filtros).iloc[0])
     consumo_proyectado = list(df[df['item']=='consumo_kg'].drop(columns=filtros).iloc[0])
     safety_stock = list(df[df['item']=='safety_stock'].drop(columns=filtros).iloc[0])
-    target = list(df[df['item']=='Target'].drop(columns=filtros).iloc[0])
-    capacidad = list(df[df['item']=='capacidad_almacenamiento'].drop(columns=filtros).iloc[0])
+    capacidad_recepcion = list(df[df['item']=='capacidad_recepcion'].drop(columns=filtros).iloc[0])
+    capacidad_almacenamiento = list(df[df['item']=='capacidad_almacenamiento'].drop(columns=filtros).iloc[0])
     
     fig, ax = plt.subplots(figsize=(12, 4))
 
@@ -33,7 +33,8 @@ def dibujar_inventario_planta(df:pd.DataFrame):
     ax.set_ylabel('Kg')
 
     # ax.plot(names, target, label='Inventario Objetivo')
-    ax.plot(names, capacidad, label='Capacidad', color='blue', linestyle='dashed')
+    ax.plot(names, capacidad_almacenamiento, label='Capacidad almacenamiento', color='blue', linestyle='dashed')
+    ax.plot(names, capacidad_recepcion, label='Capacidad recepcion', color='blue', linestyle='solid')
     ax.plot(names, inventario_al_cierre, label='Inventario', color='green')
     ax.plot(names, consumo_proyectado, label='Consumo', color='black')
     ax.plot(names, safety_stock, color='red', linestyle='dashed', label='SS')

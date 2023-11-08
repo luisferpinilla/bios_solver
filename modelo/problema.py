@@ -4,6 +4,7 @@ from modelo.generador_variables import generar_variables
 from modelo.generador_restricciones import generar_restricciones
 from modelo.generador_fobjetivo import generar_fob
 from modelo.generador_reporte import generar_reporte, guardar_reporte_xlsx
+from modelo.visor_parametros import visor_parametros
 import pulp as pu
 
 
@@ -63,6 +64,18 @@ class Problema():
 
         generar_fob(fob=self.target, parametros=self.parametros,
                     conjuntos=self.conjuntos, variables=self.variables)
+        
+    def get_revsion_parametros(self):
+        
+        if len(self.conjuntos) == 0:
+            self.generar_conjuntos()
+        
+        
+        if len(self.parametros)==0:
+            self.generador_parametros()
+            
+        return visor_parametros(conjuntos=self.conjuntos, parametros= self.parametros)
+        
 
     def solve(self, engine='coin', gap=0.0, tlimit=0.0, gen_lp_file=False):
 
