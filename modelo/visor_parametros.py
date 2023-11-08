@@ -35,7 +35,6 @@ def visor_parametros(conjuntos:dict, parametros:dict)->pd.DataFrame:
         for ingrediente in conjuntos['ingredientes']:
             
             consumo_medio = parametros['Consumo_promedio'][f'{planta.split("_")[1]}_{ingrediente}']
-            print(planta, ingrediente, consumo_medio)
             inventario_inicial = parametros['inventario_inicial_ua'][f'II_{planta}_{ingrediente}']
             ss_kg = parametros['safety_stock'][f'SS_{planta}_{ingrediente}']
             ss_camiones = int(ss_kg/34000)
@@ -43,6 +42,7 @@ def visor_parametros(conjuntos:dict, parametros:dict)->pd.DataFrame:
             capacidad_camiones = int(capacidad/34000)
             recepcion_kg = parametros['capacidad_recepcion_ingredientes'][f'{planta}_{ingrediente}']
             recepcion_camiones = int(recepcion_kg/34000)
+            capacidad_sin_usar = capacidad - inventario_inicial
             
             
             if consumo_medio >0:
@@ -50,12 +50,14 @@ def visor_parametros(conjuntos:dict, parametros:dict)->pd.DataFrame:
                 capacidad_dio = capacidad/consumo_medio
                 ss_dias = ss_kg/consumo_medio
                 recepcion_camiones_dias = recepcion_kg/consumo_medio
+                capacidad_sin_usar_dias = capacidad_sin_usar/consumo_medio
                 
             else:
                 inventario_inicial_dio = 1000
                 capacidad_dio = 1000
                 ss_dias = 1000
                 recepcion_camiones_dias = 1000
+                capacidad_sin_usar_dias = 1000
                 
             
             df_dict['planta'].append(planta)
@@ -67,8 +69,8 @@ def visor_parametros(conjuntos:dict, parametros:dict)->pd.DataFrame:
             df_dict['inventario_dias'].append(inventario_inicial_dio)
             df_dict['capacidad_kg'].append(capacidad)
             df_dict['capacidad_dias'].append(capacidad_dio)
-            df_dict['capacidad_sin_usar_kg'].append('--')
-            df_dict['capacidad_sin_usar_dias'].append('--')
+            df_dict['capacidad_sin_usar_kg'].append(capacidad_sin_usar)
+            df_dict['capacidad_sin_usar_dias'].append(capacidad_sin_usar_dias)
             df_dict['Capacidad-SafetyStock_kg'].append(ss_kg)
             df_dict['Capacidad-SafetyStock_camiones'].append(ss_camiones)
             df_dict['Capacidad-SafetyStock_dias'].append(ss_dias)
