@@ -1,4 +1,4 @@
-def _costos_almacenamiento_puerto(variables: dict, costos_almacenamiento: dict, valor_cif:dict, cargas: list, periodos: int):
+def _costos_almacenamiento_puerto(variables: dict, costos_almacenamiento: dict, valor_cif: dict, cargas: list, periodos: int):
 
     # $CC_{l}^{t}$ : Costo de almacenamiento de la carga $l$ por tonelada a cobrar al final del día $t$ en el puerto $J$.
     # XIP_{empresa}_{ingrediente}_{puerto}_{barco}_{periodo} : Cantidad de la carga $l$ en puerto al final del periodo $t$
@@ -87,7 +87,8 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
 
                 # Costo variables por transporte entre operdor y planta
                 cv_coef_name = f'CV_{operador}_{planta}_{ingrediente}'
-                cv_coef_val = costo_transporte_variable[cv_coef_name] +int(periodo)
+                cv_coef_val = costo_transporte_variable[cv_coef_name] + int(
+                    periodo)
                 fobj.append(34000*cv_coef_val*itr_var)
                 fobj.append(34000*cv_coef_val*itd_var)
 
@@ -108,80 +109,74 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
     return fobj
 
 
+def _costo_exceder_capacidad_almacenamiento(conjuntos: dict, variables: dict, BigM: float):
 
-def _costo_exceder_capacidad_almacenamiento(conjuntos:dict, variables:dict, BigM:float):
-    
     print('fobj: Agregando costo de penalidad por exceder capacidad almacenamiento')
-    
+
     fobj = list()
 
     for planta in conjuntos['plantas']:
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
-                
+
                 sal_name = f'SAL_{planta}_{ingrediente}_{periodo}'
                 sal_var = variables['SAL'][sal_name]
-            
+
                 fobj.append((2*BigM)*sal_var)
-                
+
     return fobj
-    
 
 
-
-def _costo_bakorder(conjuntos:dict, variables: dict, bigM:float):
+def _costo_bakorder(conjuntos: dict, variables: dict, bigM: float):
 
     print('fob: Agregando costos de penalidad por backorder')
 
     fobj = list()
-    
+
     for planta in conjuntos['plantas']:
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
-                
+
                 sbk_name = f'SBK_{planta}_{ingrediente}_{periodo}'
                 sbk_var = variables['SBK'][sbk_name]
-    
+
                 fobj.append((bigM)*sbk_var)
-    
 
     return fobj
 
 
-def _costo_safety_stock(conjuntos:dict, variables: dict, bigM:float):
+def _costo_safety_stock(conjuntos: dict, variables: dict, bigM: float):
 
     print('fob: Agregando costos de penalidad por Safety Stock')
 
     fobj = list()
-    
+
     for planta in conjuntos['plantas']:
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
-                
+
                 sss_name = f'SSS_{planta}_{ingrediente}_{periodo}'
                 sss_var = variables['SSS'][sss_name]
-                
-                fobj.append((bigM/4)*sss_var)
 
+                fobj.append((bigM/4)*sss_var)
 
     return fobj
 
 
-def _costo_inventario_objetivo(conjuntos:dict, variables: dict, bigM:float):
+def _costo_inventario_objetivo(conjuntos: dict, variables: dict, bigM: float):
 
     print('fob: Agregando costos de penalidad por Safety Stock')
 
     fobj = list()
-    
+
     for planta in conjuntos['plantas']:
         for ingrediente in conjuntos['ingredientes']:
             for periodo in conjuntos['periodos']:
-                
+
                 sio_name = f'SIO_{planta}_{ingrediente}_{periodo}'
                 sio_var = variables['SIO'][sio_name]
-                
-                fobj.append((bigM/3)*sio_var)
 
+                fobj.append((bigM/3)*sio_var)
 
     return fobj
 
@@ -224,21 +219,22 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
                            periodos=periodos)
 
     # Costo del backorder
-    cbk = _costo_bakorder(conjuntos=conjuntos, 
-                          variables=variables, 
+    cbk = _costo_bakorder(conjuntos=conjuntos,
+                          variables=variables,
                           bigM=bigM)
-    
+
     # Costo de no respetar un inventario de seguridad de un ingrediente en una planta
-    css = _costo_safety_stock(conjuntos=conjuntos, variables=variables, bigM=bigM)
-    
+    css = _costo_safety_stock(
+        conjuntos=conjuntos, variables=variables, bigM=bigM)
+
     # ctg = _costo_inventario_objetivo(conjuntos=conjuntos, variables=variables, bigM=bigM)
 
     # Costo de exceder las capacidades máximas de almacenamiento
-    cal = _costo_exceder_capacidad_almacenamiento(conjuntos=conjuntos, 
-                                                  variables=variables, 
+    cal = _costo_exceder_capacidad_almacenamiento(conjuntos=conjuntos,
+                                                  variables=variables,
                                                   BigM=bigM)
 
-    ctotal = cap + cop + ct  + cal + cbk + css#  + ctg
+    ctotal = cop + ct + cal + css + cbk + cap
 
     for term in ctotal:
         fob.append(term)

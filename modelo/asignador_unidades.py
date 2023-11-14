@@ -15,7 +15,7 @@ def _generar_conjuntos(file: str, planta: str):
         df['unidad_almacenamiento'].unique())
 
 
-def _generar_parametros(file: str, planta: str, parametros:dict):
+def _generar_parametros(file: str, planta: str, parametros: dict):
 
     # Cantidaes de inventario
 
@@ -30,7 +30,7 @@ def _generar_parametros(file: str, planta: str, parametros:dict):
         for ingrediente in conjuntos['ingredientes']:
 
             inv_par_name = f'II_{ua}_{ingrediente}'
-            
+
             if inventario_df.loc[ua]['ingrediente_actual'] == ingrediente:
                 inv_par_value = inventario_df.loc[ua]['cantidad_actual']
             else:
@@ -42,14 +42,12 @@ def _generar_parametros(file: str, planta: str, parametros:dict):
             cap_par_value = inventario_df.loc[ua][ingrediente]
             capacidad_ua_dict[cap_par_name] = cap_par_value
 
-
     parametros['inventario_inicial'] = inventario_inicial_dict
 
     parametros['capacidad_unidades'] = capacidad_ua_dict
 
     # Demanda a consumir
 
-    
     # Llegadas de material
     pass
 
@@ -89,7 +87,7 @@ def main(problema: Problema, planta: str):
     conjuntos['periodos'] = problema.conjuntos['periodos']
     conjuntos['ingredientes'] = problema.conjuntos['ingredientes']
 
-    _generar_conjuntos(file=file, planta=planta, para)
+    _generar_conjuntos(file=file, planta=planta)
 
     _generar_parametros(problema=problema, planta=planta)
 

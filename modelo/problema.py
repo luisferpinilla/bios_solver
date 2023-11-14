@@ -48,7 +48,7 @@ class Problema():
 
         print('generando variables')
 
-        generar_variables(conjuntos=self.conjuntos, parametros=self.parametros, 
+        generar_variables(conjuntos=self.conjuntos, parametros=self.parametros,
                           variables=self.variables)
 
     def gen_constrains(self):
@@ -64,18 +64,16 @@ class Problema():
 
         generar_fob(fob=self.target, parametros=self.parametros,
                     conjuntos=self.conjuntos, variables=self.variables)
-        
+
     def get_revsion_parametros(self):
-        
+
         if len(self.conjuntos) == 0:
             self.generar_conjuntos()
-        
-        
-        if len(self.parametros)==0:
+
+        if len(self.parametros) == 0:
             self.generador_parametros()
-            
-        return visor_parametros(conjuntos=self.conjuntos, parametros= self.parametros)
-        
+
+        return visor_parametros(conjuntos=self.conjuntos, parametros=self.parametros)
 
     def solve(self, engine='coin', gap=0.0, tlimit=0.0, gen_lp_file=False):
 
@@ -100,13 +98,15 @@ class Problema():
                 if gap == 0.0:
                     engine = pu.GLPK_CMD()
                 else:
-                    engine = pu.GLPK_CMD(options=['--mipgap', str(gap), '--check'])
+                    engine = pu.GLPK_CMD(
+                        options=['--mipgap', str(gap), '--check'])
             else:
                 if gap == 0.0:
                     engine = pu.GLPK_CMD(timeLimit=tlimit)
                 else:
-                    engine = pu.GLPK_CMD(timeLimit=tlimit, options=['--mipgap', str(gap), '--check'])
-                
+                    engine = pu.GLPK_CMD(timeLimit=tlimit, options=[
+                                         '--mipgap', str(gap), '--check'])
+
             self.solver.solve(solver=engine)
 
         else:

@@ -208,26 +208,29 @@ class Validador():
 
         df = pd.read_excel(self.file, sheet_name='unidades_almacenamiento')
 
-        ingredientes = [x for x in df['ingrediente_actual'].unique() if x in df.columns]
-        
+        ingredientes = [
+            x for x in df['ingrediente_actual'].unique() if x in df.columns]
+
         count = 0
-        
+
         unidades = list()
-        
+
         for ingrediente in ingredientes:
-            
-            temp = df[df['ingrediente_actual']==ingrediente]
-            
-            temp = temp[temp['cantidad_actual']>temp[ingrediente]]
-            
+
+            temp = df[df['ingrediente_actual'] == ingrediente]
+
+            temp = temp[temp['cantidad_actual'] > temp[ingrediente]]
+
             for i in temp.index:
-                unidades.append(f"unidad {temp.loc[i]['unidad_almacenamiento']} en {temp.loc[i]['planta']}")
-            
+                unidades.append(
+                    f"unidad {temp.loc[i]['unidad_almacenamiento']} en {temp.loc[i]['planta']}")
+
             count += temp.shape[0]
-            
-        if len(unidades)>0:
-            self.cantidad_errores +=1
-            self.validaciones['Capacidad en Unidades de Almacenamiento'] = f"Error, las siguientes unidades {unidades} tienen valores erróneos sobre la capacidad de almacenamiento"
+
+        if len(unidades) > 0:
+            self.cantidad_errores += 1
+            self.validaciones[
+                'Capacidad en Unidades de Almacenamiento'] = f"Error, las siguientes unidades {unidades} tienen valores erróneos sobre la capacidad de almacenamiento"
         else:
             self.validaciones['Capacidad en Unidades de Almacenamiento'] = "OK, las capacidades estan sobre las cantidades de inventario"
 
@@ -235,11 +238,12 @@ class Validador():
 
         df = pd.read_excel(io=self.file, sheet_name='consumo_proyectado')
 
-        df = df.groupby(['empresa', 'planta', 'ingrediente'])[['key']].count().reset_index()
-        
-        df = df[df['key']>1]
-        
-        if df.shape[0]>0:
+        df = df.groupby(['empresa', 'planta', 'ingrediente'])[
+            ['key']].count().reset_index()
+
+        df = df[df['key'] > 1]
+
+        if df.shape[0] > 0:
             self.cantidad_errores += 1
             self.validaciones['Conteos en consumos proyectados'] = "Error, la pestaña de consumos proyectados tiene valores duplicados en cuanto a ingrediente y planta"
         else:
@@ -264,5 +268,5 @@ class Validador():
         self._validar_safety_stock()
 
         self._validar_no_exceder_capacidad_almacenamiento()
-        
+
         self._validar_no_duplicados_consumos()
