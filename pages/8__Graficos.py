@@ -45,7 +45,8 @@ def dibujar_inventario_planta(df: pd.DataFrame):
     ax.plot(names, capacidad_recepcion, label='Capacidad recepcion',
             color='blue', linestyle='solid')
     ax.plot(names, inventario_al_cierre, label='Inventario', color='green')
-    ax.plot(names, consumo_proyectado, label='Consumo', color='black')
+    ax.plot(names, consumo_proyectado, linestyle='dashed',
+            label='Consumo', color='black')
     ax.plot(names, safety_stock, color='red', linestyle='dashed', label='SS')
     ax.bar(names, llegadas_directas_kg, color='blue',
            width=1, label='Llegadas directas')
@@ -158,7 +159,7 @@ else:
 
         st.markdown('### Inventario en puertos')
         df2 = puerto_df[puerto_df['ingrediente'] == ingrediente]
-        st.write(df2)
+
         if df2.shape[0] > 0:
             fig2 = dibujar_inventario_puerto(df2)
             st.pyplot(fig2)
