@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 class Reporte():
     def __init__(self, problema: Problema) -> None:
-        
+
         self.problema = problema
         self.df_dict = self.obtener_dataframes()
 
@@ -38,7 +38,6 @@ class Reporte():
         df.drop(columns=['key'], inplace=True)
 
         return df[campos + [value_name]]
-
 
     def obtener_dataframes(self) -> dict:
 
@@ -78,9 +77,7 @@ class Reporte():
 
         return df_dict
 
-
     def guardar_excel(self, filename: str):
-        
 
         with pd.ExcelWriter(path=filename) as writer:
 
@@ -88,10 +85,8 @@ class Reporte():
 
                 dataframe.to_excel(writer, sheet_name=sheet_name, index=False)
 
-                
-    def obtener_cruce_inventarios_planta(self)->pd.DataFrame:
-        
-        
+    def obtener_cruce_inventarios_planta(self) -> pd.DataFrame:
+
         # Leer inventario de planta
         inventario_planta_df = self.df_dict['inventario_planta'].copy()
         inventario_planta_df.rename(
@@ -145,7 +140,7 @@ class Reporte():
         consumo_proyectado_df.drop(columns=['tipo'], inplace=True)
         consumo_proyectado_df.rename(
             columns={'kg': 'consumo_kg'}, inplace=True)
-        
+
         # obtener el backorder
         backorder_df = self.df_dict['Backorder'].copy()
         backorder_df.drop(columns=['tipo'], inplace=True)
@@ -158,19 +153,19 @@ class Reporte():
         # Alarma por safety Stock
         alarma_ss_df = self.df_dict['alarma_safety_stock'].copy()
         alarma_ss_df.drop(columns=['tipo'], inplace=True)
-        
+
         # inventario Objetivo
         inv_objetivo_df = self.df_dict['inventario_objetivo'].copy()
-        inv_objetivo_df = inv_objetivo_df[inv_objetivo_df['ingrediente'].isin(self.problema.conjuntos['ingredientes'])]
+        inv_objetivo_df = inv_objetivo_df[inv_objetivo_df['ingrediente'].isin(
+            self.problema.conjuntos['ingredientes'])]
 
         # capacidad inventario
         cap_inventario_df = self.df_dict['capacidad_almacenamiento'].copy()
         cap_inventario_df.drop(columns='tipo', inplace=True)
-        
+
         #  Capacidad recepción de material
         cap_recepcion_df = self.df_dict['capacidad_recepcion'].copy()
 
-    
         # Agregar los transitos a Fact inventarios planta
         fact_inventario_planta = pd.merge(left=fact_inventario_planta,
                                           right=transitos_planta_df,
@@ -206,7 +201,7 @@ class Reporte():
                                           right_on=['empresa', 'planta',
                                                     'ingrediente', 'periodo'],
                                           how='left').fillna(0.0)
-        
+
         # Agregar el backorder a Fact inventarios planta
         fact_inventario_planta = pd.merge(left=fact_inventario_planta,
                                           right=backorder_df,
@@ -233,58 +228,60 @@ class Reporte():
                                           right_on=['empresa', 'planta',
                                                     'ingrediente', 'periodo'],
                                           how='left').fillna(0.0)
-        
+
         # Agregar objetivo de inventario inventarios planta
         fact_inventario_planta = pd.merge(left=fact_inventario_planta,
                                           right=inv_objetivo_df,
                                           left_on=['ingrediente'],
                                           right_on=['ingrediente'],
-                                          how='left').fillna(0.0)  
-        
+                                          how='left').fillna(0.0)
+
         # Agregar capacidad de inventario inventarios planta
         fact_inventario_planta = pd.merge(left=fact_inventario_planta,
                                           right=cap_inventario_df,
-                                          left_on=['empresa', 'planta','ingrediente'],
-                                          right_on=['empresa', 'planta','ingrediente'],
-                                          how='left').fillna(0.0)   
-        
+                                          left_on=['empresa',
+                                                   'planta', 'ingrediente'],
+                                          right_on=['empresa',
+                                                    'planta', 'ingrediente'],
+                                          how='left').fillna(0.0)
+
         # Agregar capacidad de recepcion inventarios
         fact_inventario_planta = pd.merge(left=fact_inventario_planta,
                                           right=cap_recepcion_df,
-                                          left_on=['empresa', 'planta','ingrediente'],
-                                          right_on=['empresa', 'planta','ingrediente'],
-                                          how='left').fillna(0.0) 
-        
-         # calcular DIO
-        fact_inventario_planta['DIO'] = fact_inventario_planta['inventario_al_cierre_kg']/fact_inventario_planta['consumo_kg']
+                                          left_on=['empresa',
+                                                   'planta', 'ingrediente'],
+                                          right_on=['empresa',
+                                                    'planta', 'ingrediente'],
+                                          how='left').fillna(0.0)
+
+        # calcular DIO
+        fact_inventario_planta['DIO'] = fact_inventario_planta['inventario_al_cierre_kg'] / \
+            fact_inventario_planta['consumo_kg']
 
         # calcular Inventario_Objetivo
-        fact_inventario_planta['Target'] = fact_inventario_planta['consumo_kg']*fact_inventario_planta['inventario_objetivo']
-        
+        fact_inventario_planta['Target'] = fact_inventario_planta['consumo_kg'] * \
+            fact_inventario_planta['inventario_objetivo']
+
         return fact_inventario_planta
-    
-        
+
     def obtener_fact_inventario_planta(self) -> dict:
-        
+
         fact_inventario_planta = self.obtener_cruce_inventarios_planta()
-        
-        id_vars = ['empresa', 'planta','ingrediente', 'periodo']
+
+        id_vars = ['empresa', 'planta', 'ingrediente', 'periodo']
         value_vars = ['inventario_al_cierre_kg', 'transitos_kg', 'llegadas_directas_kg',
-                      'llegadas_por_bodega_kg', 'consumo_kg', 'backorder_kg', 
-                      'safety_stock', 'alarma_safety_stock', 'inventario_objetivo', 
+                      'llegadas_por_bodega_kg', 'consumo_kg', 'backorder_kg',
+                      'safety_stock', 'alarma_safety_stock', 'inventario_objetivo',
                       'DIO', 'Target', 'capacidad_almacenamiento', 'capacidad_recepcion']
 
+        fact_inventario_planta = fact_inventario_planta.melt(
+            id_vars=id_vars, value_vars=value_vars, value_name='kg', var_name='item')
 
-        fact_inventario_planta = fact_inventario_planta.melt(id_vars=id_vars, value_vars= value_vars, value_name='kg', var_name='item')
-        
-        
         fact_inventario_planta['periodo'] = fact_inventario_planta['periodo'].astype(
             int)
 
         fact_inventario_planta['kg'] = fact_inventario_planta['kg'].apply(
             lambda x: round(x, 0))
-        
-       
 
         fact_inventario_planta = fact_inventario_planta.pivot_table(values='kg',
                                                                     index=[
@@ -301,7 +298,6 @@ class Reporte():
         fact_inventario_planta.rename(columns=date_map, inplace=True)
 
         return fact_inventario_planta
-
 
     def obtener_cruce_inventario_puerto(self) -> dict:
         # Fletes variables
@@ -562,12 +558,11 @@ class Reporte():
         # Calcular Costos
         fact_inventario_puerto['costo_portuario_bodegaje_total'] = fact_inventario_puerto['bodegaje_puerto_kg'] * \
             fact_inventario_puerto['costo_portuario_bodegaje_kg']
-            
+
         return fact_inventario_puerto
-            
-    
+
     def obtener_fact_inventario_puerto(self) -> dict:
-        
+
         fact_inventario_puerto = self.obtener_cruce_inventario_puerto()
 
         fact_inventario_puerto = fact_inventario_puerto.melt(id_vars=['empresa', 'operador', 'importacion', 'ingrediente', 'periodo'],
@@ -584,7 +579,7 @@ class Reporte():
             int)
         fact_inventario_puerto['kg'] = fact_inventario_puerto['kg'].apply(
             lambda x: round(x, 0))
-            
+
         fact_inventario_puerto = fact_inventario_puerto.pivot_table(values='kg',
                                                                     index=[
                                                                         'empresa', 'operador', 'importacion', 'ingrediente', 'item'],
@@ -601,3 +596,20 @@ class Reporte():
         fact_inventario_puerto.rename(columns=date_map, inplace=True)
 
         return fact_inventario_puerto
+
+    def obtener_fact_transporte(self) -> dict:
+
+        df_dict = dict()
+        df_dict['carga'] = list()
+        df_dict['planta'] = list()
+        df_dict['periodo'] = list()
+        df_dict['fecha'] = list()
+
+        for carga in self.problema.conjuntos['cargas']:
+            for planta in self.problema.conjuntos['plantas']:
+                for periodo in self.problema.conjuntos['periodos']:
+                    df_dict['carga'].append(carga)
+                    df_dict['planta'].append(planta)
+                    df_dict['periodo'].append(periodo)
+                    df_dict['fecha'].append(
+                        self.problema.conjuntos['fechas'][periodo])
