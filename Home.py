@@ -153,10 +153,7 @@ if file:
 
             if tmax:
 
-                problema = generar_problema(archivo=file)
-
-                ejecutar_modelo(problema=problema,
-                                t_max_minutos=tmax)
+                ejecutar_modelo(problema=problema,gap_minimo=0.01, t_max_minutos=60*24)
 
     else:
         file = None

@@ -5,7 +5,7 @@ import pandas as pd
 
 # if __name__ == '__main__':
 
-file = '0_model_23oct-rev2.xlsm'
+file = '0_model_16Nov_rev.xlsm'
 
 problema = Problema(excel_file_path=file)
 
@@ -21,7 +21,7 @@ problema.gen_constrains()
 
 df = visor_parametros(conjuntos=problema.conjuntos, parametros=problema.parametros)
 
-problema.solve(tlimit=1200, engine='glpk',gap=0.025)
+problema.solve(engine='glpk', gap=0.001)
 
 reporte = Reporte(problema=problema)
 

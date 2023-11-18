@@ -75,7 +75,7 @@ def visor_parametros(conjuntos: dict, parametros: dict) -> pd.DataFrame:
             recepcion_camiones = int(recepcion_kg/34000)
             capacidad_sin_usar = capacidad - inventario_inicial
 
-            if consumo_medio > 0:
+            if consumo_medio > 0.0:
                 inventario_inicial_dio = inventario_inicial/consumo_medio
                 capacidad_dio = capacidad/consumo_medio
                 ss_dias = ss_kg/consumo_medio

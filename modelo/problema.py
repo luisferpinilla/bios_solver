@@ -99,13 +99,13 @@ class Problema():
                     engine = pu.GLPK_CMD()
                 else:
                     engine = pu.GLPK_CMD(
-                        options=['--mipgap', str(gap), '--check'])
+                        options=['--mipgap', str(gap)])
             else:
                 if gap == 0.0:
                     engine = pu.GLPK_CMD(timeLimit=tlimit)
                 else:
                     engine = pu.GLPK_CMD(timeLimit=tlimit, options=[
-                                         '--mipgap', str(gap), '--check'])
+                                         '--mipgap', str(gap)])
 
             self.solver.solve(solver=engine)
 

@@ -60,7 +60,7 @@ def __llegadas_a_puerto(parametros: dict, conjuntos: dict, file: str):
     cap_descarge_per_dia = 5000000
 
     inventarios_puerto_df = pd.read_excel(
-        file, sheet_name='tto_puerto', usecols='B:H')
+        file, sheet_name='tto_puerto')
 
     campos = ['empresa', 'operador', 'imp-motonave', 'ingrediente']
 
@@ -577,6 +577,8 @@ def __safety_stock_planta(parametros: dict, conjuntos: dict, file: str):
     param_dict = dict()
 
     ss_df = pd.read_excel(file, sheet_name='Safety_stock')
+    
+    ss_df['dias_ss'] = ss_df['dias_ss'].fillna(0.0) 
 
     ss_dict = {f"{ss_df.loc[r]['planta']}_{ss_df.loc[r]['ingrediente']}": ss_df.loc[r]
                ['dias_ss'] for r in ss_df.index}
@@ -646,6 +648,51 @@ def __fechas_iniciales_cargas(parametros:dict, conjuntos:dict):
                 
     parametros['periodos_atencion_cargas'] = initial_dates_inventory_dict
     
+def __max_cantidad_camiones_a_despachar(parametros:dict, conjuntos:dict):
+    
+    cap_almacenamiento_planta = parametros['capacidad_almacenamiento_planta']
+    Consumo_promedio_planta = parametros['Consumo_promedio']
+    safety_stock = parametros['safety_stock']
+    recepcion = parametros['capacidad_recepcion_ingredientes']
+    
+    max_dict = dict()
+    
+    for planta in conjuntos['plantas']:
+        for ingrediente in conjuntos['ingredientes']:
+            
+            # Obtener capacidad máxima de almacenamiento
+            cap_name = f'CI_{planta}_{ingrediente}'
+            cap_value = cap_almacenamiento_planta[cap_name]
+            
+            # Obtener el consumo promedio
+            con_name = f'{planta.split("_")[1]}_{ingrediente}'
+            con_value = Consumo_promedio_planta[con_name]
+            
+            # Obtener el safety stock
+            ss_name = f'SS_{planta}_{ingrediente}'
+            ss_value = safety_stock[ss_name]
+            
+            # Obtener la capacidad de recepcion de ingredientes
+            rec_name = f'{planta}_{ingrediente}'
+            rec_val = recepcion[rec_name]
+            
+            if con_value > 0.0:
+                
+                # Capacidad almacenamiento + un camión - consumo_medio
+                cap_rec_camiones = int(rec_val/34000)
+                cap_calc_camiones = int((cap_value - con_value + 34000)/34000)
+                cap_max_camiones = min(cap_rec_camiones, cap_calc_camiones)
+                
+                max_dict[f'{planta}_{ingrediente}'] = cap_max_camiones
+            else:
+                max_dict[f'{planta}_{ingrediente}'] = 0
+                
+    parametros['capacidad_recepcion_max_camiones'] = max_dict
+            
+            
+            
+    
+    
     
 
 def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: str) -> dict:
@@ -690,3 +737,5 @@ def generar_parametros(parametros: dict, conjuntos: dict, file: str, usecols: st
     
     
     __fechas_iniciales_cargas(parametros=parametros, conjuntos=conjuntos)
+    
+    __max_cantidad_camiones_a_despachar(parametros=parametros, conjuntos=conjuntos)

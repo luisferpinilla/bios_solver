@@ -1,7 +1,7 @@
 import pulp as pu
 
 
-def _despacho_directo(variables: dict, periodos: list,  cargas: list, plantas: list, relevance_cargas:dict, max_trucks=50):
+def _despacho_directo(variables: dict, periodos: list,  cargas: list, plantas: list, relevance_cargas:dict, max_trucks=dict):
 
     # $XTD_{lm}^{t}$ : Cantidad de carga $l$ en barco a transportar bajo despacho directo hacia la planta $k$ durante el día $t$
     # variables['XTD'] = dict()
@@ -14,21 +14,20 @@ def _despacho_directo(variables: dict, periodos: list,  cargas: list, plantas: l
     for periodo in periodos:
         for carga in cargas:
             for planta in plantas:
-                #xtd_name = f'XTD_{carga}_{planta}_{periodo}'
-                #xtd_var = pu.LpVariable(
-                #    name=xtd_name, lowBound=0.0, upBound=34000*max_trucks, cat=pu.LpContinuous)
-                #variables['XTD'][xtd_name] = xtd_var
+                
+                max_name = f'{planta}_{carga.split("_")[3]}'
+                max_value = max_trucks[max_name]
 
                 xad_name = f'XAD_{carga}_{planta}_{periodo}'
                 xad_var = pu.LpVariable(
-                    name=xad_name, lowBound=0.0, upBound=34000*max_trucks, cat=pu.LpContinuous)
+                    name=xad_name, lowBound=0.0, upBound=34000*max_value, cat=pu.LpContinuous)
                 variables['XAD'][xad_name] = xad_var
 
                 itd_name = f'ITD_{carga}_{planta}_{periodo}'
                 
                 
                 # Si la variable no es relevante, la dejaremos como continua == 0
-                if not carga in relevance_cargas.keys():
+                if not carga in relevance_cargas.keys() or max_value==0:
                     
                     itd_var = pu.LpVariable(name=itd_name, lowBound=0, upBound=0, cat=pu.LpContinuous)
                     
@@ -40,7 +39,7 @@ def _despacho_directo(variables: dict, periodos: list,  cargas: list, plantas: l
                     
                     else:
                         # Si es relevante, la dejamos como integer
-                        itd_var = pu.LpVariable(name=itd_name, lowBound=0, upBound=max_trucks, cat=pu.LpInteger)
+                        itd_var = pu.LpVariable(name=itd_name, lowBound=0, upBound=max_value, cat=pu.LpInteger)
                     
                     
                 variables['ITD'][itd_name] = itd_var
@@ -58,7 +57,7 @@ def _decargue_barco_a_puerto(variables: dict, cargas: list, periodos: list):
             variables['XPL'][xpl_name] = xpl_var
 
 
-def _despacho_desde_puerto(variables: dict, cargas: list, plantas: list, periodos: list, relevance_cargas:dict, max_trucks=50):
+def _despacho_desde_puerto(variables: dict, cargas: list, plantas: list, periodos: list, relevance_cargas:dict, max_trucks=dict):
 
     # $XTD_{lm}^{t}$ : Cantidad de carga $l$ en barco a transportar bajo despacho directo hacia la unidad $m$ durante el día $t$
     #variables['XTR'] = dict()
@@ -70,22 +69,21 @@ def _despacho_desde_puerto(variables: dict, cargas: list, plantas: list, periodo
     for periodo in periodos:
         for carga in cargas:
             for planta in plantas:
-                #xtr_name = f'XTR_{carga}_{planta}_{periodo}'
-                #xtr_var = pu.LpVariable(
-                #    name=xtr_name, lowBound=0.0, upBound=34000*max_trucks, cat=pu.LpContinuous)
-                #variables['XTR'][xtr_name] = xtr_var
+
+                max_name = f'{planta}_{carga.split("_")[3]}'
+                max_value = max_trucks[max_name]
 
                 xar_name = f'XAR_{carga}_{planta}_{periodo}'                
                 xar_var = pu.LpVariable(name=xar_name, 
                                         lowBound=0.0, 
-                                        upBound=34000*max_trucks, 
+                                        upBound=34000*max_value, 
                                         cat=pu.LpContinuous)
                 variables['XAR'][xar_name] = xar_var
                 
                 itr_name = f'ITR_{carga}_{planta}_{periodo}'
                 
                 # Si la variable no es relevante, la dejaremos como continua == 0
-                if not carga in relevance_cargas.keys():
+                if not carga in relevance_cargas.keys() or max_value==0:
                     
                     itr_var = pu.LpVariable(name=itr_name, lowBound=0, upBound=0, cat=pu.LpContinuous)
                     
@@ -97,7 +95,7 @@ def _despacho_desde_puerto(variables: dict, cargas: list, plantas: list, periodo
                     
                     else:
                         # Si es relevante, la dejamos como integer
-                        itr_var = pu.LpVariable(name=itr_name, lowBound=0, upBound=max_trucks, cat=pu.LpInteger)
+                        itr_var = pu.LpVariable(name=itr_name, lowBound=0, upBound=max_value, cat=pu.LpInteger)
                 
                 variables['ITR'][itr_name] = itr_var
 
@@ -162,9 +160,11 @@ def generar_variables(conjuntos: dict, variables: dict, parametros) -> dict:
     plantas = conjuntos['plantas']
     cargas = conjuntos['cargas']
     relevance_cargas = parametros['periodos_atencion_cargas']
+    max_trucks = parametros['capacidad_recepcion_max_camiones']
 
     _despacho_directo(variables=variables,
                       relevance_cargas=relevance_cargas,
+                      max_trucks=max_trucks,
                       cargas=cargas,
                       plantas=plantas, 
                       periodos=periodos)
@@ -176,6 +176,7 @@ def generar_variables(conjuntos: dict, variables: dict, parametros) -> dict:
     _despacho_desde_puerto(variables=variables,
                            cargas=cargas, 
                            relevance_cargas=relevance_cargas,
+                           max_trucks=max_trucks,                           
                            periodos=periodos, 
                            plantas=plantas)
 

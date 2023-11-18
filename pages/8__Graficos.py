@@ -165,3 +165,6 @@ else:
             st.pyplot(fig2)
         else:
             st.write('No data')
+
+        transporte_df = reporte.obtener_fact_transporte()
+        st.write(transporte_df)

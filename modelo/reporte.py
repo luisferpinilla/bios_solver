@@ -613,3 +613,17 @@ class Reporte():
                     df_dict['periodo'].append(periodo)
                     df_dict['fecha'].append(
                         self.problema.conjuntos['fechas'][periodo])
+
+        df = pd.DataFrame(df_dict)
+
+        self.__convertir_a_dataframe(data=df, campos=[
+                                     'empresa', 'operador', 'importacion', 'ingrediente'], value_name='')
+
+        transitos_planta_df = self.df_dict['transito_a_planta']
+
+        llegadas_directas_planta_df = self.df_dict['llegadas_directas'].copy()
+
+        llegadas_por_bodega_planta_df = self.df_dict['llegadas_bodega_puerto'].copy(
+        )
+
+        return transitos_planta_df

@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from modelo.reporte import Reporte
 
 
 @st.cache_data
@@ -41,6 +42,12 @@ else:
     st.write('# Parámetros cargados')
 
     problema = st.session_state['problema']
+
+    reporte = Reporte(problema=problema)
+
+    reporte.guardar_excel('Gap01.xlsx')
+
+    st.success('se guardó el archivo')
 
     st.button(label='Callback')
 

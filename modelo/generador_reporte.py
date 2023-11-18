@@ -6,6 +6,7 @@ Created on Sun Jul 30 15:11:39 2023
 """
 
 import pandas as pd
+import numpy as np
 
 
 def __procesar_listado_variables(variable_dict: dict, campos: list) -> pd.DataFrame:
@@ -119,20 +120,10 @@ def _procesar_variables_transporte(df_dict: dict, variables: dict, conjuntos: di
 
     campos.remove('tipo')
 
-    xdt_df = xdt_df.pivot_table(index=['empresa_origen',
-                                       'operador',
-                                       'ingrediente',
-                                       'importacion',
-                                       'fecha despacho'], columns='planta', values='kilos_despachados',
-                                aggfunc=sum)
-
-    xtr_df = xtr_df.pivot_table(index=['empresa_origen', 'operador',
-                                       'ingrediente',
-                                       'importacion',
-                                       'fecha despacho'], columns='planta', values='kilos_despachados', aggfunc=sum)
-
     df_dict['Despacho directo'] = xdt_df
-    df_dict['Despacho desde Bodega'] = xtr_df
+    df_dict['Camiones directo'] = itd_df
+    df_dict['Despacho indirecto'] = xtr_df
+    df_dict['Camiones indirecto'] = itr_df
 
 
 def _procesar_variables_alacenamiento_puerto(df_dict: dict, variables: dict, conjuntos: dict):
