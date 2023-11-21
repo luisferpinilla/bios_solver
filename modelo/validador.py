@@ -44,12 +44,12 @@ class Validador():
 
         df = pd.read_excel(io=self.file, sheet_name='ingredientes')
 
-        self.ingredientes = list(df['ingrediente'].unique())
+        self.ingredientes = list(df['nombre'].unique())
 
         if len(self.ingredientes) == df.shape[0]:
-            self.validaciones['ingredientes'] = "OK, La lista de ingredientes tiene nombres únicos"
+            self.validaciones['nombre'] = "OK, La lista de ingredientes tiene nombres únicos"
         else:
-            self.validaciones['ingredientes'] = "Error, La lista de ingredientes tiene nombres duplicados"
+            self.validaciones['nombre'] = "Error, La lista de ingredientes tiene nombres duplicados"
             self.cantidad_errores += 1
 
     def _validar_empresas(self):
@@ -95,11 +95,11 @@ class Validador():
 
     def _validar_operadores(self):
 
-        df = pd.read_excel(io=self.file, sheet_name='puertos')
+        df = pd.read_excel(io=self.file, sheet_name='operadores')
 
         self.puertos = list(df['puerto'].unique())
 
-        self.operadores = list(df['operador-puerto'].unique())
+        self.operadores = list(df['operador'].unique())
 
         if len(self.operadores) == df.shape[0]:
             self.validaciones['operadores únicos'] = "OK, los operadores son únicos"
@@ -179,7 +179,7 @@ class Validador():
 
     def _validar_safety_stock(self):
 
-        df = pd.read_excel(io=self.file, sheet_name='Safety_stock')
+        df = pd.read_excel(io=self.file, sheet_name='safety_stock')
 
         ingredientes = list(df['ingrediente'].unique())
 
@@ -238,7 +238,9 @@ class Validador():
 
         df = pd.read_excel(io=self.file, sheet_name='consumo_proyectado')
 
-        df = df.groupby(['empresa', 'planta', 'ingrediente'])[
+        df['key'] = 'key'
+
+        df = df.groupby(['planta', 'ingrediente'])[
             ['key']].count().reset_index()
 
         df = df[df['key'] > 1]

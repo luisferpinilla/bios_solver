@@ -26,8 +26,6 @@ class Problema():
 
         self.solver = pu.LpProblem("Bios", sense=pu.const.LpMinimize)
 
-        self.usecols = 'B:AH'
-
         self.estatus = 'Sin Ejecutar'
 
     def generar_sets(self):
@@ -35,14 +33,14 @@ class Problema():
         print('generando conjuntos')
 
         generar_conjuntos(problema=self.conjuntos,
-                          file=self.file, usecols=self.usecols)
+                          file=self.file)
 
     def generar_parameters(self):
 
         print('generando parametros')
 
         generar_parametros(parametros=self.parametros, conjuntos=self.conjuntos,
-                           file=self.file, usecols=self.usecols)
+                           file=self.file)
 
     def generar_vars(self):
 
@@ -75,7 +73,7 @@ class Problema():
 
         return visor_parametros(conjuntos=self.conjuntos, parametros=self.parametros)
 
-    def solve(self, engine='coin', gap=0.0, tlimit=0.0, gen_lp_file=False):
+    def solve(self, engine='coin', gap=0.0, tlimit_seconds=0, gen_lp_file=False):
 
         print('restolviendo el problema')
 
@@ -94,32 +92,42 @@ class Problema():
 
         print('ejecutando solver')
         if engine == 'glpk':
-            if tlimit == 0.0:
+            if tlimit_seconds == 0.0:
                 if gap == 0.0:
                     engine = pu.GLPK_CMD()
+                    
                 else:
                     engine = pu.GLPK_CMD(
                         options=['--mipgap', str(gap)])
+                    print('ejecutando gap:', gap)
             else:
                 if gap == 0.0:
-                    engine = pu.GLPK_CMD(timeLimit=tlimit)
+                    engine = pu.GLPK_CMD(timeLimit=tlimit_seconds)
+                    print('tlimit:', tlimit_seconds, 'segundos')
                 else:
-                    engine = pu.GLPK_CMD(timeLimit=tlimit, options=[
+                    engine = pu.GLPK_CMD(timeLimit=tlimit_seconds, options=[
                                          '--mipgap', str(gap)])
+                    print('gap:', gap)
+                    print('tlimit:', tlimit_seconds, 'segundos')
 
             self.solver.solve(solver=engine)
 
         else:
-            if tlimit == 0.0:
+            if tlimit_seconds == 0.0:
                 if gap == 0.0:
                     engine = pu.PULP_CBC_CMD()
                 else:
                     engine = pu.PULP_CBC_CMD(gapRel=gap)
+                    print('ejecutando gap:', gap)
             else:
                 if gap == 0.0:
-                    engine = pu.PULP_CBC_CMD(timeLimit=tlimit)
+                    engine = pu.PULP_CBC_CMD(timeLimit=tlimit_seconds)
+                    print('tlimit:', tlimit_seconds, 'segundos')
+                    
                 else:
-                    engine = pu.PULP_CBC_CMD(gapRel=gap, timeLimit=tlimit)
+                    engine = pu.PULP_CBC_CMD(gapRel=gap, timeLimit=tlimit_seconds)
+                    print('ejecutando gap:', gap)
+                    print('tlimit:', tlimit_seconds, 'segundos')
 
             self.solver.solve(solver=engine)
 

@@ -13,14 +13,14 @@ def __remover_underscores(x: str) -> str:
     return x
 
 
-def _generar_periodos(problema: dict, file: str, usecols: str):
+def _generar_periodos(problema: dict, file: str):
 
     # extraer los periodos de los títulos del archivo
-    
+
     print('sets: periodos')
 
     df = pd.read_excel(
-        io=file, sheet_name='consumo_proyectado', usecols=usecols)
+        io=file, sheet_name='consumo_proyectado')
 
     columns = df.columns
 
@@ -35,7 +35,7 @@ def _generar_periodos(problema: dict, file: str, usecols: str):
 
 
 def _generar_empresas(file: str):
-    
+
     print('sets: empresas')
 
     empresas_df = pd.read_excel(file, sheet_name='empresas')
@@ -47,30 +47,31 @@ def _generar_empresas(file: str):
 
 
 def _generar_ingredientes(file: str):
-    
+
     print('sets: ingredientes')
 
     ingredientes_df = pd.read_excel(file, sheet_name='ingredientes')
 
-    ingredientes_df['ingrediente'] = ingredientes_df['ingrediente'].apply(
+    ingredientes_df['nombre'] = ingredientes_df['nombre'].apply(
         __remover_underscores)
 
-    return ingredientes_df['ingrediente'].to_list()
+    return ingredientes_df['nombre'].to_list()
 
 
 def _generar_operadores(file: str):
-    
+
     print('sets: operadores logísticos')
 
-    puertos_df = pd.read_excel(file, sheet_name='puertos')
+    puertos_df = pd.read_excel(file, sheet_name='operadores')
 
-    puertos_df['operador-puerto'] = puertos_df['operador-puerto'].apply(__remover_underscores)
+    puertos_df['operador'] = puertos_df['operador'].apply(
+        __remover_underscores)
 
-    return list(puertos_df['operador-puerto'].unique())
+    return list(puertos_df['operador'].unique())
 
 
 def _generar_plantas(file: str):
-    
+
     print('sets: plantas')
 
     plantas_df = pd.read_excel(file, sheet_name='plantas')
@@ -86,7 +87,7 @@ def _generar_plantas(file: str):
 
 
 def _generar_cargas_en_puerto(file=str):
-    
+
     print('sets: cargas')
 
     transitos_a_puerto_df = pd.read_excel(file, sheet_name='tto_puerto')
@@ -115,13 +116,13 @@ def _generar_cargas_en_puerto(file=str):
     return cargas
 
 
-def generar_conjuntos(problema: dict, file: str, usecols: str) -> dict:
+def generar_conjuntos(problema: dict, file: str) -> dict:
 
     # Empresas
     problema['empresas'] = _generar_empresas(file=file)
 
     # Calendario
-    periodos, fechas = _generar_periodos(problema=problema, file=file, usecols=usecols)
+    periodos, fechas = _generar_periodos(problema=problema, file=file)
     problema['periodos'] = periodos
     problema['fechas'] = fechas
 
