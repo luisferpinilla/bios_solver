@@ -89,7 +89,8 @@ def generar_problema(archivo: str) -> Problema:
 def ejecutar_modelo(problema: Problema, t_max_minutos=float, gap_minimo=0.025):
 
     with st.spinner(text='Ejecutando'):
-        problema.solve(engine='coin', tlimit=t_max_minutos*60, gap=gap_minimo)
+        problema.solve(
+            engine='coin', tlimit_seconds=t_max_minutos*60, gap=gap_minimo)
 
     if problema.estatus != 'Optimal':
         st.error(f'El solucionador reporta {problema.estatus}')
@@ -128,7 +129,7 @@ if file:
 
             if df.shape[0] > 0:
 
-                with st.expander(label='Valicacion de capacidades y cantidades'):
+                with st.expander(label='Valicacion de capacidades y cantidades', expanded=True):
 
                     df = df[['consumo_medio_kg',
                             'ss_kg',
@@ -153,7 +154,8 @@ if file:
 
             if tmax:
 
-                ejecutar_modelo(problema=problema,gap_minimo=0.01, t_max_minutos=60*24)
+                ejecutar_modelo(problema=problema,
+                                gap_minimo=0.02, t_max_minutos=60*tmax)
 
     else:
         file = None

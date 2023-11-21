@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from modelo.reporte import Reporte
+from datetime import datetime
 
 
 @st.cache_data
@@ -45,7 +46,8 @@ else:
 
     reporte = Reporte(problema=problema)
 
-    reporte.guardar_excel('Gap01.xlsx')
+    reporte.guardar_excel(
+        f"output_{datetime.now().strftime('%Y%m%%h$m')}.xlsx")
 
     st.success('se guardó el archivo')
 

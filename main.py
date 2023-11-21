@@ -5,7 +5,7 @@ import pandas as pd
 
 # if __name__ == '__main__':
 
-file = '0_model_16Nov_rev.xlsm'
+file = 'model_template.xlsm'
 
 problema = Problema(excel_file_path=file)
 
@@ -21,11 +21,11 @@ problema.gen_constrains()
 
 df = visor_parametros(conjuntos=problema.conjuntos, parametros=problema.parametros)
 
-problema.solve(engine='glpk', gap=0.001)
+problema.solve(engine='coin', gap=0.02, tlimit_seconds=60*15)
 
 reporte = Reporte(problema=problema)
 
-reporte.guardar_excel('borrame.xlsx')
+reporte.guardar_excel('gap002.xlsx')
 
 df_dict = reporte.df_dict
 
