@@ -142,6 +142,7 @@ class AsignadorCapacidad():
 
     def calcular(self):
         values = list(self.unidades_df['ingrediente_actual'])
+        cantidades = list(self.unidades_df['cantidad_actual'])
 
         for i in self.unidades_df.index:
             if i in self.unidades_df[self.unidades_df['cantidad_actual'] <= 0].index:
@@ -165,7 +166,10 @@ class AsignadorCapacidad():
 
                 # Asignar la unidad vacia al ingrediente
                 values[i] = ingrediente_a_asignar
+                cantidades[i] = 1.0
+
                 self.unidades_df['ingrediente_actual'] = values
+                self.unidades_df['cantidad_actual'] = cantidades
 
     def obtener_unidades_almacenamiento(self):
         return self.unidades_df
