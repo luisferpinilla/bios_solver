@@ -48,6 +48,8 @@ class Reporte():
 
         for k, v in tqdm(data.items()):
 
+            # print(k,v)
+
             campos = v['fields']
             if v['type'] == 'variable':
                 data = self.problema.variables[k]
@@ -155,9 +157,9 @@ class Reporte():
         alarma_ss_df.drop(columns=['tipo'], inplace=True)
 
         # inventario Objetivo
-        inv_objetivo_df = self.df_dict['inventario_objetivo'].copy()
-        inv_objetivo_df = inv_objetivo_df[inv_objetivo_df['ingrediente'].isin(
-            self.problema.conjuntos['ingredientes'])]
+        # inv_objetivo_df = self.df_dict['inventario_objetivo'].copy()
+        # inv_objetivo_df = inv_objetivo_df[inv_objetivo_df['ingrediente'].isin(
+        #    self.problema.conjuntos['ingredientes'])]
 
         # capacidad inventario
         cap_inventario_df = self.df_dict['capacidad_almacenamiento'].copy()
@@ -230,11 +232,11 @@ class Reporte():
                                           how='left').fillna(0.0)
 
         # Agregar objetivo de inventario inventarios planta
-        fact_inventario_planta = pd.merge(left=fact_inventario_planta,
-                                          right=inv_objetivo_df,
-                                          left_on=['ingrediente'],
-                                          right_on=['ingrediente'],
-                                          how='left').fillna(0.0)
+        # fact_inventario_planta = pd.merge(left=fact_inventario_planta,
+        #                                  right=inv_objetivo_df,
+        #                                  left_on=['ingrediente'],
+        #                                  right_on=['ingrediente'],
+        #                                  how='left').fillna(0.0)
 
         # Agregar capacidad de inventario inventarios planta
         fact_inventario_planta = pd.merge(left=fact_inventario_planta,
@@ -259,8 +261,8 @@ class Reporte():
             fact_inventario_planta['consumo_kg']
 
         # calcular Inventario_Objetivo
-        fact_inventario_planta['Target'] = fact_inventario_planta['consumo_kg'] * \
-            fact_inventario_planta['inventario_objetivo']
+        # fact_inventario_planta['Target'] = fact_inventario_planta['consumo_kg'] * \
+        #     fact_inventario_planta['inventario_objetivo']
 
         return fact_inventario_planta
 
@@ -271,8 +273,9 @@ class Reporte():
         id_vars = ['empresa', 'planta', 'ingrediente', 'periodo']
         value_vars = ['inventario_al_cierre_kg', 'transitos_kg', 'llegadas_directas_kg',
                       'llegadas_por_bodega_kg', 'consumo_kg', 'backorder_kg',
-                      'safety_stock', 'alarma_safety_stock', 'inventario_objetivo',
-                      'DIO', 'Target', 'capacidad_almacenamiento', 'capacidad_recepcion']
+                      'safety_stock', 'alarma_safety_stock',  # 'inventario_objetivo',
+                      'DIO',  # 'Target',
+                      'capacidad_almacenamiento', 'capacidad_recepcion']
 
         fact_inventario_planta = fact_inventario_planta.melt(
             id_vars=id_vars, value_vars=value_vars, value_name='kg', var_name='item')
@@ -325,7 +328,7 @@ class Reporte():
 
         # Valor CIF de la carga
         valor_cif_df = self.df_dict['valor_cif'].copy()
-        valor_cif_df.drop(columns=['tipo'], inplace=True)
+        # valor_cif_df.drop(columns=['tipo'], inplace=True)
 
         # Llegadas al puerto
         llegadas_puerto_df = self.df_dict['Llegadas_a_puerto'].copy()
@@ -507,34 +510,38 @@ class Reporte():
         fact_inventario_puerto = pd.merge(left=fact_inventario_puerto,
                                           right=costo_almacenamiento_df,
                                           left_on=[
-                                              'empresa', 'operador', 'importacion', 'ingrediente', 'periodo'],
+                                              'empresa', 'operador', 'puerto', 'importacion', 'ingrediente', 'periodo'],
                                           right_on=[
-                                              'empresa', 'operador', 'importacion', 'ingrediente', 'periodo'],
+                                              'empresa', 'operador', 'puerto', 'importacion', 'ingrediente', 'periodo'],
                                           how='left')
 
         # Unir inventarios en puerto con llegadas en barco
         fact_inventario_puerto = pd.merge(left=fact_inventario_puerto,
                                           right=llegadas_puerto_df,
                                           left_on=[
-                                              'empresa', 'operador', 'importacion', 'ingrediente', 'periodo'],
+                                              'empresa', 'operador', 'puerto', 'importacion', 'ingrediente', 'periodo'],
                                           right_on=[
-                                              'empresa', 'operador', 'importacion', 'ingrediente', 'periodo'],
+                                              'empresa', 'operador', 'puerto', 'importacion', 'ingrediente', 'periodo'],
                                           how='left')
 
         # Colocarle a Fact los bodegajes en puerto
         fact_inventario_puerto = pd.merge(left=fact_inventario_puerto,
                                           right=costo_op_bodegaje_df,
-                                          left_on=['operador', 'ingrediente'],
-                                          right_on=['operador', 'ingrediente'],
+                                          left_on=['operador',
+                                                   'puerto',
+                                                   'ingrediente'],
+                                          right_on=['operador',
+                                                    'puerto',
+                                                    'ingrediente'],
                                           how='left')
 
         # Colocarle a Fact los despachos directos
         fact_inventario_puerto = pd.merge(left=fact_inventario_puerto,
                                           right=despacho_directo_df,
                                           left_on=[
-                                              'empresa', 'operador', 'importacion', 'ingrediente', 'periodo'],
+                                              'empresa', 'operador',   'importacion', 'ingrediente', 'periodo'],
                                           right_on=[
-                                              'empresa', 'operador', 'importacion', 'ingrediente', 'periodo'],
+                                              'empresa', 'operador',  'importacion', 'ingrediente', 'periodo'],
                                           how='left')
 
         # Colocarle a Fact los despachos desde bodega
@@ -550,9 +557,9 @@ class Reporte():
         fact_inventario_puerto = pd.merge(left=fact_inventario_puerto,
                                           right=bodegaje_puerto_df,
                                           left_on=[
-                                              'empresa', 'operador', 'importacion', 'ingrediente', 'periodo'],
+                                              'empresa', 'operador', 'puerto', 'importacion', 'ingrediente', 'periodo'],
                                           right_on=[
-                                              'empresa', 'operador', 'importacion', 'ingrediente', 'periodo'],
+                                              'empresa', 'operador', 'puerto', 'importacion', 'ingrediente', 'periodo'],
                                           how='left')
 
         # Calcular Costos

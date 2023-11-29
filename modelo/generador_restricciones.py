@@ -173,14 +173,15 @@ def _tiempo_transitos(restricciones: list, variables: list, cargas: list, planta
         campos = name_var_despacho.split('_')
         empresa_origen = campos[1]
         operador = campos[2]
-        importacion = campos[3]
-        ingrediente = campos[4]
-        empresa_destino = campos[5]
-        planta = campos[6]
-        periodo = int(campos[7])
+        puerto = campos[3]
+        importacion = campos[4]
+        ingrediente = campos[5]
+        empresa_destino = campos[6]
+        planta = campos[7]
+        periodo = int(campos[8])
 
         if not periodo in periodos[-2:]:
-            name_recibo_2 = f'XAD_{empresa_origen}_{operador}_{importacion}_{ingrediente}_{empresa_destino}_{planta}_{periodo+2}'
+            name_recibo_2 = f'XAD_{empresa_origen}_{operador}_{puerto}_{importacion}_{ingrediente}_{empresa_destino}_{planta}_{periodo+2}'
             var_recibo_2 = variables['XAD'][name_recibo_2]
             rest = (34000*var_despacho == var_recibo_2,
                     f'Transitos directos {name_var_despacho} y {name_recibo_2}')
@@ -192,7 +193,7 @@ def _tiempo_transitos(restricciones: list, variables: list, cargas: list, planta
 
         if periodo < 2:
 
-            name_recibo = f'XAD_{empresa_origen}_{operador}_{importacion}_{ingrediente}_{empresa_destino}_{planta}_{periodo}'
+            name_recibo = f'XAD_{empresa_origen}_{operador}_{puerto}_{importacion}_{ingrediente}_{empresa_destino}_{planta}_{periodo}'
             var_recibo = variables['XAD'][name_recibo]
             rest_list.append(
                 (var_recibo == 0.0, f'No fuga planta por {var_recibo} directo'))
@@ -205,14 +206,15 @@ def _tiempo_transitos(restricciones: list, variables: list, cargas: list, planta
         campos = name_var_despacho.split('_')
         empresa_origen = campos[1]
         operador = campos[2]
-        importacion = campos[3]
-        ingrediente = campos[4]
-        empresa_destino = campos[5]
-        planta = campos[6]
-        periodo = int(campos[7])
+        puerto = campos[3]
+        importacion = campos[4]
+        ingrediente = campos[5]
+        empresa_destino = campos[6]
+        planta = campos[7]
+        periodo = int(campos[8])
 
         if not periodo in periodos[-2:]:
-            name_recibo_2 = f'XAR_{empresa_origen}_{operador}_{importacion}_{ingrediente}_{empresa_destino}_{planta}_{periodo+2}'
+            name_recibo_2 = f'XAR_{empresa_origen}_{operador}_{puerto}_{importacion}_{ingrediente}_{empresa_destino}_{planta}_{periodo+2}'
             var_recibo_2 = variables['XAR'][name_recibo_2]
             rest = (34000*var_despacho == var_recibo_2,
                     f'Transitos bodega {name_var_despacho} y {name_recibo_2}')
@@ -224,7 +226,7 @@ def _tiempo_transitos(restricciones: list, variables: list, cargas: list, planta
 
         if periodo < 2:
 
-            name_recibo = f'XAR_{empresa_origen}_{operador}_{importacion}_{ingrediente}_{empresa_destino}_{planta}_{periodo}'
+            name_recibo = f'XAR_{empresa_origen}_{operador}_{puerto}_{importacion}_{ingrediente}_{empresa_destino}_{planta}_{periodo}'
             var_recibo = variables['XAR'][name_recibo]
             rest_list.append(
                 (var_recibo == 0.0, f'No fuga planta por {var_recibo} bodega'))
@@ -237,7 +239,6 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, plantas: lis
     print('rest: mantnimiento de safety stock en planta')
 
     # XIU + SSS >= SS
-
 
     rest_list = list()
 
@@ -265,7 +266,7 @@ def _mantenimiento_ss_plantas(restricciones: list, variables: list, plantas: lis
     restricciones['Safety stock en planta'] = rest_list
 
 
-def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: list, ingredientes: list, periodos: list, dio: dict, consumo_promedio:dict):
+def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: list, ingredientes: list, periodos: list, dio: dict, consumo_promedio: dict):
 
     print('rest: superar inventario objetivo en planta')
 
@@ -275,7 +276,7 @@ def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: 
 
     for ingrediente in ingredientes:
         for planta in plantas:
-            for periodo in [10,20,25, periodos[-1]]:
+            for periodo in [10, 20, 25, periodos[-1]]:
 
                 # XIU
                 xiu_name = f'XIU_{planta}_{ingrediente}_{periodo}'
@@ -299,60 +300,57 @@ def _inventario_objetivo_plantas(restricciones: list, variables: list, plantas: 
                 rest_list.append(rest)
 
     restricciones['Inventario Objetivo en planta'] = rest_list
-    
-    
-def _capacidad_recepcion_ingredientes_planta(restricciones:dict,
-                                             variables:dict,
-                                             ingredientes:list,
-                                             cargas:list,
-                                             plantas:list,
-                                             periodos:list,
-                                             capacidad_recepcion_ingrediente:dict,
+
+
+def _capacidad_recepcion_ingredientes_planta(restricciones: dict,
+                                             variables: dict,
+                                             ingredientes: list,
+                                             cargas: list,
+                                             plantas: list,
+                                             periodos: list,
+                                             capacidad_recepcion_ingrediente: dict,
                                              ):
-    
+
     rest_list = list()
-        
-    for planta in plantas:        
-        for periodo in periodos:    
-            for ingrediente in ingredientes: 
+
+    for planta in plantas:
+        for periodo in periodos:
+            for ingrediente in ingredientes:
                 left_expesion = list()
-                
+
                 cap_name = f'{planta}_{ingrediente}'
                 cap_value = capacidad_recepcion_ingrediente[cap_name]
-                
+
                 for carga in cargas:
-                   
+
                     campos = carga.split('_')
                     c_ingrediente = campos[3]
-                    
+
                     if c_ingrediente == ingrediente:
-                    
+
                         itd_name = f'ITD_{carga}_{planta}_{periodo}'
                         itd_var = variables['ITD'][itd_name]
 
-                        itr_name = f'ITR_{carga}_{planta}_{periodo}' 
-                        itr_var = variables['ITR'][itr_name]      
-                        
+                        itr_name = f'ITR_{carga}_{planta}_{periodo}'
+                        itr_var = variables['ITR'][itr_name]
+
                         left_expesion.append(34000*itd_var + 34000*itr_var)
-                
-                rest = (pu.lpSum(left_expesion)<=cap_value, f'capacidad_recepcion en {planta} de {ingrediente} en {periodo}')
-                    
+
+                rest = (pu.lpSum(left_expesion) <= cap_value,
+                        f'capacidad_recepcion en {planta} de {ingrediente} en {periodo}')
+
                 rest_list.append(rest)
-                
+
         restricciones['capacidad_recepcion_ingredientes_planta'] = rest_list
-                
-                
-    
-    
 
 
-def _capacidad_almacenamiento_ingrediente_planta(restricciones: list, 
-                                     variables: dict, 
-                                     capacidad_plantas_ingredientes: dict, 
-                                     consumo_promedio:dict,
-                                     plantas: list, 
-                                     ingredientes: list,
-                                     periodos: list):
+def _capacidad_almacenamiento_ingrediente_planta(restricciones: list,
+                                                 variables: dict,
+                                                 capacidad_plantas_ingredientes: dict,
+                                                 consumo_promedio: dict,
+                                                 plantas: list,
+                                                 ingredientes: list,
+                                                 periodos: list):
 
     print('rest: capacidad de almacenamiento en por ingrediente en planta')
 
@@ -382,7 +380,7 @@ def _capacidad_almacenamiento_ingrediente_planta(restricciones: list,
     restricciones['Capacidad almacenamiento plantas'] = rest
 
 
-def _capacidad_almacenamiento_conjunto_planta(conjuntos:dict, variables:dict, max_cap_almacenamiento_planta:dict, capacidad_plantas_ingredientes:dict):
+def _capacidad_almacenamiento_conjunto_planta(conjuntos: dict, variables: dict, max_cap_almacenamiento_planta: dict, capacidad_plantas_ingredientes: dict):
 
     print('rest: capacidad de almacenamiento total planta')
 
@@ -409,15 +407,15 @@ def _capacidad_almacenamiento_conjunto_planta(conjuntos:dict, variables:dict, ma
                 ci_name = f'CI_{planta}_{ingrediente}'
                 ci_value = capacidad_plantas_ingredientes[ci_name]
 
-                if ci_value>0:
+                if ci_value > 0:
                     left_expresion.append((1/ci_value)*xiu_var)
                     left_expresion.append((-1/ci_value)*sal_var)
 
-            rest.append((pu.lpSum(left_expresion)<=1.0, f'Capacidad de almacenamiento total en {planta} al final de {periodo}'))
+            rest.append((pu.lpSum(left_expresion) <= 1.0,
+                        f'Capacidad de almacenamiento total en {planta} al final de {periodo}'))
 
 
-
-def _tiempo_administrativo(restricciones:dict, variables:dict, conjuntos:dict, periodos_restringidos:[0]):
+def _tiempo_administrativo(restricciones: dict, variables: dict, conjuntos: dict, periodos_restringidos: [0]):
 
     rest_list = list()
 
@@ -427,13 +425,14 @@ def _tiempo_administrativo(restricciones:dict, variables:dict, conjuntos:dict, p
 
                 itr_name = f'ITR_{carga}_{planta}_{periodo}'
                 itr_var = variables['ITR'][itr_name]
-                rest = (itr_var == 0.0, f'No despacho directo de {carga} hacia {planta} en {periodo}')
+                rest = (
+                    itr_var == 0.0, f'No despacho directo de {carga} hacia {planta} en {periodo}')
                 rest_list.append(rest)
-
 
                 itd_name = f'ITD_{carga}_{planta}_{periodo}'
                 itd_var = variables['ITD'][itd_name]
-                rest = (itd_var == 0.0, f'No despacho indirecto de {carga} hacia {planta} en {periodo}')
+                rest = (
+                    itd_var == 0.0, f'No despacho indirecto de {carga} hacia {planta} en {periodo}')
                 rest_list.append(rest)
 
     restricciones['No despacho'] = rest_list
@@ -455,8 +454,8 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
     inventario_inicial_ua = parametros['inventario_inicial_ua']
     safety_stock = parametros['safety_stock']
     capacidad_recepcion_ingrediente = parametros['capacidad_recepcion_ingredientes']
-    
-    dio = parametros['dio_objetivo']
+
+    # dio = parametros['dio_objetivo']
     # costo_penalizacion_capacidad_planta = parametros['costo_penalizacion_capacidad_maxima']
 
     _balance_masa_bif(restricciones=restricciones,
@@ -472,22 +471,22 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                                 cargas=cargas,
                                 inventario_inicial=inventario_inicial_cargas,
                                 periodos=periodos)
-    
+
     _capacidad_recepcion_ingredientes_planta(restricciones=restricciones,
-                                             variables=variables, 
+                                             variables=variables,
                                              ingredientes=ingredientes,
-                                             cargas=cargas, 
-                                             plantas=plantas, 
-                                             periodos=periodos, 
+                                             cargas=cargas,
+                                             plantas=plantas,
+                                             periodos=periodos,
                                              capacidad_recepcion_ingrediente=capacidad_recepcion_ingrediente)
 
     _capacidad_almacenamiento_ingrediente_planta(restricciones=restricciones,
-                                     variables=variables,
-                                     capacidad_plantas_ingredientes=capacidad_plantas_ingredientes,
-                                     consumo_promedio=consumo_promedio,
-                                     plantas=plantas,
-                                     ingredientes=ingredientes,
-                                     periodos=periodos)
+                                                 variables=variables,
+                                                 capacidad_plantas_ingredientes=capacidad_plantas_ingredientes,
+                                                 consumo_promedio=consumo_promedio,
+                                                 plantas=plantas,
+                                                 ingredientes=ingredientes,
+                                                 periodos=periodos)
     '''    
     _capacidad_almacenamiento_conjunto_planta(conjuntos=conjuntos,
                                               variables=variables,
@@ -510,14 +509,12 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                               periodos=periodos,
                               plantas=plantas,
                               safety_stock=safety_stock)
-    
 
     _tiempo_transitos(restricciones=restricciones,
                       variables=variables,
                       cargas=cargas,
                       plantas=plantas,
                       periodos=periodos)
-
 
     _balance_masa_planta(restricciones=restricciones,
                          variables=variables,
@@ -528,11 +525,8 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                          ingredientes=ingredientes,
                          periodos=periodos,
                          consumo=consumo_proyectado)
- 
-    
+
     _tiempo_administrativo(restricciones=restricciones,
                            variables=variables,
                            conjuntos=conjuntos,
                            periodos_restringidos=['0'])
-
- 

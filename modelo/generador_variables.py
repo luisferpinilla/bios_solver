@@ -1,7 +1,7 @@
 import pulp as pu
 
 
-def _despacho_directo(variables: dict, periodos: list,  cargas: list, plantas: list, relevance_cargas:dict, max_trucks=dict):
+def _despacho_directo(variables: dict, periodos: list,  cargas: list, plantas: list, relevance_cargas: dict, max_trucks=dict):
 
     # $XTD_{lm}^{t}$ : Cantidad de carga $l$ en barco a transportar bajo despacho directo hacia la planta $k$ durante el día $t$
     # variables['XTD'] = dict()
@@ -10,11 +10,10 @@ def _despacho_directo(variables: dict, periodos: list,  cargas: list, plantas: l
     # $ITD_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar directamente hacia la panta $k$ durante el día $t$
     variables['ITD'] = dict()
 
-
     for periodo in periodos:
         for carga in cargas:
             for planta in plantas:
-                
+
                 max_name = f'{planta}_{carga.split("_")[3]}'
                 max_value = max_trucks[max_name]
 
@@ -24,24 +23,10 @@ def _despacho_directo(variables: dict, periodos: list,  cargas: list, plantas: l
                 variables['XAD'][xad_name] = xad_var
 
                 itd_name = f'ITD_{carga}_{planta}_{periodo}'
-                
-                
-                # Si la variable no es relevante, la dejaremos como continua == 0
-                if not carga in relevance_cargas.keys() or max_value==0:
-                    
-                    itd_var = pu.LpVariable(name=itd_name, lowBound=0, upBound=0, cat=pu.LpContinuous)
-                    
-                else:
-                
-                    if relevance_cargas[carga] < int(periodo):
-                        
-                        itd_var = pu.LpVariable(name=itd_name, lowBound=0, upBound=0, cat=pu.LpContinuous)
-                    
-                    else:
-                        # Si es relevante, la dejamos como integer
-                        itd_var = pu.LpVariable(name=itd_name, lowBound=0, upBound=max_value, cat=pu.LpInteger)
-                    
-                    
+
+                itd_var = pu.LpVariable(
+                    name=itd_name, lowBound=0, upBound=max_value, cat=pu.LpInteger)
+
                 variables['ITD'][itd_name] = itd_var
 
 
@@ -51,16 +36,16 @@ def _decargue_barco_a_puerto(variables: dict, cargas: list, periodos: list):
     for carga in cargas:
         for periodo in periodos:
             xpl_name = f'XPL_{carga}_{periodo}'
-            
+
             xpl_var = pu.LpVariable(
                 name=xpl_name, lowBound=0.0, upBound=50000001, cat=pu.LpContinuous)
             variables['XPL'][xpl_name] = xpl_var
 
 
-def _despacho_desde_puerto(variables: dict, cargas: list, plantas: list, periodos: list, relevance_cargas:dict, max_trucks=dict):
+def _despacho_desde_puerto(variables: dict, cargas: list, plantas: list, periodos: list, relevance_cargas: dict, max_trucks=dict):
 
     # $XTD_{lm}^{t}$ : Cantidad de carga $l$ en barco a transportar bajo despacho directo hacia la unidad $m$ durante el día $t$
-    #variables['XTR'] = dict()
+    # variables['XTR'] = dict()
     variables['XAR'] = dict()
 
     # $ITD_{lm}^{t}$ : Cantidad de camiones con carga $l$ a despachar directamente hacia la unidad $m$ durante el día $t$
@@ -73,30 +58,18 @@ def _despacho_desde_puerto(variables: dict, cargas: list, plantas: list, periodo
                 max_name = f'{planta}_{carga.split("_")[3]}'
                 max_value = max_trucks[max_name]
 
-                xar_name = f'XAR_{carga}_{planta}_{periodo}'                
-                xar_var = pu.LpVariable(name=xar_name, 
-                                        lowBound=0.0, 
-                                        upBound=34000*max_value, 
+                xar_name = f'XAR_{carga}_{planta}_{periodo}'
+                xar_var = pu.LpVariable(name=xar_name,
+                                        lowBound=0.0,
+                                        upBound=34000*max_value,
                                         cat=pu.LpContinuous)
                 variables['XAR'][xar_name] = xar_var
-                
+
                 itr_name = f'ITR_{carga}_{planta}_{periodo}'
-                
-                # Si la variable no es relevante, la dejaremos como continua == 0
-                if not carga in relevance_cargas.keys() or max_value==0:
-                    
-                    itr_var = pu.LpVariable(name=itr_name, lowBound=0, upBound=0, cat=pu.LpContinuous)
-                    
-                else:
-                
-                    if relevance_cargas[carga] < int(periodo):
-                        
-                        itr_var = pu.LpVariable(name=itr_name, lowBound=0, upBound=0, cat=pu.LpContinuous)
-                    
-                    else:
-                        # Si es relevante, la dejamos como integer
-                        itr_var = pu.LpVariable(name=itr_name, lowBound=0, upBound=max_value, cat=pu.LpInteger)
-                
+
+                itr_var = pu.LpVariable(
+                    name=itr_name, lowBound=0, upBound=max_value, cat=pu.LpInteger)
+
                 variables['ITR'][itr_name] = itr_var
 
 
@@ -131,7 +104,8 @@ def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, p
 
                 # $SSS_{ik}^{t}$ : Lo que falta para que el inventario del ingrediente $i$ en la planta $k$ al final del día $t$ esté sobre el nivel de seguridad $SS_{ik}^{t}$
                 sss_name = f'SSS_{planta}_{ingrediente}_{periodo}'
-                sss_var = pu.LpVariable(name=sss_name, lowBound=0.0, cat=pu.LpContinuous)
+                sss_var = pu.LpVariable(
+                    name=sss_name, lowBound=0.0, cat=pu.LpContinuous)
                 variables['SSS'][sss_name] = sss_var
 
                 # $SBK_{ik}^{t}$ : Lo que falta para cumplir la demanda
@@ -145,7 +119,7 @@ def _almacenamiento_planta(variables: list, plantas: list, ingredientes: list, p
                 sal_var = pu.LpVariable(
                     name=sal_name, lowBound=0.0, cat=pu.LpContinuous)
                 variables['SAL'][sal_name] = sal_var
-                
+
                 # $SIO_{ik}^{t}$ : Lo que falta para cumplir con el inventario objetivo
                 # sio_name = f'SIO_{planta}_{ingrediente}_{periodo}'
                 # sio_var = pu.LpVariable(
@@ -166,25 +140,25 @@ def generar_variables(conjuntos: dict, variables: dict, parametros) -> dict:
                       relevance_cargas=relevance_cargas,
                       max_trucks=max_trucks,
                       cargas=cargas,
-                      plantas=plantas, 
+                      plantas=plantas,
                       periodos=periodos)
 
-    _decargue_barco_a_puerto(variables=variables, 
-                             cargas=cargas, 
+    _decargue_barco_a_puerto(variables=variables,
+                             cargas=cargas,
                              periodos=periodos)
 
     _despacho_desde_puerto(variables=variables,
-                           cargas=cargas, 
+                           cargas=cargas,
                            relevance_cargas=relevance_cargas,
-                           max_trucks=max_trucks,                           
-                           periodos=periodos, 
+                           max_trucks=max_trucks,
+                           periodos=periodos,
                            plantas=plantas)
 
-    _almacenamiento_planta(variables=variables, 
+    _almacenamiento_planta(variables=variables,
                            plantas=plantas,
-                           periodos=periodos, 
+                           periodos=periodos,
                            ingredientes=ingredientes)
 
     _almacenamiento_puerto(variables=variables,
-                           cargas=cargas, 
+                           cargas=cargas,
                            periodos=periodos)

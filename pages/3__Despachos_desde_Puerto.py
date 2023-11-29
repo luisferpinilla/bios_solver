@@ -29,9 +29,7 @@ else:
 
     df = solucion['Despacho directo'].reset_index()
 
-
     with col1:
-
 
         operadores_list = ['Todos'] + list(df['operador'].unique())
 
@@ -62,7 +60,7 @@ else:
 
     st.write('## Despachos desde bodega en puerto')
 
-    df = solucion['Despacho desde Bodega'].reset_index()
+    df = solucion['Despacho indirecto'].reset_index()
 
     col1, col2 = st.columns(2)
 

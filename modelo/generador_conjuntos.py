@@ -93,13 +93,13 @@ def _generar_cargas_en_puerto(file=str):
     transitos_a_puerto_df = pd.read_excel(file, sheet_name='tto_puerto')
     inventarios_puerto_df = pd.read_excel(file, sheet_name='inventario_puerto')
 
-    campos = ['empresa', 'operador',  'imp-motonave', 'ingrediente']
-
+    campos = ['empresa', 'operador',  'puerto', 'ingrediente', 'importacion']
+    
+    
     for campo in campos:
-        inventarios_puerto_df[campo] = inventarios_puerto_df[campo].apply(
-            __remover_underscores)
-        transitos_a_puerto_df[campo] = transitos_a_puerto_df[campo].apply(
-            __remover_underscores)
+        transitos_a_puerto_df[campo] = transitos_a_puerto_df[campo].apply(__remover_underscores)
+        inventarios_puerto_df[campo] = inventarios_puerto_df[campo].apply(__remover_underscores)
+        
 
     transitos_a_puerto_df['key'] = transitos_a_puerto_df.apply(
         lambda field: '_'.join([field[x] for x in campos]), axis=1)

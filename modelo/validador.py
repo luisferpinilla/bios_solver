@@ -22,7 +22,7 @@ class Validador():
         with open("modelo/file_structure.json") as file:
             paginas_dict = json.load(file)
 
-        print(paginas_dict)
+        # print(paginas_dict)
 
         errors_list = list()
 
@@ -105,6 +105,8 @@ class Validador():
             self.validaciones['operadores únicos'] = "OK, los operadores son únicos"
         else:
             self.validaciones['operadores únicos'] = "Error, los operadores no son únicos"
+
+        print(self.operadores)
 
         for operador in self.operadores:
             campos = operador.split('-')
@@ -261,9 +263,9 @@ class Validador():
 
         self._validar_plantas()
 
-        self._validar_operadores()
+        # self._validar_operadores()
 
-        self._validar_fletes()
+        # self._validar_fletes()
 
         self._validar_demanda()
 

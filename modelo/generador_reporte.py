@@ -84,8 +84,9 @@ def _procesar_variables_transporte(df_dict: dict, variables: dict, conjuntos: di
     campos = ['tipo',
               'empresa_origen',
               'operador',
-              'importacion',
+              'puerto',
               'ingrediente',
+              'importacion',              
               'empresa_destino',
               'planta',
               'periodo']
@@ -128,8 +129,8 @@ def _procesar_variables_transporte(df_dict: dict, variables: dict, conjuntos: di
 
 def _procesar_variables_alacenamiento_puerto(df_dict: dict, variables: dict, conjuntos: dict):
 
-    campos = ['tipo', 'empresa', 'operador',
-              'importacion', 'ingrediente', 'periodo']
+    campos = ['tipo', 'empresa', 'operador', 'puerto', 
+              'ingrediente', 'importacion', 'periodo']
 
     variable_dict = variables['XPL']
 
@@ -159,8 +160,9 @@ def _procesar_variables_alacenamiento_puerto(df_dict: dict, variables: dict, con
                                           campos=['tipo',
                                                   'empresa_origen',
                                                   'operador',
-                                                  'importacion',
+                                                  'puerto',
                                                   'ingrediente',
+                                                  'importacion',                                                  
                                                   'empresa_destino',
                                                   'planta',
                                                   'periodo'])
@@ -246,8 +248,9 @@ def _procesar_variables_almacenamiento_planta(df_dict: dict, variables: dict, co
     campos = ['tipo',
               'empresa_origen',
               'operador',
-              'importacion',
+              'puerto',
               'ingrediente',
+              'importacion',              
               'empresa_destino',
               'planta',
               'periodo']
@@ -423,8 +426,8 @@ def _procesar_variables_safety_stock(df_dict: dict, variables: dict):
 
 def _procesar_costos_almacenamiento(df_dict: dict, variables: dict, parametros: dict, conjuntos: dict):
 
-    campos = ['tipo', 'empresa', 'operador',
-              'importacion', 'ingrediente', 'periodo']
+    campos = ['tipo', 'empresa', 'operador', 'puerto',
+              'ingrediente', 'importacion', 'periodo']
 
     variable_dict = variables['XIP']
 
@@ -434,8 +437,8 @@ def _procesar_costos_almacenamiento(df_dict: dict, variables: dict, parametros: 
 
     almacenamiento_df.drop(columns=['tipo'], inplace=True)
 
-    campos = ['tipo', 'empresa', 'ingrediente',
-              'operador', 'importacion', 'periodo']
+    campos = ['tipo', 'empresa', 'operador', 'puerto', 
+              'importacion', 'ingrediente', 'periodo']
 
     par_dict = parametros['costos_almacenamiento']
 
@@ -449,8 +452,8 @@ def _procesar_costos_almacenamiento(df_dict: dict, variables: dict, parametros: 
     costos_almacenamiento_df['periodo'] = costos_almacenamiento_df['periodo'].astype(
         int)
 
-    campos_cruce = ['empresa', 'ingrediente',
-                    'operador', 'importacion', 'periodo']
+    campos_cruce = ['empresa', 'operador', 'puerto', 
+                    'importacion', 'ingrediente', 'periodo']
 
     df = pd.merge(left=almacenamiento_df,
                   right=costos_almacenamiento_df,
@@ -488,8 +491,8 @@ def _procesar_costos_portuarios(df_dict: dict, variables: dict, parametros: dict
 
     variable_dict = variables['XPL']
 
-    campos = ['tipo', 'empresa', 'operador',
-              'importacion', 'ingrediente', 'periodo']
+    campos = ['tipo', 'empresa', 'operador', 'puerto',
+              'ingrediente', 'importacion', 'periodo']
 
     almacenamiento_df = __procesar_listado_variables(variable_dict, campos)
 
@@ -530,8 +533,8 @@ def _procesar_costos_portuarios(df_dict: dict, variables: dict, parametros: dict
 
     # cantidades despachadas directo XTR
 
-    campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
-              'ingrediente', 'empresa_destino', 'planta', 'periodo']
+    campos = ['tipo', 'empresa', 'operador', 'puerto',
+              'ingrediente', 'importacion', 'empresa_destino', 'planta', 'periodo']
 
     variable_dict = variables['ITD']
 
@@ -561,8 +564,8 @@ def _procesar_costos_portuarios(df_dict: dict, variables: dict, parametros: dict
 def _procesar_costos_transporte(df_dict: dict, variables: dict, parametros: dict, conjuntos: dict):
 
     # Despachos directos
-    campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
-              'ingrediente', 'empresa_destino', 'planta', 'periodo']
+    campos = ['tipo', 'empresa', 'operador', 'puerto',
+              'ingrediente', 'importacion', 'empresa_destino', 'planta', 'periodo']
 
     variable_dict = variables['ITD']
 
@@ -578,8 +581,8 @@ def _procesar_costos_transporte(df_dict: dict, variables: dict, parametros: dict
 
     # Despachos desde bodega
 
-    campos = ['tipo', 'empresa_origen', 'operador', 'importacion',
-              'ingrediente', 'empresa_destino', 'planta', 'periodo']
+    campos = ['tipo', 'empresa', 'operador', 'puerto',
+              'ingrediente', 'importacion', 'empresa_destino', 'planta', 'periodo']
 
     variable_dict = variables['ITR']
 

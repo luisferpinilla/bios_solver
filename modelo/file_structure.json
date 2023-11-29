@@ -15,10 +15,14 @@
         "nombre_puerto"
     ],
     "fletes_fijos": [
-        "operador-puerto-ing"
+        "operador",
+        "puerto",
+        "ingrediente"
     ],
     "fletes_variables": [
-        "operador-puerto-ing"
+        "operador",
+        "puerto",
+        "ingrediente"
     ],
     "venta_entre_empresas": [
         "origen"
@@ -35,21 +39,24 @@
     "costos_almacenamiento_cargas": [
         "empresa",
         "ingrediente",
-        "operador-puerto",
-        "imp-motonave",
+        "operador",
+        "puerto",
+        "importacion",
         "fecha_corte",
         "valor_kg"
     ],
     "costos_operacion_portuaria": [
         "tipo_operacion",
-        "operador-puerto-ing",
+        "operador",
+        "puerto",
+        "ingrediente",
         "valor_kg"
     ],
     "inventario_puerto": [
         "empresa",
         "ingrediente",
         "operador",
-        "imp-motonave",
+        "importacion",
         "fecha_llegada",
         "cantidad_kg",
         "valor_cif_kg"
@@ -57,19 +64,18 @@
     "tto_puerto": [
         "empresa",
         "operador",
+        "puerto",
         "ingrediente",
-        "imp-motonave",
+        "importacion",
         "cantidad_kg",
         "fecha_llegada",
         "valor_kg"
     ],
     "tto_plantas": [
-        "empresa",
         "planta",
         "ingrediente",
         "cantidad",
-        "fecha_llegada",
-        "Ubicación"
+        "fecha_llegada"
     ],
     "unidades_almacenamiento": [
         "planta",

@@ -5,8 +5,9 @@
             "tipo",
             "empresa",
             "operador",
-            "importacion",
+            "puerto",
             "ingrediente",
+            "importacion",
             "periodo"
         ],
         "output_name": "kg",
@@ -18,8 +19,9 @@
             "tipo",
             "empresa_origen",
             "operador",
-            "importacion",
+            "puerto",
             "ingrediente",
+            "importacion",
             "empresa_destino",
             "planta",
             "periodo"
@@ -33,8 +35,9 @@
             "tipo",
             "empresa_origen",
             "operador",
-            "importacion",
+            "puerto",
             "ingrediente",
+            "importacion",
             "empresa_destino",
             "planta",
             "periodo"
@@ -48,8 +51,9 @@
             "tipo",
             "empresa_origen",
             "operador",
-            "importacion",
+            "puerto",
             "ingrediente",
+            "importacion",
             "empresa_destino",
             "planta",
             "periodo"
@@ -63,8 +67,9 @@
             "tipo",
             "empresa_origen",
             "operador",
-            "importacion",
+            "puerto",
             "ingrediente",
+            "importacion",
             "empresa_destino",
             "planta",
             "periodo"
@@ -78,8 +83,9 @@
             "tipo",
             "empresa",
             "operador",
-            "importacion",
+            "puerto",
             "ingrediente",
+            "importacion",
             "periodo"
         ],
         "output_name": "kg",
@@ -127,8 +133,9 @@
             "tipo",
             "empresa",
             "operador",
-            "importacion",
+            "puerto",
             "ingrediente",
+            "importacion",
             "periodo"
         ],
         "output_name": "kg",
@@ -149,6 +156,7 @@
         "fields": [
             "tipo",
             "operador",
+            "puerto",
             "ingrediente"
         ],
         "output_name": "costo_por_kg",
@@ -159,6 +167,7 @@
         "fields": [
             "tipo",
             "operador",
+            "puerto",
             "ingrediente"
         ],
         "output_name": "costo_por_kg",
@@ -206,8 +215,9 @@
             "tipo",
             "empresa",
             "operador",
-            "importacion",
+            "puerto",
             "ingrediente",
+            "importacion",
             "periodo"
         ],
         "output_name": "costo_por_kg",
@@ -230,8 +240,9 @@
             "tipo",
             "empresa",
             "operador",
-            "importacion",
-            "ingrediente"
+            "puerto",
+            "ingrediente",
+            "importacion"
         ],
         "output_name": "kg",
         "sheet_name": "inv_inicial_cargas"
@@ -262,22 +273,14 @@
     "valor_cif": {
         "type": "parameter",
         "fields": [
-            "tipo",
             "empresa",
             "operador",
-            "importacion",
-            "ingrediente"
+            "puerto",
+            "ingrediente",
+            "importacion"
         ],
         "output_name": "valor_cif",
         "sheet_name": "valor_cif"
-    },
-    "dio_objetivo": {
-        "type": "parameter",
-        "fields": [
-            "ingrediente"
-        ],
-        "output_name": "inventario_objetivo",
-        "sheet_name": "inventario_objetivo"
     },
     "capacidad_almacenamiento_planta": {
         "type": "parameter",
