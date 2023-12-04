@@ -308,38 +308,49 @@ def _capacidad_recepcion_ingredientes_planta(restricciones: dict,
                                              cargas: list,
                                              plantas: list,
                                              periodos: list,
-                                             capacidad_recepcion_ingrediente: dict,
+                                             parametros:list,
                                              ):
 
+    plataformas = parametros['plataformas']
+    operacion_planta = parametros['operacion_planta']
+    tiempo_limpieza = parametros['tiempo_limpieza']
+    tiempo_descarge = parametros['tiempo_descarge']
+    
+    
+    
     rest_list = list()
 
     for planta in plantas:
+        
+        nombre_planta = planta.split('_')[1]
+        t_disponible = operacion_planta[nombre_planta]*plataformas[nombre_planta]
+
         for periodo in periodos:
-            for ingrediente in ingredientes:
-                left_expesion = list()
+                        
+            left_expesion = list()
 
-                cap_name = f'{planta}_{ingrediente}'
-                cap_value = capacidad_recepcion_ingrediente[cap_name]
+            for carga in cargas:
 
-                for carga in cargas:
+                campos = carga.split('_')
+                c_ingrediente = campos[3]
 
-                    campos = carga.split('_')
-                    c_ingrediente = campos[3]
+                itd_name = f'ITD_{carga}_{planta}_{periodo}'
+                itd_var = variables['ITD'][itd_name]
 
-                    if c_ingrediente == ingrediente:
+                itr_name = f'ITR_{carga}_{planta}_{periodo}'
+                itr_var = variables['ITR'][itr_name]
+                        
+                t_descarge = tiempo_descarge[f'{nombre_planta}_{c_ingrediente}']
+                t_limpieza = tiempo_limpieza[nombre_planta]
 
-                        itd_name = f'ITD_{carga}_{planta}_{periodo}'
-                        itd_var = variables['ITD'][itd_name]
+                left_expesion.append(t_descarge*itd_var)
+                left_expesion.append(t_descarge*itr_var)
+                left_expesion.append(t_limpieza)
+                        
 
-                        itr_name = f'ITR_{carga}_{planta}_{periodo}'
-                        itr_var = variables['ITR'][itr_name]
+            rest = (pu.lpSum(left_expesion) <= t_disponible, f'capacidad_recepcion en {planta} de {c_ingrediente} en {periodo}')
 
-                        left_expesion.append(34000*itd_var + 34000*itr_var)
-
-                rest = (pu.lpSum(left_expesion) <= cap_value,
-                        f'capacidad_recepcion en {planta} de {ingrediente} en {periodo}')
-
-                rest_list.append(rest)
+            rest_list.append(rest)
 
         restricciones['capacidad_recepcion_ingredientes_planta'] = rest_list
 
@@ -453,7 +464,8 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
     cargas = conjuntos['cargas']
     inventario_inicial_ua = parametros['inventario_inicial_ua']
     safety_stock = parametros['safety_stock']
-    capacidad_recepcion_ingrediente = parametros['capacidad_recepcion_ingredientes']
+
+    
 
     # dio = parametros['dio_objetivo']
     # costo_penalizacion_capacidad_planta = parametros['costo_penalizacion_capacidad_maxima']
@@ -478,7 +490,7 @@ def generar_restricciones(restricciones: dict, conjuntos: dict, parametros: dict
                                              cargas=cargas,
                                              plantas=plantas,
                                              periodos=periodos,
-                                             capacidad_recepcion_ingrediente=capacidad_recepcion_ingrediente)
+                                             parametros=parametros)
 
     _capacidad_almacenamiento_ingrediente_planta(restricciones=restricciones,
                                                  variables=variables,

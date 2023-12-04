@@ -314,30 +314,36 @@ def __capacidad_recepcion_ingredientes(parametros: dict, conjuntos: dict, file: 
 
     empresas_plantas = parametros['empresas_plantas']
 
-    df = pd.read_excel(io=file, sheet_name='safety_stock')[
-        ['planta', 'ingrediente', 'Capacidad_recepcion_kg']]
-
-    df['empresa'] = df['planta'].map(empresas_plantas)
-
-    df['key'] = df['empresa'] + '_' + df['planta'] + '_' + df['ingrediente']
-
-    df.drop(columns=['empresa', 'planta', 'ingrediente'], inplace=True)
-
-    df.set_index('key', drop=True, inplace=True)
-
-    capacidad_recepcion_ingredientes_dict = dict()
-
-    for planta in conjuntos['plantas']:
-        for ingrediente in conjuntos['ingredientes']:
-
-            name = f'{planta}_{ingrediente}'
-
-            if name in df.index:
-                capacidad_recepcion_ingredientes_dict[name] = df.loc[name]['Capacidad_recepcion_kg']
-            else:
-                capacidad_recepcion_ingredientes_dict[name] = 0
-
-    parametros['capacidad_recepcion_ingredientes'] = capacidad_recepcion_ingredientes_dict
+    df = pd.read_excel(io=file, sheet_name='plantas')
+    
+    operacion_dict = {df.loc[i]['planta']:df.loc[i]['operacion_minutos'] for i in df.index}
+    
+    limpieza_dict = {df.loc[i]['planta']:df.loc[i]['minutos_limpieza'] for i in df.index}
+    
+    plataformas_dict = {df.loc[i]['planta']:df.loc[i]['plataformas'] for i in df.index}
+    
+    df = pd.melt(frame=df,
+                 id_vars=['planta'], 
+                 value_vars=conjuntos['ingredientes'],
+                 var_name='ingrediente', 
+                 value_name='t_descarge')
+    
+    t_descarge_dict = dict()
+    
+    for i in df.index:
+        par_name = f"{df.loc[i]['planta']}_{df.loc[i]['ingrediente']}"
+        par_value = df.loc[i]['t_descarge']
+        t_descarge_dict[par_name] = par_value
+        
+    
+    parametros['operacion_planta'] = operacion_dict
+    
+    parametros['tiempo_limpieza'] = limpieza_dict
+    
+    parametros['plataformas'] = plataformas_dict
+    
+    parametros['tiempo_descarge'] = t_descarge_dict
+    
 
 
 def __tiempo_transporte(parametros: dict, conjuntos: dict, file: str):
@@ -667,7 +673,11 @@ def __max_cantidad_camiones_a_despachar(parametros: dict, conjuntos: dict):
     cap_almacenamiento_planta = parametros['capacidad_almacenamiento_planta']
     Consumo_promedio_planta = parametros['Consumo_promedio']
     safety_stock = parametros['safety_stock']
-    recepcion = parametros['capacidad_recepcion_ingredientes']
+    t_operacion = parametros['operacion_planta']
+    plataformas = parametros['plataformas']
+    t_limpieza = parametros['tiempo_limpieza']
+    t_descarge = parametros['tiempo_descarge']
+    
 
     max_dict = dict()
 
@@ -687,11 +697,14 @@ def __max_cantidad_camiones_a_despachar(parametros: dict, conjuntos: dict):
             ss_value = safety_stock[ss_name]
 
             # Obtener la capacidad de recepcion de ingredientes
-            rec_name = f'{planta}_{ingrediente}'
-            rec_val = recepcion[rec_name]
+            nombre_planta = planta.split('_')[1] 
+            rec_name = f'{nombre_planta}_{ingrediente}'
+            rec_val = t_operacion[nombre_planta]*plataformas[nombre_planta] - t_limpieza[nombre_planta]
+            rec_val = int(rec_val/t_descarge[rec_name])
 
             if con_value > 0.0:
 
+                   
                 # Capacidad almacenamiento + un camión - consumo_medio
                 cap_rec_camiones = int(rec_val/34000)
                 cap_calc_camiones = int((cap_value - con_value + 34000)/34000)

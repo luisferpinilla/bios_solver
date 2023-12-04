@@ -47,6 +47,7 @@ def _costo_operacion_portuaria(variables: dict, costos_despacho_directo: dict, c
 
         operador = name.split('_')[2]
         puerto = name.split('_')[3]
+        operador = operador.replace(puerto, '')
         ingrediente = name.split('_')[4]
 
         cb_name = f'CB_{operador}_{puerto}_{ingrediente}'
@@ -58,6 +59,7 @@ def _costo_operacion_portuaria(variables: dict, costos_despacho_directo: dict, c
 
         operador = name.split('_')[2]
         puerto = name.split('_')[3]
+        operador = operador.replace(puerto, '')
         ingrediente = name.split('_')[4]
 
         cd_name = f'CD_{operador}_{puerto}_{ingrediente}'
@@ -80,8 +82,9 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_in
         for carga in cargas:
             campos = carga.split('_')
             empresa_origen = campos[0]
-            operador = campos[1] + campos[2]
+            operador = campos[1] 
             puerto = campos[2]
+            # operador = operador.replace(puerto, '')
             importacion = campos[4]
             ingrediente = campos[3]
 
