@@ -68,7 +68,7 @@ def _costo_operacion_portuaria(variables: dict, costos_despacho_directo: dict, c
     return fobj
 
 
-def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_transporte_fijos: dict, costo_intercompany: dict, valor_cif_carga: dict, cargas: list, plantas: list, periodos: list):
+def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_intercompany: dict, valor_cif_carga: dict, cargas: list, plantas: list, periodos: list):
     # $CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
     # $XTR_{lm}^{t}$ : Cantidad de carga $l$ en puerto a despachar hacia la unidad $m$ durante el día $t$
 
@@ -101,12 +101,6 @@ def _costo_transporte(variables: dict, costo_transporte_variable: dict, costo_tr
                     periodo)
                 fobj.append(34000*cv_coef_val*itr_var)
                 fobj.append(34000*cv_coef_val*itd_var)
-
-                # Costo fijos por transporte entre operador y planta
-                # cf_coef_name = f'CF_{operador}_{planta}_{ingrediente}'
-                # cf_coef_value = costo_transporte_fijos[cf_coef_name]
-                # fobj.append(cf_coef_value*itr_var)
-                # fobj.append(cf_coef_value*itd_var)
 
                 # Costo intercompany y valor de la carga
                 ci_iter_name = f"CW_{empresa_origen}_{empresa_destino}"
@@ -200,8 +194,8 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     costos_despacho_directo = parametros['costos_operacion_directo']
     costo_envio_bodega = parametros['costos_operacion_bodega']
     costo_intercompany = parametros['costo_venta_intercompany']
-    costo_transporte_variable = parametros['fletes_variables']
-    costo_transporte_fijos = parametros['fletes_fijos']
+    costo_transporte_variable = parametros['fletes_cop_per_kg']
+
     periodos = conjuntos['periodos']
     cargas = conjuntos['cargas']
     plantas = conjuntos['plantas']
@@ -223,7 +217,6 @@ def generar_fob(fob: list, parametros: dict, conjuntos: dict, variables: dict):
     # Costos por transporte
     ct = _costo_transporte(variables=variables,
                            costo_transporte_variable=costo_transporte_variable,
-                           costo_transporte_fijos=costo_transporte_fijos,
                            costo_intercompany=costo_intercompany,
                            valor_cif_carga=valor_cif_carga,
                            cargas=cargas,

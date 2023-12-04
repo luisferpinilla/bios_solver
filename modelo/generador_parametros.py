@@ -144,10 +144,12 @@ def __generar_costos_cif_cargas(parametros: dict, conjuntos: dict, file=str):
     inventarios_puerto_df = pd.read_excel(file, sheet_name='inventario_puerto')
 
     campos = ['empresa', 'operador', 'puerto', 'ingrediente', 'importacion']
-    
+
     for campo in campos:
-        transitos_a_puerto_df[campo] = transitos_a_puerto_df[campo].apply(__remover_underscores)
-        inventarios_puerto_df[campo] = inventarios_puerto_df[campo].apply(__remover_underscores) 
+        transitos_a_puerto_df[campo] = transitos_a_puerto_df[campo].apply(
+            __remover_underscores)
+        inventarios_puerto_df[campo] = inventarios_puerto_df[campo].apply(
+            __remover_underscores)
 
     transitos_a_puerto_df['key'] = transitos_a_puerto_df.apply(
         lambda field: '_'.join([field[x] for x in campos]), axis=1)
@@ -193,8 +195,7 @@ def __costo_almacenamiento_puerto(parametros: dict, conjuntos: dict, file: str):
     cc_df['fecha_corte'] = cc_df['fecha_corte'].apply(
         lambda x: x if x <= ultima_fecha else ultima_fecha)
 
-    fechas_dict = {conjuntos['fechas'][x]
-        : x for x in range(len(conjuntos['fechas']))}
+    fechas_dict = {conjuntos['fechas'][x]                   : x for x in range(len(conjuntos['fechas']))}
 
     cc_df['periodo'] = cc_df['fecha_corte'].map(fechas_dict)
 
@@ -210,15 +211,14 @@ def __costo_almacenamiento_puerto(parametros: dict, conjuntos: dict, file: str):
     costos_dict = dict()
 
     for carga in conjuntos['cargas']:
-        
+
         campos = carga.split('_')
         empresa = campos[0]
         operador = campos[1]
         puerto = campos[2]
         ingrediente = campos[3]
         importacion = campos[4]
-        
-        
+
         for periodo in conjuntos['periodos']:
             par_name = f'CC_{empresa}_{operador}_{puerto}_{importacion}_{ingrediente}_{periodo}'
             if par_name in cc_df.index:
@@ -259,23 +259,26 @@ def __costos_transporte(conjuntos: dict, parametros: dict, file: str):
     # $CF_{lm}$ : Costo fijo de transporte por camión despachado llevando la carga $l$ hasta la unidad de almacenamiento $m$.
     # $ CT_{lm}$ : Costo de transporte por tonelada despachada de la carga $l$ hasta la unidad de almacenamiento $m$.
 
-    fletes = {'fletes_fijos': 'CF', 'fletes_variables': 'CV'}
+    fletes = {'fletes_cop_per_kg': 'CV'}
 
     index_key = ['operador', 'puerto', 'ingrediente']
-    
 
     values_dict = dict()
 
-    for flete, codigo in fletes.items():     
+    for flete, codigo in fletes.items():
 
         df = pd.read_excel(file, sheet_name=flete)
-        
+
         columns = df.drop(columns=index_key).columns
 
-        df = df.melt(id_vars=index_key, value_vars=columns, var_name='planta', value_name='costo')
+        df = df.melt(id_vars=index_key, value_vars=columns,
+                     var_name='planta', value_name='costo')
 
+        df['planta'] = df['planta'].apply(
+            lambda x: f'{parametros["empresas_plantas"][x]}_{x}')
 
-        df['key'] = codigo + "_" + df['operador'] + df['puerto'] + "_" + df['planta'] + "_" + df['ingrediente']
+        df['key'] = codigo + "_" + df['operador'] + df['puerto'] + \
+            "_" + df['planta'] + "_" + df['ingrediente']
 
         df.set_index('key', drop=True, inplace=True)
 
@@ -412,7 +415,7 @@ def __capacidad_almacenamiento_planta(parametros: dict, conjuntos: dict, file: s
     for planta in conjuntos['plantas']:
 
         for ingrediente in conjuntos['ingredientes']:
-            
+
             par_name = f"CI_{planta}_{ingrediente}"
 
             if par_name in capacidad_df.index:

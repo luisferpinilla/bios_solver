@@ -47,7 +47,7 @@ else:
     reporte = Reporte(problema=problema)
 
     reporte.guardar_excel(
-        f"output_{datetime.now().strftime('%Y%m%%h$m')}.xlsx")
+        f"output_{datetime.now().strftime('%Y%m%d%H%M')}.xlsx")
 
     st.success('se guardó el archivo')
 
@@ -77,7 +77,7 @@ else:
 
     with st.expander(label='Costos de Transporte'):
 
-        parametros = problema.parametros['fletes_variables']
+        parametros = problema.parametros['fletes_cop_per_kg']
 
         campos = ['operador', 'empresa', 'planta', 'ingrediente']
 

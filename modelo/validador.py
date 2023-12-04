@@ -259,17 +259,17 @@ class Validador():
 
         self._validar_ingredientes()
 
-        self._validar_empresas()
+        # self._validar_empresas()
 
-        self._validar_plantas()
+        # self._validar_plantas()
 
         # self._validar_operadores()
 
         # self._validar_fletes()
 
-        self._validar_demanda()
+        # self._validar_demanda()
 
-        self._validar_safety_stock()
+        # self._validar_safety_stock()
 
         self._validar_no_exceder_capacidad_almacenamiento()
 

@@ -310,10 +310,10 @@ class Reporte():
             columns={'costo_por_kg': 'costo_flete_por_kg'}, inplace=True)
 
         # fletes fijos
-        fletes_fijos_df = self.df_dict['flete_fijo'].copy()
-        fletes_fijos_df.drop(columns=['tipo'], inplace=True)
-        fletes_fijos_df.rename(
-            columns={'costo_por_camion': 'costo_flete_por_camion'}, inplace=True)
+        # fletes_fijos_df = self.df_dict['flete_fijo'].copy()
+        # fletes_fijos_df.drop(columns=['tipo'], inplace=True)
+        # fletes_fijos_df.rename(
+        #    columns={'costo_por_camion': 'costo_flete_por_camion'}, inplace=True)
 
         # intercompany
         intercompany_df = self.df_dict['costo_intercompany'].copy()
@@ -393,13 +393,13 @@ class Reporte():
                                        how='left').drop(columns=['empresa'])
 
         # Colocar fletes fijos al despacho directo
-        despacho_directo_df = pd.merge(left=despacho_directo_df,
-                                       right=fletes_fijos_df,
-                                       left_on=['operador', 'ingrediente',
-                                                'empresa_destino', 'planta'],
-                                       right_on=['operador', 'ingrediente',
-                                                 'empresa', 'planta'],
-                                       how='left').drop(columns=['empresa'])
+        # despacho_directo_df = pd.merge(left=despacho_directo_df,
+        #                               right=fletes_fijos_df,
+        #                               left_on=['operador', 'ingrediente',
+        #                                        'empresa_destino', 'planta'],
+        #                               right_on=['operador', 'ingrediente',
+        #                                         'empresa', 'planta'],
+        #                               how='left').drop(columns=['empresa'])
 
         # Colocar valor Cif
         despacho_directo_df = pd.merge(left=despacho_directo_df,
@@ -422,8 +422,9 @@ class Reporte():
         # Calcular el costo portuario por despacho directo
         despacho_directo_df['costo_portuario_directo_total'] = despacho_directo_df['costo_portuario_directo_kg'] * \
             despacho_directo_df['kilos_despachados_directo']
-        despacho_directo_df['costo_fletes_directo'] = despacho_directo_df['costo_flete_por_kg']*despacho_directo_df['kilos_despachados_directo'] + despacho_directo_df['costo_flete_por_camion'] * \
-            despacho_directo_df['cantidad_camiones_directo']
+        despacho_directo_df['costo_fletes_directo'] = despacho_directo_df['costo_flete_por_kg'] * \
+            despacho_directo_df['kilos_despachados_directo']
+        # + despacho_directo_df['costo_flete_por_camion'] * despacho_directo_df['cantidad_camiones_directo']
         despacho_directo_df['costo_intercompany_directo'] = despacho_directo_df['valor_cif'] * \
             despacho_directo_df['porcentaje_intercompany'] * \
             despacho_directo_df['kilos_despachados_directo']
@@ -457,13 +458,13 @@ class Reporte():
                                       how='left').drop(columns=['empresa'])
 
         # Colocar fletes fijos al despacho desde bodega
-        despacho_bodega_df = pd.merge(left=despacho_bodega_df,
-                                      right=fletes_fijos_df,
-                                      left_on=['operador', 'ingrediente',
-                                               'empresa_destino', 'planta'],
-                                      right_on=['operador', 'ingrediente',
-                                                'empresa', 'planta'],
-                                      how='left').drop(columns=['empresa'])
+        # despacho_bodega_df = pd.merge(left=despacho_bodega_df,
+        #                              right=fletes_fijos_df,
+        #                              left_on=['operador', 'ingrediente',
+        #                                       'empresa_destino', 'planta'],
+        #                              right_on=['operador', 'ingrediente',
+        #                                        'empresa', 'planta'],
+        #                              how='left').drop(columns=['empresa'])
 
         # Colocar valor Cif
         despacho_bodega_df = pd.merge(left=despacho_bodega_df,
@@ -484,8 +485,9 @@ class Reporte():
                                       how='left')
 
         # Calcular el costo portuario por despacho desde bodega
-        despacho_bodega_df['costo_fletes_bodega'] = despacho_bodega_df['costo_flete_por_kg']*despacho_bodega_df['kilos_despachados_bodega'] + despacho_bodega_df['costo_flete_por_camion'] * \
-            despacho_bodega_df['cantidad_camiones_bodega']
+        despacho_bodega_df['costo_fletes_bodega'] = despacho_bodega_df['costo_flete_por_kg'] * \
+            despacho_bodega_df['kilos_despachados_bodega']
+        # + despacho_bodega_df['costo_flete_por_camion'] * despacho_bodega_df['cantidad_camiones_bodega']
         despacho_bodega_df['costo_intercompany_bodega'] = despacho_bodega_df['valor_cif'] * \
             despacho_bodega_df['porcentaje_intercompany'] * \
             despacho_bodega_df['kilos_despachados_bodega']

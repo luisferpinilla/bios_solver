@@ -86,7 +86,7 @@ def generar_problema(archivo: str) -> Problema:
     return problema
 
 
-def ejecutar_modelo(problema: Problema, t_max_minutos=float, gap_minimo=0.025):
+def ejecutar_modelo(problema: Problema, t_max_minutos=float, gap_minimo=0.01):
 
     with st.spinner(text='Ejecutando'):
         problema.solve(
@@ -155,7 +155,7 @@ if file:
             if tmax:
 
                 ejecutar_modelo(problema=problema,
-                                gap_minimo=0.02, t_max_minutos=60*tmax)
+                                gap_minimo=0.001, t_max_minutos=tmax)
 
     else:
         file = None

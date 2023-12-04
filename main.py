@@ -1,11 +1,16 @@
 from modelo.problema import Problema
 from modelo.reporte import Reporte
 from modelo.visor_parametros import visor_parametros
+from modelo.validador import Validador
 import pandas as pd
 
 # if __name__ == '__main__':
 
 file = 'model_template.xlsm'
+
+validador = Validador(file=file)
+
+validador.ejecutar_validaciones()
 
 problema = Problema(excel_file_path=file)
 
@@ -19,13 +24,21 @@ problema.generar_target()
 
 problema.gen_constrains()
 
-df = visor_parametros(conjuntos=problema.conjuntos, parametros=problema.parametros)
+conjuntos = problema.conjuntos
+parametros = problema.parametros
+variables = problema.variables
 
-problema.solve(engine='coin', gap=0.02, tlimit_seconds=60*15)
+df = visor_parametros(conjuntos=problema.conjuntos,
+                      parametros=problema.parametros)
+
+
+problema.solve(engine='coin', gap=0.005, tlimit_seconds=60*60*8)
+
+problema.imprimir_modelo_lp('borrame.lp')
 
 reporte = Reporte(problema=problema)
 
-reporte.guardar_excel('gap002.xlsx')
+reporte.guardar_excel('gap20231127c.xlsx')
 
 df_dict = reporte.df_dict
 
@@ -36,10 +49,6 @@ fact_inventario_puerto = reporte.obtener_cruce_inventario_puerto()
 with pd.ExcelWriter('borrame.xlsx') as writer:
     fact_inventario_planta.to_excel(writer, sheet_name='plantas')
     fact_inventario_puerto.to_excel(writer, sheet_name='puertos')
-
-conjuntos = problema.conjuntos
-parametros = problema.parametros
-variables = problema.variables
 
 
 # df_dict = reporte.obtener_dataframes(filename='reporte.xlsx')

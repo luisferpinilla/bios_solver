@@ -154,6 +154,7 @@ else:
         st.markdown('### Inventarios en Plantas')
         df1 = planta_df[(planta_df['ingrediente'] == ingrediente)
                         & (planta_df['planta'] == planta)]
+        # st.write(df1)
         fig = dibujar_inventario_planta(df1)
         st.pyplot(fig)
 

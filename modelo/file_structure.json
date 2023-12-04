@@ -1,10 +1,4 @@
 {
-    "ingredientes": [
-        "nombre"
-    ],
-    "empresas": [
-        "empresa"
-    ],
     "plantas": [
         "planta",
         "empresa"
@@ -14,12 +8,7 @@
         "puerto",
         "nombre_puerto"
     ],
-    "fletes_fijos": [
-        "operador",
-        "puerto",
-        "ingrediente"
-    ],
-    "fletes_variables": [
+    "fletes_cop_per_kg": [
         "operador",
         "puerto",
         "ingrediente"
