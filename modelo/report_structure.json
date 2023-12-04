@@ -173,7 +173,7 @@
         "output_name": "costo_por_kg",
         "sheet_name": "cost_oportuaria_directo"
     },
-    "fletes_variables": {
+    "fletes_cop_per_kg": {
         "type": "parameter",
         "fields": [
             "tipo",
@@ -184,18 +184,6 @@
         ],
         "output_name": "costo_por_kg",
         "sheet_name": "flete_variable"
-    },
-    "fletes_fijos": {
-        "type": "parameter",
-        "fields": [
-            "tipo",
-            "operador",
-            "empresa",
-            "planta",
-            "ingrediente"
-        ],
-        "output_name": "costo_por_camion",
-        "sheet_name": "flete_fijo"
     },
     "consumo_proyectado": {
         "type": "parameter",

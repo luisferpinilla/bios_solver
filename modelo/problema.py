@@ -6,6 +6,7 @@ from modelo.generador_fobjetivo import generar_fob
 from modelo.generador_reporte import generar_reporte, guardar_reporte_xlsx
 from modelo.visor_parametros import visor_parametros
 import pulp as pu
+import os
 
 
 class Problema():
@@ -91,22 +92,27 @@ class Problema():
                 self.solver += rest
 
         print('ejecutando solver')
+        cpu_count = max(1, os.cpu_count()-1)
+        print(f'usando {cpu_count} núcleos')
         if engine == 'glpk':
             if tlimit_seconds == 0.0:
                 if gap == 0.0:
                     engine = pu.GLPK_CMD()
-                    
+
                 else:
                     engine = pu.GLPK_CMD(
                         options=['--mipgap', str(gap)])
                     print('ejecutando gap:', gap)
             else:
                 if gap == 0.0:
-                    engine = pu.GLPK_CMD(timeLimit=tlimit_seconds)
+                    engine = pu.COIN_CMD(timeLimit=tlimit_seconds,
+                                         threads=cpu_count)
                     print('tlimit:', tlimit_seconds, 'segundos')
                 else:
-                    engine = pu.GLPK_CMD(timeLimit=tlimit_seconds, options=[
-                                         '--mipgap', str(gap)])
+                    engine = pu.COIN_CMD(timeLimit=tlimit_seconds,
+                                         threads=cpu_count,
+                                         options=[
+                                             '--mipgap', str(gap)])
                     print('gap:', gap)
                     print('tlimit:', tlimit_seconds, 'segundos')
 
@@ -123,9 +129,10 @@ class Problema():
                 if gap == 0.0:
                     engine = pu.PULP_CBC_CMD(timeLimit=tlimit_seconds)
                     print('tlimit:', tlimit_seconds, 'segundos')
-                    
+
                 else:
-                    engine = pu.PULP_CBC_CMD(gapRel=gap, timeLimit=tlimit_seconds)
+                    engine = pu.PULP_CBC_CMD(
+                        gapRel=gap, timeLimit=tlimit_seconds)
                     print('ejecutando gap:', gap)
                     print('tlimit:', tlimit_seconds, 'segundos')
 
