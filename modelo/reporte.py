@@ -166,7 +166,7 @@ class Reporte():
         cap_inventario_df.drop(columns='tipo', inplace=True)
 
         #  Capacidad recepción de material
-        cap_recepcion_df = self.df_dict['capacidad_recepcion'].copy()
+        # cap_recepcion_df = self.df_dict['capacidad_recepcion'].copy()
 
         # Agregar los transitos a Fact inventarios planta
         fact_inventario_planta = pd.merge(left=fact_inventario_planta,
@@ -248,13 +248,13 @@ class Reporte():
                                           how='left').fillna(0.0)
 
         # Agregar capacidad de recepcion inventarios
-        fact_inventario_planta = pd.merge(left=fact_inventario_planta,
-                                          right=cap_recepcion_df,
-                                          left_on=['empresa',
-                                                   'planta', 'ingrediente'],
-                                          right_on=['empresa',
-                                                    'planta', 'ingrediente'],
-                                          how='left').fillna(0.0)
+        # fact_inventario_planta = pd.merge(left=fact_inventario_planta,
+        #                                  right=cap_recepcion_df,
+        #                                  left_on=['empresa',
+        #                                           'planta', 'ingrediente'],
+        #                                  right_on=['empresa',
+        #                                            'planta', 'ingrediente'],
+        #                                  how='left').fillna(0.0)
 
         # calcular DIO
         fact_inventario_planta['DIO'] = fact_inventario_planta['inventario_al_cierre_kg'] / \
@@ -275,7 +275,9 @@ class Reporte():
                       'llegadas_por_bodega_kg', 'consumo_kg', 'backorder_kg',
                       'safety_stock', 'alarma_safety_stock',  # 'inventario_objetivo',
                       'DIO',  # 'Target',
-                      'capacidad_almacenamiento', 'capacidad_recepcion']
+                      'capacidad_almacenamiento'
+                      # , 'capacidad_recepcion'
+                      ]
 
         fact_inventario_planta = fact_inventario_planta.melt(
             id_vars=id_vars, value_vars=value_vars, value_name='kg', var_name='item')

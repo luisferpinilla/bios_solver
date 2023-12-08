@@ -2,7 +2,8 @@ import pulp as pu
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from asignador_capacidad import AsignadorCapacidad
+from problema.asignador_capacidad import AsignadorCapacidad
+from tqdm import tqdm
 import os
 
 
@@ -45,13 +46,25 @@ class Unidad_Almacenamiento():
 
 
 class Importacion():
-    def __init__(self, empresa: str, puerto: str, operador: str, ingrediente: str, valor_cif: float, inventario_inicial: float) -> None:
+    def __init__(self,
+                 empresa: str,
+                 puerto: str,
+                 operador: str,
+                 codigo: str,
+                 ingrediente: str,
+                 valor_cif: float,
+                 inventario_inicial: float,
+                 periodos: dict) -> None:
+
         self.empresa = empresa
         self.puerto = puerto
         self.operador = operador
+        self.codigo = codigo
         self.ingrediente = ingrediente
-        self.inventario_inicial = inventario_inicial
         self.valor_cif = valor_cif
+        self.inventario_inicial = inventario_inicial
+        self.periodos = periodos
+
         self.vencimientos = dict()
         # vencimientos[periodo]
         self.inventario_al_cierre = dict()
@@ -62,40 +75,128 @@ class Importacion():
         self.despachos_a_planta = dict()
         # LPVAR despachos_a_planta[periodo]
 
+        self.restricciones = list()
+
+        self.terminos_fobj = list()
+
     def establecer_vencimiento(self, periodo: int, costo_por_kg: float):
+        """ingresa un costo por kilogramo a cobrar por vencimiento durante el periodo dado
+
+        Args:
+            periodo (int): periodo en el que se aplicará el vencimiento
+            costo_por_kg (float): Costo aplicado durante el vencimiento
+        """
         self.vencimientos[periodo] = costo_por_kg
 
-    def agregar_llegada_en_barco(self, periodo: int, cantidad: float):
+    def obtener_vencimiento(self, periodo: int) -> float:
+        """returna el vencimiento para el periodo dado
+
+        Args:
+            periodo (int): periodo solicitado
+
+        Returns:
+            float: costo establecido por kilogramo
+        """
+        if periodo in self.vencimientos.keys():
+            return self.vencimientos[periodo]
+        return 0.0
+
+    def agregar_llegada_en_barco(self, periodo: int, cantidad: pu.LpVariable):
+        """adiciona variables de llegada de material para la importacion
+        Args:
+            periodo (int): periodo de llegada
+            cantidad (pu.LpVariable): Variable de llegada de material
+        """
         self.llegadas_a_puerto[periodo] = cantidad
 
     def agregar_despacho_a_planta(self, despacho_var: pu.LpVariable, periodo: int):
+        """Agrega Variables de despacho
+
+        Args:
+            despacho_var (pu.LpVariable): variable de despacho
+            periodo (int): periodo dado
+        """
         if not periodo in self.despachos_a_planta.keys():
             self.despachos_a_planta[periodo] = list()
         self.despachos_a_planta[periodo].append(despacho_var)
 
+    def obtener_despacchos_a_planta(self, periodo: int) -> list:
+        """retorna una lista con las variables de despacho para cada planta
+
+        Args:
+            periodo (int): periodo consultado
+
+        Returns:
+            list: lista con las variables de despacho
+        """
+        if not periodo in self.despachos_a_planta.keys():
+            return self.despachos_a_planta[periodo]
+        return list()
+
+    def build_variables(self):
+        """Construye la lista de variables de inventario
+        """
+        for periodo, fecha in self.periodos.items():
+
+            xip_name = f'xip_{self.empresa}_{self.operador}_{self.ingrediente}_{self.codigo}_{periodo}'
+
+            xip_var = pu.LpVariable(name=xip_name,
+                                    lowBound=0.0,
+                                    cat=pu.LpContinuous)
+
+            self.inventario_al_cierre[periodo] = xip_var
+
     def build_lp_model_components(self):
+        """Genera las restricciones y función objetivo que aporta al problema
+        """
 
-        # balance de masa
+        # xip = xip(t-1) + llegadas - despachos
+        # xip + despachos = xip(t-1) + llegadas
 
-        # funcion objetivo
+        for periodo, fecha in self.periodos.items():
 
-        pass
+            left = list()
+            right = list()
+
+            xip = self.inventario_al_cierre[periodo]
+            left.append(xip)
+
+            despachos = self.obtener_despacchos_a_planta(periodo=periodo)
+            for despacho in despachos:
+                left.append(34000*despacho)
+
+            if periodo == 0:
+                xip_t1 = self.inventario_inicial
+            else:
+                xip_t1 = self.inventario_al_cierre[periodo-1]
+            right.append(xip_t1)
+
+            if periodo in self.llegadas_a_puerto.keys():
+                llegadas = self.llegadas_a_puerto[periodo]
+                for llegada in llegadas:
+                    right.append(llegada)
+
+            rest = (pu.lpSum(left) == pu.lpSum(
+                right), f'inventario_{self.empresa}_{self.operador}_{self.ingrediente}_{self.codigo}_{periodo}')
+
+            self.restricciones.append(rest)
+
+            # Funcion objetivo
+            costo_vencimiento = self.obtener_vencimiento[periodo]
+            if costo_vencimiento > 0.0:
+                self.terminos_fobj.append(costo_vencimiento*xip)
 
     def __str__(self) -> str:
-        return f'{self.empresa}_{self.puerto}_{self.operador}_{self.ingrediente}'
-
-
-class Transportador():
-    pass
+        return f'{self.empresa}_{self.puerto}_{self.operador}_{self.codigo}_{self.ingrediente}'
 
 
 class Planta():
     def __init__(self,
                  nombre: str,
                  periodos: dict,
-                 costo_backorder=200,
-                 costo_exceso_capacidad=800,
-                 costo_incumplir_safety_stock=400) -> None:
+                 costo_backorder=400,
+                 costo_exceso_capacidad=400,
+                 costo_incumplir_safety_stock=200) -> None:
 
         self.nombre = nombre
         self.empresa = None
@@ -280,7 +381,7 @@ class Planta():
 
         return 0.0
 
-    def establecer_var_llegada_material(self, material: str, periodo: int, var_llegada: pu.LpVariable, cap_camion=34000):
+    def establecer_var_llegada_material(self, material: str, periodo: int, var_llegada: pu.LpVariable):
         """Agrega variables de llegada de material desde puerto
 
         Args:
@@ -295,10 +396,10 @@ class Planta():
         if not periodo in self.lista_llegadas_modelo[material].keys():
             self.lista_llegadas_modelo[material][periodo] = list()
 
-        self.lista_llegadas_modelo[material][periodo].append(
-            cap_camion*var_llegada)
+        self.lista_llegadas_modelo[material][periodo].append(var_llegada)
 
     def obtener_vars_llegadas_material(self, material: str, periodo: int) -> list:
+
         if material in self.lista_llegadas_modelo.keys():
             if periodo in self.lista_llegadas_modelo[material].keys():
                 return self.lista_llegadas_modelo[material][periodo]
@@ -451,17 +552,14 @@ class Planta():
                     left_expresion.append(dm_t)
 
                     # xiu_(t-1)
-                    if periodo == 0:
-                        right_expresion.append(ii)
-                    else:
-                        right_expresion.append(xiu_ant)
+                    right_expresion.append(xiu_ant)
 
                     # + ttp llegadasProgramadas
                     right_expresion.append(ttp_t)
 
                     # + llegadas planeadas
-                    for llegada in itdr_t_vars:
-                        right_expresion.append(llegada)
+                    for itdr_var in itdr_t_vars:
+                        right_expresion.append(34000*itdr_var)
 
                     # + XBK Backorder
                     right_expresion.append(xbk)
@@ -483,34 +581,41 @@ class Planta():
                         nombre_rest = f'cumplir_ss_en_{self.nombre}_de_{ingrediente}_en_{periodo}'
                         xss = self.incumplimiento_ss_al_cierre[ingrediente][periodo]
                         rest = (xiu >= ss + xss)
+                        self.lista_restricciones.append(rest)
 
-    def get_inventory_report(self):
+        # Restriccion de capacidad de recepcion
+        # sum(itdr_t_vars)*tiempo_ingrediente <= toperacion_dia*plataforma - tiempo_limpieza
+        for periodo, fecha in self.periodos.items():
 
-        df_dict = dict()
-        df_dict['planta'] = list()
-        df_dict['ingrediente'] = list()
-        df_dict['periodo'] = list()
-        df_dict['fecha'] = list()
-        df_dict['llegada_programada'] = list()
-        df_dict['llegada_modelo'] = list()
-        df_dict['consumo'] = list()
-        df_dict['inventario'] = list()
+            left_expresion = list()
+            right_expresion = list()
 
-        for ingrediente in self.inventario_al_cierre.keys():
-            for periodo, fecha in self.periodos.items():
-                df_dict['planta'].append(self.nombre)
-                df_dict['ingrediente'].append(ingrediente)
-                df_dict['periodo'].append(periodo)
-                df_dict['fecha'].append(fecha)
-                df_dict['llegada_programada'].append(
-                    self.obtener_llegada_material(ingrediente=ingrediente, periodo=periodo))
-                df_dict['llegada_modelo'].append('.')
-                df_dict['consumo'].append(
-                    self.obtener_consumo(ingrediente, periodo))
-                df_dict['inventario'].append(
-                    self.inventario_al_cierre[ingrediente][periodo].varValue)
+            for ingrediente, temp in self.inventario_al_cierre.items():
 
-        return pd.DataFrame(df_dict)
+                tiempo_ingrediente = self.tiempo_descargue_igredientes_por_minuto[ingrediente]
+                tiempo_limpieza = self.tiempo_limpieza_en_minutos
+                cantidad_plataformas = self.cantidad_plataformas
+                tiempo_operativo = self.turno
+
+                itdr_t_vars = self.obtener_vars_llegadas_material(
+                    material=ingrediente, periodo=periodo)
+
+                for itdr in itdr_t_vars:
+                    # tiempo_limpieza * itdr
+                    left_expresion.append(
+                        tiempo_ingrediente*itdr + tiempo_limpieza)
+
+                # Agregar tiempo de limpieza por cada ingrediente recibido
+                if len(itdr_t_vars) > 0:
+                    left_expresion.append(tiempo_limpieza)
+
+            if len(left_expresion) > 0:
+                right_expresion.append(tiempo_operativo*cantidad_plataformas)
+                rest_name = f'Tiempo_recepcion_{self.nombre}_{periodo}'
+                rest = (pu.lpSum(left_expresion) <=
+                        pu.lpSum(right_expresion), rest_name)
+
+                self.lista_restricciones.append(rest)
 
     def __str__(self) -> str:
         return self.nombre
@@ -552,8 +657,8 @@ class Barco():
                  periodo_llegada: int,
                  cantidad_kg: float,
                  valor_cif: float,
-                 costo_bodegaje: float,
                  costo_directo: float,
+                 costo_bodegaje: float,
                  periodos=dict,
                  rata_desgarge=5000000,
                  capacidad_camion=34000) -> None:
@@ -564,6 +669,7 @@ class Barco():
         self.operador = operador
         self.ingrediente = ingrediente
         self.periodo_llegada = periodo_llegada
+        self.periodo_partida = -1
         self.cantidad_kg = cantidad_kg
         self.valor_cif = valor_cif
         self.llegadas = dict()
@@ -583,30 +689,38 @@ class Barco():
         ultimo_periodo = max(self.periodos.keys())
 
         while cantidad_kg > 0:
-            if cantidad_kg > rata_desgarge and periodo_llegada < ultimo_periodo:
 
-                var_name = f'bodegaje_{self.empresa}_{self.puerto}_{self.operador}_{self.importacion}_{self.ingrediente}_{periodo_llegada}'
+            var_name = f'xpl_{self.empresa}_{self.puerto}_{self.operador}_{self.importacion}_{self.ingrediente}_{periodo_llegada}'
+
+            if cantidad_kg >= rata_desgarge and periodo_llegada < ultimo_periodo:
+
                 bodegaje_var = pu.LpVariable(name=var_name,
                                              lowBound=0,
                                              upBound=self.rata_descarge + 1,
                                              cat=pu.LpInteger)
+
                 self.bodegaje[periodo_llegada] = bodegaje_var
 
                 self.llegadas[periodo_llegada] = rata_desgarge
+
                 cantidad_kg -= rata_desgarge
 
             else:
 
-                var_name = f'bodegaje_{self.empresa}_{self.puerto}_{self.operador}_{self.importacion}_{self.ingrediente}_{periodo_llegada}'
                 bodegaje_var = pu.LpVariable(name=var_name,
                                              lowBound=0,
                                              upBound=self.rata_descarge + 1,
                                              cat=pu.LpInteger)
 
+                self.bodegaje[periodo_llegada] = bodegaje_var
+
                 self.llegadas[periodo_llegada] = cantidad_kg
+
                 cantidad_kg -= cantidad_kg
 
             periodo_llegada += 1
+
+        self.periodo_partida = periodo_llegada
 
     def establecer_despachos_directos(self, periodo: int, despacho: pu.LpVariable):
         """recibe una variable de despacho directo y la tiene en cuenta en las restricciones de balance de masa en puerto
@@ -654,43 +768,60 @@ class Barco():
 
     def build_lp_components(self):
 
-        # costos de bodegaje
-        for key, variable in self.bodegaje.items():
-            self.expresiones_funcion_objetivo.append(
-                self.costo_bodegaje*variable)
-
         # Costos de despacho directo
         for periodo, lista in self.lista_despacho_directo.items():
-            for var_despacho in lista:
+            for itd in lista:
                 self.expresiones_funcion_objetivo.append(
-                    self.costo_despacho_directo*var_despacho)
+                    self.costo_despacho_directo*itd)
 
-        # Balance de masa
-        for periodo, llegada in self.llegadas.items():
-            rest_name = f'balance_masa_bif_{self.empresa}_{self.puerto}_{self.importacion}_{self.ingrediente}_{periodo}'
+        for periodo, xpl in self.bodegaje.items():
+            if self.periodo_partida == periodo:
+                self.expresiones_funcion_objetivo.append(
+                    self.costo_bodegaje*xpl)
+
+        # Balance de masa bif
+        # xpl_t + despachos_directos_t == llegada_t
+        for periodo, llegada_t in self.llegadas.items():
 
             if periodo in self.bodegaje.keys():
-                bodegaje_var = self.bodegaje[periodo]
 
-                despachos_directos = self.obtener_despachos_directos(
+                rest_name = f'balance_masa_bif_{self.empresa}_{self.puerto}_{self.importacion}_{self.ingrediente}_{periodo}'
+
+                xpl_t = self.bodegaje[periodo]
+
+                despachos_directos_t = self.obtener_despachos_directos(
                     periodo=periodo)
 
-                rest = (bodegaje_var + pu.lpSum(despachos_directos)
-                        == llegada, rest_name)
+                despachos_directos_t = [
+                    34000*lp_variable for lp_variable in despachos_directos_t]
+
+                rest = (xpl_t + pu.lpSum(despachos_directos_t)
+                        == llegada_t, rest_name)
 
                 self.lista_restricciones.append(rest)
 
 
 class Importacion():
-    def __init__(self, empresa: str, codigo: str, operador: str, ingrediente: str, valor_cif: float, periodos: dict, cantidad_kg=0.0, periodo_llegada=1000) -> None:
+    def __init__(self, empresa: str,
+                 puerto: str,
+                 codigo: str,
+                 operador: str,
+                 ingrediente: str,
+                 valor_cif: float,
+                 costo_bodegaje: float,
+                 periodos: dict) -> None:
+
         self.periodos = periodos
         self.empresa = empresa
+        self.puerto = puerto
         self.codigo = codigo
         self.operador = operador
         self.ingrediente = ingrediente
-        self.perido_llegada = periodo_llegada
-        self.inventario_inicial = cantidad_kg
+        self.perido_llegada = 1000
+        self.periodo_partida = -1
+        self.inventario_inicial = 0.0
         self.valor_cif = valor_cif
+        self.costo_bodegaje = costo_bodegaje
         self.costo_vencimiento = dict()
         # costo_vencimiento[periodo]
         self.variables_bodegaje = dict()
@@ -699,6 +830,10 @@ class Importacion():
         # LPVAR variables_despacho[periodo]
         self.inventario_al_cierre = dict()
         # LPVAR inventario_al_cierre[periodo]
+
+        self.lista_restricciones = list()
+
+        self.lista_parametros_obj = list()
 
     def establecer_costo_vencimiento(self, periodo: int, valor: float):
         """Establece el valor a cobrarse al vencimiento
@@ -722,15 +857,22 @@ class Importacion():
             return self.costo_vencimiento[periodo]
         return 0.0
 
+    def establecer_inventario_inicial(self, cantidad: float):
+        self.perido_llegada = -1
+        self.inventario_inicial = cantidad
+
     def agregar_llegada_de_bodegaje(self, periodo: int, llegada: pu.LpVariable):
 
-        if self.perido_llegada < periodo:
+        if periodo < self.perido_llegada:
             self.perido_llegada = periodo
 
-        if not periodo in self.variables_bodegaje.keys():
-            self.variables_bodegaje[periodo] = list()
+        if self.periodo_partida < periodo:
+            self.periodo_partida = periodo
 
-        self.variables_bodegaje[periodo].append(llegada)
+        if not periodo in self.variables_bodegaje.keys():
+            self.variables_bodegaje[periodo] = llegada
+        else:
+            print("error")
 
     def agregar_despacho_a_planta(self, periodo: int, despacho: pu.LpVariable):
         if not periodo in self.variables_despacho.keys():
@@ -738,36 +880,105 @@ class Importacion():
 
         self.variables_despacho[periodo].append(despacho)
 
-    def build(self):
+    def obtener_despachos_a_planta(self, periodo: int) -> list():
+        if periodo in self.variables_despacho.keys():
+            return self.variables_despacho[periodo]
+
+        return list()
+
+    def build_vars(self):
 
         # Variables de cierre de inventario
-
-        ultimo_periodo = max(self.periodos.keys())+1
-
         for periodo in self.periodos.keys():
-            if periodo >= self.perido_llegada:
+            # if periodo >= self.perido_llegada:
 
-                # Crear variable de bodegaje
-                xbd_name = f'xpl_{self.empresa}_{self.ingrediente}_{self.codigo}_{periodo}'
+            # Crear variable de inventario al final del día
+            xip_name = f'xip_{self.empresa}_{self.ingrediente}_{self.codigo}_{periodo}'
+            xip_var = pu.LpVariable(name=xip_name,
+                                    lowBound=0.0,
+                                    cat=pu.LpContinuous)
+            self.inventario_al_cierre[periodo] = xip_var
 
-                xbd_var = pu.LpVariable(name=xbd_name,
-                                        lowBound=0.0,
-                                        upBound=5000000,
-                                        cat=pu.LpContinuous)
+    def buid_lp_components(self):
 
-                self.agregar_llegada_de_bodegaje(periodo=periodo,
-                                                 llegada=xbd_var)
+        # Balance de masa de invenarios
+        # xip = xip(t-1) + llegadas - salidas
+        # xip -salidas = xip(t-1) + llegadas
 
-                # Crear variable de inventario al final del día
+        for periodo in self.periodos:
 
-        pass
+            left_expresion = list()
+            right_expresion = list()
+
+            # xip
+            xip_t = self.inventario_al_cierre[periodo]
+            left_expresion.append(xip_t)
+
+            # xip(t-1)
+            if periodo == 0:
+                xip_t1 = self.inventario_inicial
+                right_expresion.append(xip_t1)
+            else:
+                xip_t1 = self.inventario_al_cierre[periodo-1]
+            right_expresion.append(xip_t1)
+
+            # Llegada
+            if periodo in self.variables_bodegaje.keys():
+                xpl_t = self.variables_bodegaje[periodo]
+                right_expresion.append(xpl_t)
+
+            # Despachos
+            despachos_t = self.obtener_despachos_a_planta(periodo=periodo)
+            for despacho_t in despachos_t:
+                left_expresion.append(34000*despacho_t)
+
+            rest_name = f'balance_{self.empresa}_{self.ingrediente}_{self.codigo}_{periodo}'
+
+            rest = (pu.lpSum(left_expresion) ==
+                    pu.lpSum(right_expresion), rest_name)
+
+            self.lista_restricciones.append(rest)
+
+            # Costo de vencimientos
+            costo_vencimiento = self.obtener_costo_vencimiento(
+                periodo=periodo)
+
+            if costo_vencimiento > 0.0:
+                self.lista_parametros_obj.append(costo_vencimiento*xip_t)
+
+            # costos de bodegaje, inventario al momento de la partida del barco
+            if periodo == self.periodo_partida:
+                self.lista_parametros_obj.append(
+                    self.costo_bodegaje*xip_t)
+
+    @property
+    def id(self) -> str:
+        return f'{self.empresa}_{self.operador}_{self.ingrediente}_{self.codigo}'
+
+    def __str__(self) -> str:
+        return self.id
 
 
 class Transporte():
-    def __init__(self, barcos: dict, plantas: dict, periodos: dict) -> None:
+    def __init__(self,
+                 barcos: dict,
+                 importaciones: dict,
+                 plantas: dict,
+                 fletes: dict,
+                 intercompany: dict,
+                 periodos: dict) -> None:
+
         self.barcos = barcos
+        self.importaciones = importaciones
         self.plantas = plantas
         self.periodos = periodos
+        self.fletes = fletes
+        self.intercompany = intercompany
+
+        self.lista_retricciones = list()
+        self.lista_fobj = list()
+
+    def build(self):
 
         ultimo_periodo = max(self.periodos.keys())
 
@@ -775,32 +986,82 @@ class Transporte():
         for periodo, fecha in self.periodos.items():
             for nombre_barco, barco in self.barcos.items():
                 for nombre_planta, planta in self.plantas.items():
-                    # planta = Planta()
-                    # barco = Barco()
-                    consumo_planta = planta.obtener_consumo_promedio_diario(
+
+                    dm_t = planta.obtener_consumo_promedio_diario(
                         ingrediente=barco.ingrediente)
-                    capacidad_planta = planta.obtener_capacidad_almacenamiento(
+                    ca = planta.obtener_capacidad_almacenamiento(
                         ingrediente=barco.ingrediente)
-                    # Despachar solo si hay capacidad, consumo y el despacho llega dentro del horizonte
-                    var_name = f'despacho_directo_{barco.empresa}_{barco.puerto}_{barco.operador}_{barco.importacion}_{barco.ingrediente}_{planta.nombre}_{periodo}'
+
+                    intercompany = self.intercompany[barco.empresa][planta.empresa] * \
+                        barco.valor_cif
+
+                    itd_name = f'despacho_directo_{barco.empresa}_{barco.puerto}_{barco.operador}_{barco.importacion}_{barco.ingrediente}_{planta.nombre}_{periodo}'
                     maxima_cantidad_camiones = planta.obtener_maxima_capacidad_recepcion_camiones(
                         ingrediente=barco.ingrediente)
 
                     # Si en este periodo el barco esta entregando material
                     activo = periodo in barco.llegadas.keys()
 
-                    if activo and consumo_planta > 0 and capacidad_planta > 0 and maxima_cantidad_camiones > 0 and periodo + 2 < ultimo_periodo:
+                    # Despachar solo si hay capacidad, consumo y el despacho llega dentro del horizonte
+                    if activo and dm_t > 0 and ca > 0 and maxima_cantidad_camiones > 0 and periodo + 2 < ultimo_periodo:
                         # Crear la variable
-                        itd = pu.LpVariable(name=var_name,
+                        itd = pu.LpVariable(name=itd_name,
                                             lowBound=0,
                                             upBound=maxima_cantidad_camiones,
                                             cat=pu.LpInteger)
+
                         # Entregar variable a barco
                         barco.establecer_despachos_directos(
                             periodo=periodo, despacho=itd)
+
                         # entregar variable a planta
                         planta.establecer_var_llegada_material(
                             material=barco.ingrediente, periodo=periodo+2, var_llegada=itd)
+
+                        # Costo flete
+                        flete_por_kg = self.fletes[barco.puerto][barco.operador][
+                            barco.ingrediente][nombre_planta] + intercompany
+                        self.lista_fobj.append(34000*flete_por_kg*itd)
+
+        # Crear variables Despacho bodega
+        for periodo, fecha in self.periodos.items():
+            for codigo_importacion, importacion in self.importaciones.items():
+                for nombre_planta, planta in self.plantas.items():
+
+                    dm_t = planta.obtener_consumo_promedio_diario(
+                        ingrediente=barco.ingrediente)
+                    ca = planta.obtener_capacidad_almacenamiento(
+                        ingrediente=barco.ingrediente)
+
+                    intercompany = self.intercompany[importacion.empresa][planta.empresa] * \
+                        importacion.valor_cif
+
+                    itr_name = f'despacho_bodega_{importacion.empresa}_{importacion.puerto}_{importacion.operador}_{importacion.codigo}_{importacion.ingrediente}_{planta.nombre}_{periodo}'
+                    maxima_cantidad_camiones = planta.obtener_maxima_capacidad_recepcion_camiones(
+                        ingrediente=barco.ingrediente)
+
+                    # Despachar solo si hay capacidad, consumo y el despacho llega dentro del horizonte
+                    if dm_t > 0 and ca > 0 and maxima_cantidad_camiones > 0 and periodo + 2 < ultimo_periodo:
+                        # Crear la variable
+                        itr = pu.LpVariable(name=itr_name,
+                                            lowBound=0,
+                                            upBound=maxima_cantidad_camiones,
+                                            cat=pu.LpInteger)
+
+                        # Entregar variable a importacion
+                        importacion.agregar_despacho_a_planta(
+                            periodo=periodo,
+                            despacho=itr)
+
+                        # entregar variable a planta
+                        planta.establecer_var_llegada_material(
+                            material=importacion.ingrediente, periodo=periodo+2, var_llegada=itr)
+
+                        # Costo flete
+
+                        flete_por_kg = self.fletes[importacion.puerto][
+                            importacion.operador][importacion.ingrediente][nombre_planta] + intercompany
+                        self.lista_fobj.append(34000*flete_por_kg*itr)
 
 
 class Problema():
@@ -846,6 +1107,14 @@ class Problema():
         self.barcos = dict()
         self.barcos_df = None
 
+        self.fletes = dict()
+        self.fletes_df = None
+
+        self.intercompany = dict()
+        self.intercompany_df = None
+
+        self.transporte = None
+
         self.solver = pu.LpProblem(
             name='minimizar costo logístico',
             sense=pu.const.LpMinimize)
@@ -861,8 +1130,11 @@ class Problema():
         self._cargar_transitos_planta()
         self._cargar_operadores()
         self._cargar_transitos_a_puerto()
-
-        # transporte = Transporte(self.barcos, self.plantas, self.periodos)
+        self._cargar_inventarios_puerto()
+        self._cargar_costos_almacenamiento_puerto()
+        self._cargar_fletes()
+        self._cargar_intercompany()
+        self._cargar_transportes()
 
         self._buid()
 
@@ -922,8 +1194,11 @@ class Problema():
         for i in self.plantas_df.index:
 
             planta = Planta(
-                nombre=self.plantas_df.loc[i]['planta'], periodos=self.periodos)
+                nombre=self.plantas_df.loc[i]['planta'],
+                periodos=self.periodos)
+
             empresa = self.empresas[self.plantas_df.loc[i]['empresa']]
+
             empresa.add_planta(planta=planta)
 
             for ingrediente in self.ingredientes:
@@ -1057,6 +1332,33 @@ class Problema():
 
             puerto.operadores[operador.nombre] = operador
 
+    def _cargar_inventarios_puerto(self):
+
+        df = pd.read_excel(self.file, sheet_name='inventario_puerto')
+
+        df = df[df['fecha_llegada'] <= self.periodos[0]]
+
+        df['importacion'] = df['importacion'].apply(
+            lambda x: str(x).replace(' ', ''))
+
+        for i in df.index:
+            importacion = Importacion(empresa=df.loc[i]['empresa'],
+                                      puerto=df.loc[i]['puerto'],
+                                      codigo=df.loc[i]['importacion'],
+                                      operador=df.loc[i]['operador'],
+                                      ingrediente=df.loc[i]['ingrediente'],
+                                      valor_cif=df.loc[i]['valor_cif_kg'],
+                                      costo_bodegaje=0.0,
+                                      periodos=self.periodos)
+
+            if not importacion.id in self.importaciones.keys():
+                self.importaciones[importacion.id] = importacion
+            else:
+                importacion = self.importaciones[importacion.id]
+
+            importacion.establecer_inventario_inicial(
+                cantidad=df.loc[i]['cantidad_kg'])
+
     def _cargar_transitos_a_puerto(self):
 
         tto_df = pd.read_excel(self.file, sheet_name='tto_puerto')
@@ -1075,13 +1377,16 @@ class Problema():
                                                           columns=[
                                                               'tipo_operacion'],
                                                           fill_value=0.0,
-                                                          aggfunc=sum).reset_index()
+                                                          aggfunc="sum").reset_index()
 
         transitos_df = pd.merge(left=tto_df,
                                 right=operacion_port_df,
                                 left_on=['operador', 'puerto', 'ingrediente'],
                                 right_on=['operador', 'puerto', 'ingrediente'],
                                 how='left')
+
+        transitos_df['importacion'] = transitos_df['importacion'].apply(
+            lambda x: str(x).replace(' ', ''))
 
         for i in tto_df.index:
             nombre_empresa = transitos_df.loc[i]['empresa']
@@ -1103,8 +1408,8 @@ class Problema():
                           periodo_llegada=periodo,
                           cantidad_kg=cantidad_kg,
                           valor_cif=valor_cif,
-                          costo_bodegaje=costo_bodegaje,
                           costo_directo=costo_despacho_directo,
+                          costo_bodegaje=costo_bodegaje,
                           periodos=self.periodos,
                           rata_desgarge=self.rata_desgarge_puertos,
                           capacidad_camion=self.capacidad_camion)
@@ -1112,11 +1417,18 @@ class Problema():
             # barco = Barco()
 
             importacion = Importacion(codigo=barco.importacion,
+                                      puerto=barco.puerto,
                                       empresa=barco.empresa,
                                       periodos=self.periodos,
                                       operador=barco.operador,
                                       ingrediente=barco.ingrediente,
-                                      valor_cif=barco.valor_cif)
+                                      valor_cif=barco.valor_cif,
+                                      costo_bodegaje=costo_bodegaje)
+
+            if not importacion.id in self.importaciones.keys():
+                self.importaciones[importacion.id] = importacion
+            else:
+                importacion = self.importaciones[importacion.id]
 
             # Cargar las variables de envio a bodega
             for periodo_envio, variable_bodegaje in barco.obtener_envios_a_bodega().items():
@@ -1129,46 +1441,305 @@ class Problema():
 
         # print(self.barcos_df)
 
+    def _cargar_costos_almacenamiento_puerto(self):
+
+        df = pd.read_excel(
+            self.file, sheet_name='costos_almacenamiento_cargas')
+
+        df['importacion'] = df['importacion'].apply(
+            lambda x: str(x).replace(' ', ''))
+
+        periodos_map = {k: v for v, k in self.periodos.items()}
+
+        df['periodo'] = df['fecha_corte'].map(periodos_map)
+
+        for i in df.index:
+            importacion = Importacion(empresa=df.loc[i]['empresa'],
+                                      puerto=df.loc[i]['puerto'],
+                                      codigo=df.loc[i]['importacion'],
+                                      operador=df.loc[i]['operador'],
+                                      ingrediente=df.loc[i]['ingrediente'],
+                                      valor_cif=0.0,
+                                      costo_bodegaje=0.0,
+                                      periodos=self.periodos)
+
+            periodo = df.loc[i]['periodo']
+            costo = df.loc[i]['valor_kg']
+
+            if not importacion.id in self.importaciones.keys():
+                self.importaciones[importacion.id] = importacion
+            else:
+                importacion = self.importaciones[importacion.id]
+
+            importacion.establecer_costo_vencimiento(
+                periodo=periodo, valor=costo)
+
+    def _cargar_fletes(self):
+
+        self.fletes_df = pd.read_excel(
+            io=self.file, sheet_name='fletes_cop_per_kg')
+
+        id_vars = ['puerto', 'operador', 'ingrediente']
+
+        value_vars = self.fletes_df.drop(columns=id_vars).columns
+
+        self.fletes_df = pd.melt(frame=self.fletes_df,
+                                 id_vars=id_vars,
+                                 value_vars=value_vars,
+                                 var_name='planta',
+                                 value_name='costo')
+
+        for i in self.fletes_df.index:
+
+            puerto = self.fletes_df.loc[i]['puerto']
+            operador = self.fletes_df.loc[i]['operador']
+            ingrediente = self.fletes_df.loc[i]['ingrediente']
+            planta = self.fletes_df.loc[i]['planta']
+            costo = self.fletes_df.loc[i]['costo']
+
+            if not puerto in self.fletes.keys():
+                self.fletes[puerto] = dict()
+
+            if not operador in self.fletes[puerto].keys():
+                self.fletes[puerto][operador] = dict()
+
+            if not ingrediente in self.fletes[puerto][operador].keys():
+                self.fletes[puerto][operador][ingrediente] = dict()
+
+            if not planta in self.fletes[puerto][operador][ingrediente].keys():
+                self.fletes[puerto][operador][ingrediente][planta] = costo
+
+    def _cargar_intercompany(self):
+
+        self.intercompany_df = pd.read_excel(
+            self.file, sheet_name='venta_entre_empresas')
+
+        self.intercompany_df = pd.melt(frame=self.intercompany_df,
+                                       id_vars='origen',
+                                       value_vars=['contegral', 'finca'],
+                                       var_name='destino',
+                                       value_name='intercompany')
+
+        for i in self.intercompany_df.index:
+            origen = self.intercompany_df.loc[i]['origen']
+            destino = self.intercompany_df.loc[i]['destino']
+            valor = self.intercompany_df.loc[i]['intercompany']
+
+            if not origen in self.intercompany.keys():
+                self.intercompany[origen] = dict()
+
+            if not destino in self.intercompany[origen].keys():
+                self.intercompany[origen][destino] = valor
+
+    def _cargar_transportes(self):
+
+        self.transporte = Transporte(barcos=self.barcos,
+                                     importaciones=self.importaciones,
+                                     plantas=self.plantas,
+                                     fletes=self.fletes,
+                                     intercompany=self.intercompany,
+                                     periodos=self.periodos)
+
     def _buid(self):
 
         exp_fobj_list = list()
         rest_list = list()
 
-        for nombre_planta, planta in self.plantas.items():
+        # Variables de transporte
+        self.transporte.build()
+
+        for item in self.transporte.lista_retricciones:
+            rest_list.append(item)
+
+        for item in self.transporte.lista_fobj:
+            exp_fobj_list.append(item)
+
+        # Construir variables
+        print('Construyendo variables de planta')
+        for nombre_planta, planta in tqdm(self.plantas.items()):
+            # print('building vars', nombre_planta)
             planta._buid_vars()
 
-        for nombre_planta, planta in self.plantas.items():
+        print('Construyendo componentes del modelo de planta')
+        for nombre_planta, planta in tqdm(self.plantas.items()):
+            # print('build lp model components', nombre_planta)
             planta.build_lp_model_components()
             exp_fobj_list += planta.expresiones_funcion_objetivo
             rest_list += planta.lista_restricciones
 
-        for nombre_barco, barco in self.barcos.items():
+        print('Construyendo componentes de material llegando')
+        for nombre_barco, barco in tqdm(self.barcos.items()):
+            # print('build lp components', nombre_barco)
             barco.build_lp_components()
             exp_fobj_list += barco.expresiones_funcion_objetivo
             rest_list += barco.lista_restricciones
 
+        print('Construyendo componentes de inventario en puerto')
+        for nombre_importacion, importacion in tqdm(self.importaciones.items()):
+            # print('build lp components', nombre_importacion)
+            importacion.build_vars()
+            importacion.buid_lp_components()
+            exp_fobj_list += importacion.lista_parametros_obj
+            rest_list += importacion.lista_restricciones
+
         # Agregar función objetivo
         self.solver += pu.lpSum(exp_fobj_list)
 
-        for rest in rest_list:
+        # Agregando las restricciones
+        print('Agregando restricciones al modelo')
+        for rest in tqdm(rest_list):
             self.solver += rest
+
+    def reporte_planta(self) -> pd.DataFrame:
+
+        df_dict = dict()
+        df_dict['planta'] = list()
+        df_dict['ingrediente'] = list()
+        df_dict['periodo'] = list()
+        df_dict['fecha'] = list()
+        df_dict['llegada_programada'] = list()
+        df_dict['llegada_directa'] = list()
+        df_dict['llegada_bodega'] = list()
+        df_dict['consumo'] = list()
+        df_dict['safety_stock'] = list()
+        df_dict['inventario'] = list()
+        df_dict['costo_backorder'] = list()
+        df_dict['backorder'] = list()
+        df_dict['capacidad'] = list()
+        df_dict['costo_exceso_capacidad'] = list()
+        df_dict['importaciones'] = list()
+
+        for nombre_planta, planta in self.plantas.items():
+            for ingrediente in planta.inventario_al_cierre.keys():
+                for periodo, fecha in planta.periodos.items():
+
+                    llegadas = planta.obtener_vars_llegadas_material(
+                        material=ingrediente, periodo=periodo)
+
+                    llegadas_directas = sum(
+                        [34000*x.varValue for x in llegadas if 'directo' in x.name])
+                    llegadas_bodega = sum(
+                        [34000*x.varValue for x in llegadas if 'bodega' in x.name])
+
+                    importaciones_directas = (
+                        f"{x.name.split('_')[5]} ({x.varValue})" for x in llegadas if 'directo' in x.name and x.varValue > 0)
+                    importaciones_bodega = (
+                        f"{x.name.split('_')[5]} ({x.varValue})" for x in llegadas if 'bodega' in x.name and x.varValue > 0)
+
+                    importaciones = f"Directas: [{', '.join(importaciones_directas)}]; Indirectas: [{', '.join(importaciones_bodega)}]"
+
+                    df_dict['planta'].append(planta.nombre)
+                    df_dict['ingrediente'].append(ingrediente)
+                    df_dict['periodo'].append(periodo)
+                    df_dict['fecha'].append(fecha)
+                    df_dict['llegada_programada'].append(
+                        planta.obtener_llegada_material(ingrediente=ingrediente, periodo=periodo))
+                    df_dict['llegada_directa'].append(llegadas_directas)
+                    df_dict['llegada_bodega'].append(llegadas_bodega)
+                    df_dict['consumo'].append(
+                        planta.obtener_consumo(ingrediente, periodo))
+                    df_dict['safety_stock'].append(
+                        planta.obtener_safety_stock_cantidad(ingrediente=ingrediente))
+                    df_dict['inventario'].append(
+                        planta.inventario_al_cierre[ingrediente][periodo].varValue)
+                    df_dict['backorder'].append(
+                        planta.backorder_al_cierre[ingrediente][periodo].varValue)
+                    df_dict['costo_backorder'].append(planta.costo_backorder)
+                    df_dict['capacidad'].append(
+                        planta.obtener_capacidad_almacenamiento(ingrediente=ingrediente))
+                    df_dict['costo_exceso_capacidad'].append(
+                        planta.costo_backorder)
+                    df_dict['importaciones'].append(importaciones)
+
+        return pd.DataFrame(df_dict)
+
+    def reporte_transporte(self) -> pd.DataFrame:
+
+        df_dict = dict()
+        df_dict['fecha'] = list()
+        df_dict['camiones'] = list()
+        # df_dict['dato'] = list()
+
+        fields = {
+            0: 'variable',
+            1: 'tipo',
+            2: 'empresa_origen',
+            3: 'puerto',
+            4: 'operador',
+            5: 'importacion',
+            6: 'ingrediente',
+            7: 'planta',
+            8: 'periodo'
+        }
+
+        for indice, titulo in fields.items():
+            df_dict[titulo] = list()
+
+        for nombre_planta, planta in self.plantas.items():
+            for ingrediente in self.ingredientes.keys():
+                for periodo, fecha in self.periodos.items():
+                    llegadas = planta.obtener_vars_llegadas_material(
+                        material=ingrediente, periodo=periodo)
+
+                    for variable in llegadas:
+                        if variable.varValue > 0:
+                            campos = variable.name.split('_')
+                            df_dict['fecha'].append(fecha)
+                            df_dict['camiones'].append(variable.varValue)
+                            # df_dict['dato'].append(str(variable))
+
+                            for indice, titulo in fields.items():
+                                df_dict[titulo].append(campos[indice])
+
+        transporte_df = pd.DataFrame(df_dict)
+
+        transporte_df = pd.merge(left=transporte_df,
+                                 right=self.plantas_df[['empresa', 'planta']].rename(
+                                     columns={'empresa': 'empresa_destino'}),
+                                 left_on=['planta'],
+                                 right_on=['planta'],
+                                 how='inner')
+
+        transporte_df = pd.merge(
+            left=transporte_df,
+            right=self.fletes_df.rename(columns={'costo': 'costo_por_kg'}),
+            left_on=['puerto', 'operador', 'ingrediente', 'planta'],
+            right_on=['puerto', 'operador', 'ingrediente', 'planta'],
+            how='left'
+        )
+
+        transporte_df = pd.merge(
+            left=transporte_df,
+            right=self.intercompany_df,
+            left_on=['empresa_origen', 'empresa_destino'],
+            right_on=['origen', 'destino'],
+            how='left').drop(columns=['origen', 'destino'])
+
+        return transporte_df
+
+    def solve(self, t_limit_minutes: int) -> str:
+
+        cpu_count = max(1, os.cpu_count()-1)
+        gap = 1000000
+
+        config_solver = pu.PULP_CBC_CMD(
+            timeLimit=60*t_limit_minutes,
+            gapAbs=gap,
+            warmStart=False,
+            threads=cpu_count)
+
+        print('Cantidad de cpu:', cpu_count)
+        print('gap:', gap)
+        print('t_limit:', t_limit_minutes, 'minutos')
+
+        self.solver.solve(solver=config_solver)
+        # problema.solver.solve()
+
+        return pu.LpStatus[self.solver.status]
 
 
 if __name__ == '__main__':
 
-    problema = Problema(file='model_template.xlsm')
-    problema.solver.writeLP(filename='model2.lp')
-
-    cpu_count = max(1, os.cpu_count()-1)
-
-    config_solver = pu.PULP_CBC_CMD(
-        timeLimit=60,
-        gapAbs=50000000,
-        warmStart=False,
-        threads=cpu_count)
-
-    # problema.solver.solve(solver=config_solver)
-
-    print(problema.solver.status)
-
-    print('fin')
+    problema = Problema(file='model_template_nov30.xlsm')
+    # problema.solver.writeLP(filename='model2.lp')
+    print(problema.solve(t_limit_minutes=3))

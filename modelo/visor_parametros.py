@@ -56,8 +56,8 @@ def visor_parametros(conjuntos: dict, parametros: dict) -> pd.DataFrame:
     df_dict['capacidad_dias'] = list()
     df_dict['capacidad_safetyStock_kg'] = list()
     df_dict['capacidad_safetyStock_dias'] = list()
-    df_dict['capacidad_recepcion_kg'] = list()
-    df_dict['capacidad_recepcion_dias'] = list()
+    # df_dict['capacidad_recepcion_kg'] = list()
+    # df_dict['capacidad_recepcion_dias'] = list()
 
     for planta in conjuntos['plantas']:
         for ingrediente in conjuntos['ingredientes']:
@@ -70,16 +70,16 @@ def visor_parametros(conjuntos: dict, parametros: dict) -> pd.DataFrame:
             ss_camiones = int(ss_kg/34000)
             capacidad = parametros['capacidad_almacenamiento_planta'][
                 f'CI_{planta}_{ingrediente}']
-            recepcion_kg = parametros['capacidad_recepcion_ingredientes'][
-                f'{planta}_{ingrediente}']
-            recepcion_camiones = int(recepcion_kg/34000)
+            # recepcion_kg = parametros['capacidad_recepcion_ingredientes'][
+            #    f'{planta}_{ingrediente}']
+            # recepcion_camiones = int(recepcion_kg/34000)
             capacidad_sin_usar = capacidad - inventario_inicial
 
             if consumo_medio > 0.0:
                 inventario_inicial_dio = inventario_inicial/consumo_medio
                 capacidad_dio = capacidad/consumo_medio
                 ss_dias = ss_kg/consumo_medio
-                recepcion_camiones_dias = recepcion_kg/consumo_medio
+                # recepcion_camiones_dias = recepcion_kg/consumo_medio
                 capacidad_sin_usar_dias = capacidad_sin_usar/consumo_medio
 
             else:
@@ -100,8 +100,8 @@ def visor_parametros(conjuntos: dict, parametros: dict) -> pd.DataFrame:
             df_dict['capacidad_dias'].append(capacidad_dio)
             df_dict['capacidad_safetyStock_kg'].append(ss_kg)
             df_dict['capacidad_safetyStock_dias'].append(ss_dias)
-            df_dict['capacidad_recepcion_kg'].append(recepcion_kg)
-            df_dict['capacidad_recepcion_dias'].append(recepcion_camiones_dias)
+            # df_dict['capacidad_recepcion_kg'].append(recepcion_kg)
+            # df_dict['capacidad_recepcion_dias'].append(recepcion_camiones_dias)
 
     df = pd.DataFrame(df_dict)
 
@@ -109,7 +109,7 @@ def visor_parametros(conjuntos: dict, parametros: dict) -> pd.DataFrame:
 
     df['Val0'] = df.apply(sin_capacidad_para_consumo, axis=1)
     df['Val1'] = df.apply(ss_menor_capacidad, axis=1)
-    df['Val2'] = df.apply(recepcion_menor_cap_camion, axis=1)
+    # df['Val2'] = df.apply(recepcion_menor_cap_camion, axis=1)
     df['Val3'] = df.apply(capacidad_menor_ss_mas_un_camion, axis=1)
 
     # Obtener nombres de columnas resultado de validaciones

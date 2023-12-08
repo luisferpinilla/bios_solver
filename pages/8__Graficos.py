@@ -1,65 +1,81 @@
 import streamlit as st
 from modelo.reporte import Reporte
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 import pandas as pd
 from datetime import datetime, timedelta
 
 
-def dibujar_inventario_planta(df: pd.DataFrame):
+def dibujar_planta(df: pd.DataFrame, nombre_planta: str, ingrediente: str):
 
-    filtros = ['empresa', 'planta', 'ingrediente', 'item']
+    temp = df[(df['planta'] == nombre_planta) &
+              (df['ingrediente'] == ingrediente)]
 
-    names = [datetime.strptime(x, '%Y-%m-%d')
-             for x in df.drop(columns=['Previo'] + filtros).columns]
-    names = [names[0]-timedelta(days=1)] + names
-    names = [x.strftime(format='%b-%d') for x in names]
+    fig = go.Figure()
 
-    # Values of each group
-    llegadas_directas_kg = list(
-        df[df['item'] == 'llegadas_directas_kg'].drop(columns=filtros).iloc[0])
-    llegadas_por_bodega_kg = list(
-        df[df['item'] == 'llegadas_por_bodega_kg'].drop(columns=filtros).iloc[0])
-    inventario_al_cierre = list(
-        df[df['item'] == 'inventario_al_cierre_kg'].drop(columns=filtros).iloc[0])
-    transitos_a_bodega = list(
-        df[df['item'] == 'transitos_kg'].drop(columns=filtros).iloc[0])
-    consumo_proyectado = list(
-        df[df['item'] == 'consumo_kg'].drop(columns=filtros).iloc[0])
-    safety_stock = list(
-        df[df['item'] == 'safety_stock'].drop(columns=filtros).iloc[0])
-    capacidad_recepcion = list(
-        df[df['item'] == 'capacidad_recepcion'].drop(columns=filtros).iloc[0])
-    capacidad_almacenamiento = list(
-        df[df['item'] == 'capacidad_almacenamiento'].drop(columns=filtros).iloc[0])
+    fig.add_trace(go.Scatter(
+        x=temp['fecha'],  # x-axis
+        y=temp['inventario'],  # y-axis
+        mode='lines',  # Connect data points with lines
+        name='Inventario'  # Name in the legend
+    )
+    )
 
-    fig, ax = plt.subplots(figsize=(12, 4))
+    fig.add_trace(go.Scatter(
+        x=temp['fecha'],  # x-axis
+        y=temp['capacidad'],  # y-axis
+        mode='lines',  # Connect data points with lines
+        name='Capacidad Almacenamiento',  # Name in the legend
+        line=dict(dash='dash', color='blue')
+    ))
 
-    fig.suptitle(f'Inventarios de {ingrediente} en {planta}', fontsize=14)
+    fig.add_trace(go.Bar(
+        x=temp['fecha'],
+        y=temp['llegada_bodega'],
+        name='Despacho Bodega',
+        marker_color='green',
+        hovertext=temp['importaciones'])
+    )
 
-    ax.set_xlabel('Fecha')
-    ax.set_ylabel('Kg')
+    fig.add_trace(go.Bar(
+        x=temp['fecha'],
+        y=temp['llegada_directa'],
+        name='Despacho Directo',
+        marker_color='orange',
+        hovertext=temp['importaciones'])
+    )
 
-    # ax.plot(names, target, label='Inventario Objetivo')
-    ax.plot(names, capacidad_almacenamiento,
-            label='Capacidad almacenamiento', color='blue', linestyle='dashed')
-    ax.plot(names, capacidad_recepcion, label='Capacidad recepcion',
-            color='blue', linestyle='solid')
-    ax.plot(names, inventario_al_cierre, label='Inventario', color='green')
-    ax.plot(names, consumo_proyectado, linestyle='dashed',
-            label='Consumo', color='black')
-    ax.plot(names, safety_stock, color='red', linestyle='dashed', label='SS')
-    ax.bar(names, llegadas_directas_kg, color='blue',
-           width=1, label='Llegadas directas')
-    ax.bar(names, llegadas_por_bodega_kg, color='orange',
-           width=1, label='Llegadas indirectas')
-    ax.bar(names, transitos_a_bodega, color='purple',
-           width=1, label='Llegadas programadas')
+    fig.add_trace(go.Scatter(
+        x=temp['fecha'],  # x-axis
+        y=temp['safety_stock'],  # y-axis
+        mode='lines',  # Connect data points with lines
+        name='Safety Stock',  # Name in the legend
+        line=dict(dash='dash', color='red')
+    ))
 
-    fig.autofmt_xdate()
+    fig.add_trace(go.Bar(
+        x=temp['fecha'],  # x-axis
+        y=temp['llegada_programada'],  # y-axis
+        name='Llegadas Programada',  # Name in the legend
+        marker_color='gray'
+    ))
 
-    plt.legend()
+    fig.add_trace(go.Bar(
+        x=temp['fecha'],  # x-axis
+        y=temp['backorder'],  # y-axis
+        name='Backorder',  # Name in the legend
+        marker_color='red'
+    ))
 
-    # Show graphic
+    # Layout parameters
+    fig.update_layout(
+        title=f'Planta: {nombre_planta}: {ingrediente}',  # Title
+        xaxis_title='Fecha',  # y-axis name
+        yaxis_title='Kg',  # x-axis name
+        xaxis_tickangle=0,  # Set the x-axis label angle
+        showlegend=True,     # Display the legend
+        barmode='stack',
+        legend=dict(orientation='h',  x=0.5, xanchor='center'),
+    )
     return fig
 
 
@@ -132,10 +148,10 @@ if not 'problema' in st.session_state.keys():
 else:
 
     problema = st.session_state['problema']
-    reporte = Reporte(problema=problema)
-    planta_df = reporte.obtener_fact_inventario_planta()
-    puerto_df = reporte.obtener_fact_inventario_puerto()
-    # despachos_df = reporte.o
+
+    planta_df = problema.reporte_planta()
+
+    st.write(planta_df)
 
     ingrediente_colum, planta_column = st.columns(2)
 
@@ -152,13 +168,14 @@ else:
     if planta != None and ingrediente != None:
 
         st.markdown('### Inventarios en Plantas')
-        df1 = planta_df[(planta_df['ingrediente'] == ingrediente)
-                        & (planta_df['planta'] == planta)]
+
         # st.write(df1)
-        fig = dibujar_inventario_planta(df1)
-        st.pyplot(fig)
+        fig = dibujar_planta(
+            df=planta_df, nombre_planta=planta, ingrediente=ingrediente)
+        st.plotly_chart(fig, use_container_width=True)
 
         st.markdown('### Inventario en puertos')
+        '''
         df2 = puerto_df[puerto_df['ingrediente'] == ingrediente]
 
         if df2.shape[0] > 0:
@@ -169,3 +186,4 @@ else:
 
         transporte_df = reporte.obtener_fact_transporte()
         st.write(transporte_df)
+        '''

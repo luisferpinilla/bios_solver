@@ -183,7 +183,7 @@
             "ingrediente"
         ],
         "output_name": "costo_por_kg",
-        "sheet_name": "flete_variable"
+        "sheet_name": "fletes_cop_per_kg"
     },
     "consumo_proyectado": {
         "type": "parameter",
@@ -280,15 +280,5 @@
         ],
         "output_name": "capacidad_almacenamiento",
         "sheet_name": "capacidad_almacenamiento"
-    },
-    "capacidad_recepcion_ingredientes": {
-        "type": "parameter",
-        "fields": [
-            "empresa",
-            "planta",
-            "ingrediente"
-        ],
-        "output_name": "capacidad_recepcion",
-        "sheet_name": "capacidad_recepcion"
     }
 }

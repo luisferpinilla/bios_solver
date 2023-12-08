@@ -6,7 +6,7 @@ import pandas as pd
 
 # if __name__ == '__main__':
 
-file = 'model_template.xlsm'
+file = 'model_template_nov30.xlsm'
 
 validador = Validador(file=file)
 
@@ -28,11 +28,11 @@ conjuntos = problema.conjuntos
 parametros = problema.parametros
 variables = problema.variables
 
-df = visor_parametros(conjuntos=problema.conjuntos,
-                      parametros=problema.parametros)
+#df = visor_parametros(conjuntos=problema.conjuntos,
+#                      parametros=problema.parametros)
 
 
-problema.solve(engine='coin', gap=0.005, tlimit_seconds=60*60*8)
+problema.solve(engine='coin', gap=0.005, tlimit_seconds=60*5)
 
 problema.imprimir_modelo_lp('borrame.lp')
 
