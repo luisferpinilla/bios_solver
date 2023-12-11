@@ -2,6 +2,81 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
+import plotly.graph_objects as go
+
+
+def dibujar_planta(df: pd.DataFrame, nombre_planta: str, ingrediente: str):
+
+    temp = df[(df['planta'] == nombre_planta) &
+              (df['ingrediente'] == ingrediente)]
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=temp['fecha'],  # x-axis
+        y=temp['inventario'],  # y-axis
+        mode='lines',  # Connect data points with lines
+        name='Inventario'  # Name in the legend
+    )
+    )
+
+    fig.add_trace(go.Scatter(
+        x=temp['fecha'],  # x-axis
+        y=temp['capacidad'],  # y-axis
+        mode='lines',  # Connect data points with lines
+        name='Capacidad Almacenamiento',  # Name in the legend
+        line=dict(dash='dash', color='blue')
+    ))
+
+    fig.add_trace(go.Bar(
+        x=temp['fecha'],
+        y=temp['llegada_bodega'],
+        name='Despacho Bodega',
+        marker_color='green',
+        hovertext=temp['importaciones'])
+    )
+
+    fig.add_trace(go.Bar(
+        x=temp['fecha'],
+        y=temp['llegada_directa'],
+        name='Despacho Directo',
+        marker_color='orange',
+        hovertext=temp['importaciones'])
+    )
+
+    fig.add_trace(go.Scatter(
+        x=temp['fecha'],  # x-axis
+        y=temp['safety_stock'],  # y-axis
+        mode='lines',  # Connect data points with lines
+        name='Safety Stock',  # Name in the legend
+        line=dict(dash='dash', color='red')
+    ))
+
+    fig.add_trace(go.Bar(
+        x=temp['fecha'],  # x-axis
+        y=temp['llegada_programada'],  # y-axis
+        name='Llegadas Programada',  # Name in the legend
+        marker_color='gray'
+    ))
+
+    fig.add_trace(go.Bar(
+        x=temp['fecha'],  # x-axis
+        y=temp['backorder'],  # y-axis
+        name='Backorder',  # Name in the legend
+        marker_color='red'
+    ))
+
+    # Layout parameters
+    fig.update_layout(
+        title=f'Planta: {nombre_planta}: {ingrediente}',  # Title
+        xaxis_title='Fecha',  # y-axis name
+        yaxis_title='Kg',  # x-axis name
+        xaxis_tickangle=0,  # Set the x-axis label angle
+        showlegend=True,     # Display the legend
+        barmode='stack',
+        legend=dict(orientation='h',  x=0.5, xanchor='center'),
+    )
+    return fig
 
 
 @st.cache_data
@@ -81,3 +156,12 @@ else:
                                    )
 
     st.write(transporte_df)
+
+    planta_df = problema.reporte_planta()
+
+    for planta in list(planta_df['planta'].unique()):
+        with st.expander(label=planta, expanded=False):
+
+            fig = dibujar_planta(
+                df=planta_df, nombre_planta=planta, ingrediente=ingrediente)
+            st.plotly_chart(fig, use_container_width=True)
