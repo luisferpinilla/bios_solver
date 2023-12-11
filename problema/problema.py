@@ -194,7 +194,7 @@ class Planta():
     def __init__(self,
                  nombre: str,
                  periodos: dict,
-                 costo_backorder=400,
+                 costo_backorder=800,
                  costo_exceso_capacidad=400,
                  costo_incumplir_safety_stock=200) -> None:
 
@@ -520,10 +520,6 @@ class Planta():
                     costo_ss = self.costo_incumplir_ss
                     # Costo exceso capacidad
                     costo_cap = self.costo_exceso_capacidad
-                    # Añadir costo de backorder a funcion objetivo
-                    self.expresiones_funcion_objetivo.append(costo_back*xbk)
-                    # añadir costo de exceso de capacidad a función objetivo
-                    self.expresiones_funcion_objetivo.append(costo_cap*xmx)
 
                     # Funcion objetivo
                     # Agregar la expresión sobre el backorder a la función objetivo
@@ -1716,6 +1712,75 @@ class Problema():
             how='left').drop(columns=['origen', 'destino'])
 
         return transporte_df
+
+    def reporte_puerto(this) -> pd.DataFrame:
+
+        fields = {
+            0: 'tipo',
+            1: 'empresa',
+            2: 'ingrediente',
+            3: 'importacion',
+            4: 'periodo'
+        }
+
+        df_dict = dict()
+        df_dict['fecha'] = list()
+        df_dict['puerto'] = list()
+        df_dict['inventario_kg'] = list()
+        df_dict['costo_vencimiento_kg'] = list()
+        df_dict['despachos_indirectos'] = list()
+        df_dict['despachos_indirectos_kg'] = list()
+        df_dict['plantas'] = list()
+        df_dict['ingreso_bodega'] = list()
+
+        for indice, titulo in fields.items():
+            df_dict[titulo] = list()
+
+        for importacion_name, importacion in this.importaciones.items():
+            for periodo, inventario_var in importacion.inventario_al_cierre.items():
+
+                despachos = importacion.obtener_despachos_a_planta(
+                    periodo=periodo)
+
+                despachos_totales = sum(
+                    [x.varValue for x in despachos if 'bodega' in x.name])
+
+                if periodo in importacion.variables_bodegaje.keys():
+                    bodegaje = importacion.variables_bodegaje[periodo].varValue
+                else:
+                    bodegaje = 0.0
+
+                despachos_directos = (
+                    f"{x.name.split('_')[7]} ({x.varValue})" for x in despachos if x.varValue > 0)
+
+                plantas = f"Directos: [{', '.join(despachos_directos)}]"
+
+                fecha = this.periodos[periodo]
+                campos = inventario_var.name.split('_')
+                df_dict['fecha'].append(fecha)
+                df_dict['puerto'].append(importacion.puerto)
+                df_dict['inventario_kg'].append(inventario_var.varValue)
+                df_dict['despachos_indirectos'].append(despachos_totales)
+                df_dict['despachos_indirectos_kg'].append(
+                    34000*despachos_totales)
+                df_dict['ingreso_bodega'].append(bodegaje)
+                df_dict['plantas'].append(plantas)
+
+                if periodo in importacion.costo_vencimiento.keys():
+                    df_dict['costo_vencimiento_kg'].append(
+                        importacion.costo_vencimiento[periodo])
+                else:
+                    df_dict['costo_vencimiento_kg'].append(0.0)
+
+                for indice, titulo in fields.items():
+                    df_dict[titulo].append(campos[indice])
+
+        df = pd.DataFrame(df_dict)
+
+        df['costo_total_vencimiento'] = df['inventario_kg'] * \
+            df['costo_vencimiento_kg']
+
+        return df
 
     def solve(self, t_limit_minutes: int) -> str:
 
