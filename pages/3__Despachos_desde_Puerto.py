@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+from datetime import datetime, timedelta
 
 
 @st.cache_data
@@ -21,77 +22,62 @@ else:
 
     st.button(label='callback')
 
-    solucion = problema.generar_reporte()
+    transporte_df = problema.reporte_transporte()
 
-    st.write('## Despachos directos')
+    transporte_df['fecha'] = pd.to_datetime(transporte_df['fecha'])
 
-    col1, col2 = st.columns(2)
+    periodos = problema.periodos
 
-    df = solucion['Despacho directo'].reset_index()
+    min_date = periodos[0]
 
-    with col1:
+    max_date = periodos[list(periodos.keys())[-1]]
 
-        operadores_list = ['Todos'] + list(df['operador'].unique())
+    min_date_col, max_date_col, ingrediente_col, tipo_transporte_col = st.columns(
+        4)
 
-        operador = st.selectbox(label='operador', options=operadores_list)
+    with min_date_col:
+        start_date = st.date_input(
+            label='Fecha Inicial', value=min_date, min_value=min_date, max_value=max_date)
 
-        if operador != 'Todos':
-            df = df[df['operador'] == operador]
+        start_date = datetime(
+            start_date.year, start_date.month, start_date.day)
 
-    with col2:
+    with max_date_col:
+        end_date = st.date_input(
+            label='Fecha Final', value=min_date+timedelta(days=7), min_value=min_date, max_value=max_date)
 
-        ingredientes_list = ['Todos'] + list(df['ingrediente'].unique())
+        end_date = datetime(end_date.year, end_date.month, end_date.day)
 
-        ingrediente = st.selectbox(
-            label='Ingredientes', options=ingredientes_list)
+    with ingrediente_col:
+        ingredientes = list(transporte_df['ingrediente'].unique())
 
-        if ingrediente != 'Todos':
-            df = df[df['ingrediente'] == ingrediente]
+        ingrediente = st.selectbox(label='Ingrediente', options=ingredientes)
 
-    df.set_index(['empresa_origen', 'operador', 'ingrediente',
-                 'importacion', 'fecha despacho'], inplace=True)
+    with tipo_transporte_col:
 
-    st.write(df)
+        tipos_transporte = list(transporte_df['tipo'].unique())
+        tipo_transporte = st.radio(
+            label='Tipo Despacho', options=tipos_transporte)
 
-    csv = convert_df(df)
+    st.write(
+        f'transportes entre {start_date.strftime("%b-%d")} y {end_date.strftime("%b-%d")} del tipo {tipo_transporte}')
 
-    st.download_button(label='descargar reporte',
-                       data=csv,    file_name='despacho_directo.csv',    mime='text/csv')
+    transporte_df = transporte_df[transporte_df['ingrediente'] == ingrediente]
 
-    st.write('## Despachos desde bodega en puerto')
+    transporte_df = transporte_df[transporte_df['tipo'] == tipo_transporte]
 
-    df = solucion['Despacho indirecto'].reset_index()
+    transporte_df = transporte_df[(transporte_df['fecha'] >= start_date) & (
+        transporte_df['fecha'] <= end_date)]
 
-    col1, col2 = st.columns(2)
+    transporte_df['pl'] = transporte_df['empresa_destino'].apply(lambda x: x[0:3]) + \
+        "_" + transporte_df['planta'].apply(lambda x: x)
 
-    with col1:
+    transporte_df = pd.pivot_table(data=transporte_df,
+                                   index=['empresa_origen',
+                                          'puerto', 'importacion'],
+                                   values='camiones',
+                                   columns='pl',
+                                   aggfunc='sum'
+                                   )
 
-        operadores_list = ['Todos'] + list(df['operador'].unique())
-
-        print(operadores_list)
-
-        operador = st.selectbox(label='operador', options=operadores_list)
-
-        if operador != 'Todos':
-            df = df[df['operador'] == operador]
-
-    with col2:
-
-        ingredientes_list = ['Todos'] + list(df['ingrediente'].unique())
-
-        ingrediente = st.selectbox(
-            label='Ingredientes', options=ingredientes_list)
-
-        if ingrediente != 'Todos':
-
-            df = df[df['ingrediente'] == ingrediente]
-
-    df.set_index(['empresa_origen', 'operador', 'ingrediente',
-                 'importacion', 'fecha despacho'], inplace=True)
-
-    st.write(df)
-
-    csv2 = convert_df(df)
-
-    st.download_button(label='descargar reporte',
-                       data=csv2,    file_name='despacho_bodega.csv',    mime='text/csv')
+    st.write(transporte_df)

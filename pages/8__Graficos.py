@@ -79,65 +79,51 @@ def dibujar_planta(df: pd.DataFrame, nombre_planta: str, ingrediente: str):
     return fig
 
 
-def dibujar_inventario_puerto(df: pd.DataFrame):
+def dibujar_inventario_ingrediente_puerto(df: pd.DataFrame, puerto: str, ingrediente: str) -> go.Figure:
+    fig = go.Figure()
 
-    filtros = ['empresa', 'operador', 'importacion', 'ingrediente', 'item']
+    temp = df[(df['ingrediente'] == ingrediente)
+              & (df['puerto'] == puerto)].copy()
 
-    fechas = list(df.drop(columns=['Previo'] + filtros).columns)
+    temp['key'] = temp['empresa'] + ", " + temp['importacion']
 
-    names = [datetime.strptime(x, '%Y-%m-%d') for x in fechas]
-    names = [names[0]-timedelta(days=1)] + names
-    names = [x.strftime(format='%b-%d') for x in names]
+    pivot_temp = temp.pivot_table(index='fecha', columns='key',
+                                  values='inventario_kg', aggfunc='sum').reset_index()
 
-    df = df.reset_index().groupby(['ingrediente', 'item'])[
-        ['Previo'] + fechas].sum().reset_index()
+    for importacion in pivot_temp.drop(columns=['fecha']).columns:
+        fig.add_trace(go.Scatter(
+            x=pivot_temp['fecha'],  # x-axis
+            y=pivot_temp[importacion],  # y-axis
+            mode='lines',  # Connect data points with lines
+            name=importacion  # Name in the legend
+        )
+        )
 
-    # Values of each group
+    fig.add_trace(go.Bar(
+        x=temp['fecha'],  # x-axis
+        y=temp['despachos_indirectos_kg'],  # y-axis
+        name='Despachos indirectos',  # Name in the legend
+        hovertext=temp['plantas'],
+        marker_color='blue'
+    ))
 
-    # despachos_directas_kg = list(df[df['item']=='kilos_despachados_directo'].drop(columns=['ingrediente', 'item']).iloc[0])
-    despachos_desde_bodega_kg = list(df[df['item'] == 'kilos_despachados_bodega'].drop(
-        columns=['ingrediente', 'item']).iloc[0])
+    fig.add_trace(go.Bar(
+        x=temp['fecha'],  # x-axis
+        y=temp['ingreso_bodega'],  # y-axis
+        name='Ingreso a Bodega',  # Name in the legend
+        marker_color='gray'
+    ))
 
-    despachos_directos_kg = list(df[df['item'] == 'kilos_despachados_directo'].drop(
-        columns=['ingrediente', 'item']).iloc[0])
-    inventario_al_cierre = list(df[df['item'] == 'inventario_al_cierre_kg'].drop(
-        columns=['ingrediente', 'item']).iloc[0])
-    bodegaje_puerto_kg = list(df[df['item'] == 'bodegaje_puerto_kg'].drop(
-        columns=['ingrediente', 'item']).iloc[0])
-    # consumo_proyectado = list(df[df['item']=='consumo_kg'].drop(columns=['ingrediente', 'item']).iloc[0])
-    # safety_stock = list(df[df['item']=='safety_stock'].drop(columns=['ingrediente', 'item']).iloc[0])
-    # target = list(df[df['item']=='Target'].drop(columns=['ingrediente', 'item']).iloc[0])
-
-    fig, ax = plt.subplots(figsize=(12, 4))
-
-    fig.suptitle(f'Inventarios de {ingrediente} en puerto', fontsize=14)
-
-    ax.set_xlabel('Fecha')
-    ax.set_ylabel('Kg')
-
-    ax.plot(names, inventario_al_cierre,
-            color='green',
-            label='Inventario al cierre')
-    ax.bar(names, bodegaje_puerto_kg,
-           color='gray',
-           width=1,
-           label='Bodegaje en puerto')
-    ax.bar(names,
-           despachos_desde_bodega_kg,
-           color='orange',
-           width=1,
-           label='Despachos desde bodega')
-    ax.bar(names,
-           despachos_directos_kg,
-           color='blue',
-           width=1,
-           label='Despachos directos')
-
-    fig.autofmt_xdate()
-
-    plt.legend()
-
-    # Show graphic
+    # Layout parameters
+    fig.update_layout(
+        title=f'Puerto: {puerto}, Ingrediente: {ingrediente}',  # Title
+        xaxis_title='fecha',  # y-axis name
+        yaxis_title='Kg',  # x-axis name
+        xaxis_tickangle=0,  # Set the x-axis label angle
+        showlegend=True,     # Display the legend
+        barmode='stack',
+        legend=dict(orientation='h',  x=0.5, xanchor='center'),
+    )
     return fig
 
 
@@ -150,8 +136,6 @@ else:
     problema = st.session_state['problema']
 
     planta_df = problema.reporte_planta()
-
-    st.write(planta_df)
 
     ingrediente_colum, planta_column = st.columns(2)
 
@@ -175,15 +159,18 @@ else:
         st.plotly_chart(fig, use_container_width=True)
 
         st.markdown('### Inventario en puertos')
-        '''
-        df2 = puerto_df[puerto_df['ingrediente'] == ingrediente]
 
-        if df2.shape[0] > 0:
-            fig2 = dibujar_inventario_puerto(df2)
-            st.pyplot(fig2)
-        else:
-            st.write('No data')
+        puerto_df = problema.reporte_puerto()
 
-        transporte_df = reporte.obtener_fact_transporte()
-        st.write(transporte_df)
-        '''
+        for puerto in puerto_df['puerto'].unique():
+
+            temp = puerto_df[(puerto_df['puerto'] == puerto) & (
+                puerto_df['ingrediente'] == ingrediente)]
+            if temp.shape[0] > 0:
+
+                fig = dibujar_inventario_ingrediente_puerto(
+                    df=puerto_df, puerto=puerto, ingrediente=ingrediente)
+
+                st.plotly_chart(fig, use_container_width=True)
+
+                # st.write(temp)
