@@ -1598,7 +1598,7 @@ class Problema():
         dict_df['costo_bodegaje'] = list()
 
         for codigo, importacion in self.importaciones.items():
-            importacion.fill_df(dict_df)
+            importacion.fill_dimension_importaciondf(dict_df)
 
         self.importaciones_df = pd.DataFrame(dict_df)
 
