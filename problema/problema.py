@@ -1,6 +1,5 @@
 import pulp as pu
 import pandas as pd
-import numpy as np
 from datetime import datetime
 from problema.asignador_capacidad import AsignadorCapacidad
 from tqdm import tqdm
@@ -947,6 +946,32 @@ class Importacion():
                 self.lista_parametros_obj.append(
                     self.costo_bodegaje*xip_t)
 
+    def fill_dimension_importaciondf(self, dict_to_fill: dict):
+
+        dict_to_fill['empresa'].append(self.empresa)
+        dict_to_fill['puerto'].append(self.puerto)
+        dict_to_fill['importacion'].append(self.codigo)
+        dict_to_fill['operador'].append(self.operador)
+        dict_to_fill['ingrediente'].append(self.ingrediente)
+        dict_to_fill['periodo_atraque'].append(self.perido_llegada)
+        dict_to_fill['periodo_partida'].append(self.periodo_partida)
+        dict_to_fill['inventario_inicial'].append(self.inventario_inicial)
+        dict_to_fill['valor_cif'].append(self.valor_cif)
+        dict_to_fill['costo_bodegaje'].append(self.costo_bodegaje)
+
+    def fill_fact_inventario_puerto(self, dict_to_fill: dict):
+
+        for periodo, fecha in self.periodos.items():
+            dict_to_fill['empresa'].append(self.empresa)
+            dict_to_fill['puerto'].append(self.puerto)
+            dict_to_fill['importacion'].append(self.codigo)
+            dict_to_fill['operador'].append(self.operador)
+            dict_to_fill['ingrediente'].append(self.ingrediente)
+            inventario_al_cierre = self.inventario_al_cierre[periodo].varValue
+            dict_to_fill['inventario_al_cierre'].append(inventario_al_cierre)
+            dict_to_fill['periodo'].append(periodo)
+            dict_to_fill['fecha'].append(fecha)
+
     @property
     def id(self) -> str:
         return f'{self.empresa}_{self.operador}_{self.ingrediente}_{self.codigo}'
@@ -1112,7 +1137,7 @@ class Problema():
         self.transporte = None
 
         self.solver = pu.LpProblem(
-            name='minimizar costo logístico',
+            name='minimizar_costo_logístico',
             sense=pu.const.LpMinimize)
 
         self.status = 'No Solved'
@@ -1131,6 +1156,7 @@ class Problema():
         self._cargar_fletes()
         self._cargar_intercompany()
         self._cargar_transportes()
+        self._cargar_importaciones()
 
         self._buid()
 
@@ -1332,10 +1358,31 @@ class Problema():
 
         df = pd.read_excel(self.file, sheet_name='inventario_puerto')
 
-        df = df[df['fecha_llegada'] <= self.periodos[0]]
+        # df = df[df['fecha_llegada'] <= self.periodos[0]]
 
         df['importacion'] = df['importacion'].apply(
             lambda x: str(x).replace(' ', ''))
+
+        operacion_port_df = pd.read_excel(
+            self.file,
+            sheet_name='costos_operacion_portuaria')
+
+        operacion_port_df = operacion_port_df.pivot_table(values='valor_kg',
+                                                          index=['operador',
+                                                                 'puerto',
+                                                                 'ingrediente'],
+                                                          columns=[
+                                                              'tipo_operacion'],
+                                                          fill_value=0.0,
+                                                          aggfunc="sum").reset_index()
+
+        df = pd.merge(left=df,
+                      right=operacion_port_df,
+                      left_on=['operador',
+                               'puerto', 'ingrediente'],
+                      right_on=['operador',
+                                'puerto', 'ingrediente'],
+                      how='left')
 
         for i in df.index:
             importacion = Importacion(empresa=df.loc[i]['empresa'],
@@ -1344,7 +1391,7 @@ class Problema():
                                       operador=df.loc[i]['operador'],
                                       ingrediente=df.loc[i]['ingrediente'],
                                       valor_cif=df.loc[i]['valor_cif_kg'],
-                                      costo_bodegaje=0.0,
+                                      costo_bodegaje=df.loc[i]['bodega'],
                                       periodos=self.periodos)
 
             if not importacion.id in self.importaciones.keys():
@@ -1375,26 +1422,28 @@ class Problema():
                                                           fill_value=0.0,
                                                           aggfunc="sum").reset_index()
 
-        transitos_df = pd.merge(left=tto_df,
-                                right=operacion_port_df,
-                                left_on=['operador', 'puerto', 'ingrediente'],
-                                right_on=['operador', 'puerto', 'ingrediente'],
-                                how='left')
+        self.barcos_df = pd.merge(left=tto_df,
+                                  right=operacion_port_df,
+                                  left_on=['operador',
+                                           'puerto', 'ingrediente'],
+                                  right_on=['operador',
+                                            'puerto', 'ingrediente'],
+                                  how='left')
 
-        transitos_df['importacion'] = transitos_df['importacion'].apply(
+        self.barcos_df['importacion'] = self.barcos_df['importacion'].apply(
             lambda x: str(x).replace(' ', ''))
 
         for i in tto_df.index:
-            nombre_empresa = transitos_df.loc[i]['empresa']
-            importacion = transitos_df.loc[i]['importacion']
-            codigo_operador = transitos_df.loc[i]['operador']
-            nombre_puerto = transitos_df.loc[i]['puerto']
-            nombre_ingrediente = transitos_df.loc[i]['ingrediente']
-            periodo = transitos_df.loc[i]['periodo']
-            cantidad_kg = transitos_df.loc[i]['cantidad_kg']
-            valor_cif = transitos_df.loc[i]['valor_kg']
-            costo_bodegaje = transitos_df.loc[i]['bodega']
-            costo_despacho_directo = transitos_df.loc[i]['directo']
+            nombre_empresa = self.barcos_df.loc[i]['empresa']
+            importacion = self.barcos_df.loc[i]['importacion']
+            codigo_operador = self.barcos_df.loc[i]['operador']
+            nombre_puerto = self.barcos_df.loc[i]['puerto']
+            nombre_ingrediente = self.barcos_df.loc[i]['ingrediente']
+            periodo = self.barcos_df.loc[i]['periodo']
+            cantidad_kg = self.barcos_df.loc[i]['cantidad_kg']
+            valor_cif = self.barcos_df.loc[i]['valor_kg']
+            costo_bodegaje = self.barcos_df.loc[i]['bodega']
+            costo_despacho_directo = self.barcos_df.loc[i]['directo']
 
             barco = Barco(empresa=nombre_empresa,
                           importacion=importacion,
@@ -1433,7 +1482,6 @@ class Problema():
                                                         llegada=variable_bodegaje)
 
             self.barcos[f'{barco.empresa}_{barco.ingrediente}_{barco.importacion}'] = barco
-            self.barcos_df = transitos_df
 
         # print(self.barcos_df)
 
@@ -1535,6 +1583,24 @@ class Problema():
                                      fletes=self.fletes,
                                      intercompany=self.intercompany,
                                      periodos=self.periodos)
+
+    def _cargar_importaciones(self):
+        dict_df = dict()
+        dict_df['empresa'] = list()
+        dict_df['puerto'] = list()
+        dict_df['importacion'] = list()
+        dict_df['operador'] = list()
+        dict_df['ingrediente'] = list()
+        dict_df['periodo_atraque'] = list()
+        dict_df['periodo_partida'] = list()
+        dict_df['inventario_inicial'] = list()
+        dict_df['valor_cif'] = list()
+        dict_df['costo_bodegaje'] = list()
+
+        for codigo, importacion in self.importaciones.items():
+            importacion.fill_df(dict_df)
+
+        self.importaciones_df = pd.DataFrame(dict_df)
 
     def _buid(self):
 
@@ -1805,6 +1871,9 @@ class Problema():
 
 if __name__ == '__main__':
 
-    problema = Problema(file='model_template_nov30.xlsm')
+    problema = Problema(file='model_template_1205v2.xlsm')
+
+    importaciones_df = problema.importaciones_df
+
     # problema.solver.writeLP(filename='model2.lp')
     print(problema.solve(t_limit_minutes=3))
