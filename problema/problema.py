@@ -1777,6 +1777,15 @@ class Problema():
             right_on=['origen', 'destino'],
             how='left').drop(columns=['origen', 'destino'])
 
+        transporte_df = pd.merge(left=transporte_df,
+                                 right=self.importaciones_df[[
+                                     'empresa', 'puerto', 'importacion', 'operador', 'ingrediente', 'valor_cif']],
+                                 left_on=['empresa_origen', 'puerto',
+                                          'importacion', 'operador', 'ingrediente'],
+                                 right_on=[
+                                     'empresa', 'puerto', 'importacion', 'operador', 'ingrediente'],
+                                 how='left')
+
         return transporte_df
 
     def reporte_puerto(this) -> pd.DataFrame:
@@ -1872,8 +1881,6 @@ class Problema():
 if __name__ == '__main__':
 
     problema = Problema(file='model_template_1205v2.xlsm')
-
-    importaciones_df = problema.importaciones_df
 
     # problema.solver.writeLP(filename='model2.lp')
     print(problema.solve(t_limit_minutes=3))
