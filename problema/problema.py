@@ -1533,13 +1533,16 @@ class Problema():
                                  var_name='planta',
                                  value_name='costo')
 
+        self.fletes_df['scaled_values'] = 4 * \
+            self.fletes_df['costo']/max(self.fletes_df['costo'])
+
         for i in self.fletes_df.index:
 
             puerto = self.fletes_df.loc[i]['puerto']
             operador = self.fletes_df.loc[i]['operador']
             ingrediente = self.fletes_df.loc[i]['ingrediente']
             planta = self.fletes_df.loc[i]['planta']
-            costo = self.fletes_df.loc[i]['costo']
+            costo = self.fletes_df.loc[i]['scaled_values']
 
             if not puerto in self.fletes.keys():
                 self.fletes[puerto] = dict()
@@ -1713,7 +1716,12 @@ class Problema():
                         planta.costo_backorder)
                     df_dict['importaciones'].append(importaciones)
 
-        return pd.DataFrame(df_dict)
+        df = pd.DataFrame(df_dict)
+
+        df['DIO'] = df['inventario']/df['consumo']
+        df['Capacidad_DIO'] = df['capacidad']/df['consumo']
+
+        return df
 
     def reporte_transporte(self) -> pd.DataFrame:
 
@@ -1764,11 +1772,14 @@ class Problema():
 
         transporte_df = pd.merge(
             left=transporte_df,
-            right=self.fletes_df.rename(columns={'costo': 'costo_por_kg'}),
+            right=self.fletes_df.rename(
+                columns={'costo': 'costo_flete_por_kg'}),
             left_on=['puerto', 'operador', 'ingrediente', 'planta'],
             right_on=['puerto', 'operador', 'ingrediente', 'planta'],
             how='left'
         )
+
+        transporte_df['kg_despachados'] = 34000*transporte_df['camiones']
 
         transporte_df = pd.merge(
             left=transporte_df,
